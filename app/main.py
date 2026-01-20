@@ -22,13 +22,13 @@ logger = logging.getLogger("uvicorn.error")
 from espn import ESPNClient, GameInfo
 from wled import WLEDController, WLEDConfig
 from teams import get_team_colors, get_team_display
-from config import get_settings, get_leagues, reload_config, add_wled_instance, CONFIG_DIR
+from config import get_settings, get_leagues, reload_config, add_wled_instance, CONFIG_DIR, get_instance_display_settings
 from discovery import discover_wled_devices
 
 
 def build_wled_config(host: str, start: int, end: int) -> WLEDConfig:
-    """Build WLEDConfig with display settings from config file."""
-    display = get_settings().get("display", {})
+    """Build WLEDConfig with display settings from config file (per-instance or global)."""
+    display = get_instance_display_settings(host)
     return WLEDConfig(
         host=host,
         roofline_start=start,
@@ -147,12 +147,6 @@ class WLEDInstance(BaseModel):
     host: str
     start: int = 0
     end: int = 629
-
-
-class WatchRequest(BaseModel):
-    league: str
-    game_id: str
-    wled_instances: list[WLEDInstance] = []
 
 
 class GameStatus(BaseModel):
@@ -331,14 +325,32 @@ class InstanceWatchRequest(BaseModel):
 
 @app.get("/api/instances")
 async def list_instances():
-    """Get all WLED instances and their current status."""
+    """Get all WLED instances and their current status, including display settings."""
+    settings = get_settings()
+    global_display = settings.get("display", {})
+
+    # Build a map of per-instance settings from config
+    instance_configs = {
+        i.get("host"): i for i in settings.get("wled_instances", [])
+    }
+
     result = []
     for host, inst in state.instances.items():
+        # Get per-instance config, falling back to global display settings
+        inst_cfg = instance_configs.get(host, {})
+        inst_display = inst_cfg.get("display", {})
+
         item = {
             "host": host,
             "start": inst.start,
             "end": inst.end,
             "watching": inst.game is not None,
+            # Display settings (per-instance override > global > default)
+            "min_team_pct": inst_display.get("min_team_pct", global_display.get("min_team_pct", 0.05)),
+            "contested_zone_pixels": inst_display.get("contested_zone_pixels", global_display.get("contested_zone_pixels", 6)),
+            "dark_buffer_pixels": inst_display.get("dark_buffer_pixels", global_display.get("dark_buffer_pixels", 4)),
+            "chase_speed": inst_display.get("chase_speed", global_display.get("chase_speed", 185)),
+            "chase_intensity": inst_display.get("chase_intensity", global_display.get("chase_intensity", 190)),
         }
         if inst.game:
             item["league"] = inst.game["league"]
@@ -394,35 +406,48 @@ async def stop_instance(host: str):
     return {"status": "stopped", "host": host}
 
 
-@app.post("/api/watch")
-async def watch_game(req: WatchRequest):
-    """Start watching a game on ALL instances (legacy/convenience)."""
-    if not state.instances:
-        raise HTTPException(400, "No WLED instances configured (check config/settings.yaml)")
-
-    for host, inst in state.instances.items():
-        if not inst.controller:
-            config = build_wled_config(inst.host, inst.start, inst.end)
-            inst.controller = WLEDController(config)
-
-        inst.game = {
-            "league": req.league,
-            "game_id": req.game_id,
-            "last_info": None,
-        }
-
-    return {"status": "watching", "game_id": req.game_id, "instances": len(state.instances)}
+class InstanceSettingsRequest(BaseModel):
+    min_team_pct: Optional[float] = None
+    contested_zone_pixels: Optional[int] = None
+    dark_buffer_pixels: Optional[int] = None
+    chase_speed: Optional[int] = None
+    chase_intensity: Optional[int] = None
 
 
-@app.post("/api/stop")
-async def stop_watching():
-    """Stop watching on ALL instances and turn off all lights."""
-    for inst in state.instances.values():
-        inst.game = None
-        if inst.controller:
-            await inst.controller.turn_off()
+@app.post("/api/instance/{host}/settings")
+async def update_instance_settings(host: str, req: InstanceSettingsRequest):
+    """Update display settings for a specific WLED instance."""
+    from config import update_instance_settings as cfg_update
 
-    return {"status": "stopped"}
+    if host not in state.instances:
+        raise HTTPException(404, f"Unknown instance: {host}")
+
+    # Build settings dict from non-None values
+    settings = {}
+    if req.min_team_pct is not None:
+        settings["min_team_pct"] = req.min_team_pct
+    if req.contested_zone_pixels is not None:
+        settings["contested_zone_pixels"] = req.contested_zone_pixels
+    if req.dark_buffer_pixels is not None:
+        settings["dark_buffer_pixels"] = req.dark_buffer_pixels
+    if req.chase_speed is not None:
+        settings["chase_speed"] = req.chase_speed
+    if req.chase_intensity is not None:
+        settings["chase_intensity"] = req.chase_intensity
+
+    if not settings:
+        return {"status": "no_changes", "host": host}
+
+    result = cfg_update(host, settings)
+
+    # Recreate controller with new settings if it exists
+    inst = state.instances[host]
+    if inst.controller:
+        await inst.controller.close()
+        config = build_wled_config(inst.host, inst.start, inst.end)
+        inst.controller = WLEDController(config)
+
+    return {"status": "updated", "host": host, **result}
 
 
 @app.get("/api/status")

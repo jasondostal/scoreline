@@ -1,6 +1,6 @@
 services:
   scoreline:
-    image: ghcr.io/jasondostal/scoreline:latest
+    image: ghcr.io/jasondostal/scoreline:local
     build: .
     container_name: scoreline
     restart: unless-stopped
@@ -10,3 +10,9 @@ services:
       - ./config:/app/config
     environment:
       - TZ=America/Chicago
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true

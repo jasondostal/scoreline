@@ -1,37 +1,21 @@
-# Game Lights Configuration
-# Edit this file to configure your setup
-
-# WLED instances to control
-# Each instance needs a host and LED segment range
 wled_instances:
-  - host: "192.168.1.100"  # Replace with your WLED IP
-    start: 0
-    end: 629
-
-  # Add more instances if you have multiple WLED controllers:
-  # - host: "192.168.1.101"
-  #   start: 0
-  #   end: 300
-
-# Polling interval in seconds (how often to check ESPN)
+- host: 192.168.1.100
+  start: 0
+  end: 629
+  display:
+    chase_speed: 198
+    chase_intensity: 117
+    min_team_pct: 0.05
 poll_interval: 30
-
-# Default league to show first (optional)
 default_league: nfl
-
-# Display settings (optional - sensible defaults if omitted)
 display:
-  # Divider bar color [R, G, B] - the "battle line" between teams
-  divider_color: [200, 80, 0]  # Dark orange
-
-  # Minimum team percentage (dignity rule - never less than this)
-  min_team_pct: 0.05  # 5%
-
-  # Segment sizing
-  contested_zone_pixels: 6   # Animated divider width
-  dark_buffer_pixels: 4      # Black gap on each side of divider
-
-  # Animation
-  transition_ms: 500         # Smooth transition time
-  chase_speed: 185           # Base chase animation speed (0-255)
-  chase_intensity: 190       # Chase segment size (higher = smaller)
+  divider_color:
+  - 200
+  - 80
+  - 0
+  min_team_pct: 0.05
+  contested_zone_pixels: 6
+  dark_buffer_pixels: 4
+  transition_ms: 500
+  chase_speed: 185
+  chase_intensity: 190

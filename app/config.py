@@ -42,7 +42,6 @@ def load_settings() -> dict:
     return {
         "wled_instances": settings.get("wled_instances", []),
         "poll_interval": settings.get("poll_interval", 30),
-        "default_league": settings.get("default_league", None),
         "display": display_settings,
     }
 
@@ -148,3 +147,67 @@ def add_wled_instance(host: str, start: int = 0, end: int = 300) -> dict:
     _settings = load_settings()
 
     return {"status": "added", "message": f"{host} added to config"}
+
+
+def update_instance_settings(host: str, display_settings: dict) -> dict:
+    """
+    Update display settings for a specific WLED instance.
+
+    Adds a 'display' section to the instance in settings.yaml for per-instance overrides.
+    """
+    global _settings
+
+    settings_path = CONFIG_DIR / "settings.yaml"
+    raw_settings = _load_yaml(settings_path)
+
+    if "wled_instances" not in raw_settings:
+        return {"status": "error", "message": "No instances configured"}
+
+    # Find the instance
+    found = False
+    for inst in raw_settings["wled_instances"]:
+        if inst.get("host") == host:
+            # Initialize or update display section
+            if "display" not in inst:
+                inst["display"] = {}
+            inst["display"].update(display_settings)
+            found = True
+            break
+
+    if not found:
+        return {"status": "error", "message": f"Instance {host} not found"}
+
+    # Write back
+    with open(settings_path, "w") as f:
+        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+
+    # Reload cache
+    _settings = load_settings()
+
+    return {"status": "updated", "settings": display_settings}
+
+
+def get_instance_display_settings(host: str) -> dict:
+    """
+    Get display settings for a specific instance, with fallback to global.
+    """
+    settings = get_settings()
+    global_display = settings.get("display", {})
+
+    # Find instance-specific settings
+    for inst in settings.get("wled_instances", []):
+        if inst.get("host") == host:
+            inst_display = inst.get("display", {})
+            # Merge: instance overrides global
+            return {
+                "min_team_pct": inst_display.get("min_team_pct", global_display.get("min_team_pct", 0.05)),
+                "contested_zone_pixels": inst_display.get("contested_zone_pixels", global_display.get("contested_zone_pixels", 6)),
+                "dark_buffer_pixels": inst_display.get("dark_buffer_pixels", global_display.get("dark_buffer_pixels", 4)),
+                "transition_ms": inst_display.get("transition_ms", global_display.get("transition_ms", 500)),
+                "chase_speed": inst_display.get("chase_speed", global_display.get("chase_speed", 185)),
+                "chase_intensity": inst_display.get("chase_intensity", global_display.get("chase_intensity", 190)),
+                "divider_color": inst_display.get("divider_color", global_display.get("divider_color", [200, 80, 0])),
+            }
+
+    # Fallback to global
+    return global_display
