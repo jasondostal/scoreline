@@ -1,7 +1,8 @@
 services:
-  game-lights:
+  scoreline:
+    image: ghcr.io/jasondostal/scoreline:latest
     build: .
-    container_name: game-lights
+    container_name: scoreline
     restart: unless-stopped
     ports:
       - "8084:8080"
