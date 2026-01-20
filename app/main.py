@@ -5,17 +5,24 @@ FastAPI app with game picker UI and background polling.
 """
 
 import asyncio
+import logging
+import os
+import threading
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
+from watchdog.observers.polling import PollingObserver
+from watchdog.events import FileSystemEventHandler
+
+logger = logging.getLogger("uvicorn.error")
 
 from espn import ESPNClient, GameInfo
 from wled import WLEDController, WLEDConfig
 from teams import get_team_colors, get_team_display
-from config import get_settings, get_leagues, reload_config, add_wled_instance
+from config import get_settings, get_leagues, reload_config, add_wled_instance, CONFIG_DIR
 from discovery import discover_wled_devices
 
 
@@ -69,15 +76,60 @@ def init_instances():
         )
 
 
+# Config file watcher for auto-reload
+class ConfigWatcher(FileSystemEventHandler):
+    """Watch config directory for changes and auto-reload."""
+    def __init__(self):
+        self._debounce_timer = None
+        self._lock = threading.Lock()
+
+    def on_modified(self, event):
+        if event.is_directory:
+            return
+        # Only watch settings.yaml and league files
+        if event.src_path.endswith('.yaml') or event.src_path.endswith('.yml'):
+            self._schedule_reload()
+
+    def on_created(self, event):
+        if not event.is_directory and (event.src_path.endswith('.yaml') or event.src_path.endswith('.yml')):
+            self._schedule_reload()
+
+    def _schedule_reload(self):
+        """Debounce reloads - wait 1 second after last change."""
+        with self._lock:
+            if self._debounce_timer:
+                self._debounce_timer.cancel()
+            self._debounce_timer = threading.Timer(1.0, self._do_reload)
+            self._debounce_timer.start()
+
+    def _do_reload(self):
+        logger.info("Config changed, reloading...")
+        reload_config()
+        init_instances()
+        logger.info(f"Reloaded: {len(state.instances)} instance(s)")
+
+
+config_observer: Optional[PollingObserver] = None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global config_observer
     # Startup
     state.espn = ESPNClient()
     init_instances()
     # Start the unified poll task
     state.poll_task = asyncio.create_task(poll_all_games())
+    # Start config file watcher (polling for Docker compatibility)
+    config_observer = PollingObserver(timeout=5)
+    config_observer.schedule(ConfigWatcher(), CONFIG_DIR, recursive=True)
+    config_observer.start()
+    logger.info(f"Watching {CONFIG_DIR} for config changes (polling every 5s)")
     yield
     # Shutdown
+    if config_observer:
+        config_observer.stop()
+        config_observer.join()
     if state.poll_task:
         state.poll_task.cancel()
     if state.espn:
@@ -149,13 +201,13 @@ async def poll_all_games():
                                 away_colors=away_colors,
                             )
 
-                        print(f"[{league.upper()}] {game.away_team} @ {game.home_team} | "
-                              f"{game.away_score}-{game.home_score} | "
-                              f"Home: {game.home_win_pct:.1%} | "
-                              f"{len(instances)} instance(s)")
+                        logger.info(f"[{league.upper()}] {game.away_team} @ {game.home_team} | "
+                                    f"{game.away_score}-{game.home_score} | "
+                                    f"Home: {game.home_win_pct:.1%} | "
+                                    f"{len(instances)} instance(s)")
 
         except Exception as e:
-            print(f"Poll error: {e}")
+            logger.error(f"Poll error: {e}")
 
         await asyncio.sleep(30)  # Poll every 30 seconds
 
@@ -225,8 +277,11 @@ class AddWLEDRequest(BaseModel):
 
 @app.post("/api/wled/add")
 async def api_add_wled(req: AddWLEDRequest):
-    """Add a discovered WLED device to settings.yaml."""
+    """Add a WLED device to settings.yaml and reload instances."""
     result = add_wled_instance(req.host, req.start, req.end)
+    if result.get("status") == "added":
+        reload_config()
+        init_instances()
     return result
 
 
