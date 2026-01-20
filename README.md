@@ -121,7 +121,19 @@ League definitions live in `config/leagues/` as YAML files. Each includes team c
 | `/api/settings` | GET | Current config |
 | `/api/reload` | POST | Hot-reload config from disk |
 | `/api/discover` | GET | Scan for WLED devices via mDNS |
-| `/api/wled/add` | POST | Add discovered device to config |
+| `/api/wled/add` | POST | Add WLED device to config |
+
+## Adding WLED Devices
+
+Three ways to add WLED devices:
+
+1. **UI Form** - Click "Add WLED" in the web interface and enter the IP, start LED, and end LED
+2. **mDNS Discovery** - Click "Scan Network" to auto-discover WLED devices (requires host networking or running on same network segment)
+3. **Edit YAML** - Add entries directly to `config/settings.yaml`
+
+All methods write to the same config file. Changes via UI take effect immediately; YAML edits require a restart or hitting `/api/reload`.
+
+**Note on mDNS Discovery:** When running in Docker with bridge networking, mDNS discovery won't find devices on your LAN. For discovery to work, either run with `network_mode: host` or run Scoreline directly on a machine in the same network segment as your WLED devices. The UI form works regardless of network mode.
 
 ## Requirements
 

@@ -335,9 +335,24 @@
         <div class="test-controls">
             <div class="section-label" style="display: flex; justify-content: space-between; align-items: center;">
                 <span>WLED Instances</span>
-                <button id="scan-btn" class="btn" style="padding: 4px 10px; font-size: 12px; background: #f5f5f5; border: 1px solid #ccc;">Scan Network</button>
+                <div style="display: flex; gap: 4px;">
+                    <button id="add-wled-btn" class="btn" style="padding: 4px 10px; font-size: 12px; background: #f5f5f5; border: 1px solid #ccc;">+ Add WLED</button>
+                    <button id="scan-btn" class="btn" style="padding: 4px 10px; font-size: 12px; background: #f5f5f5; border: 1px solid #ccc;">Scan Network</button>
+                </div>
             </div>
             <div id="wled-list"></div>
+            <div id="add-wled-form" class="hidden" style="margin-top: 8px; padding: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px;">
+                <div style="font-size: 11px; font-weight: 600; color: #166534; margin-bottom: 8px;">Add WLED Device</div>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" id="add-wled-host" placeholder="IP Address" style="flex: 2; padding: 6px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                    <input type="number" id="add-wled-start" placeholder="Start" value="0" style="flex: 1; padding: 6px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                    <input type="number" id="add-wled-end" placeholder="End" style="flex: 1; padding: 6px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button id="add-wled-submit" class="btn" style="padding: 4px 12px; font-size: 12px; background: #22c55e; color: white; border: none;">Add</button>
+                    <button id="add-wled-cancel" class="btn" style="padding: 4px 12px; font-size: 12px; background: #f5f5f5; border: 1px solid #ccc;">Cancel</button>
+                </div>
+            </div>
             <div id="discovered-list" class="hidden" style="margin-top: 8px; padding: 8px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 4px;">
                 <div style="font-size: 11px; font-weight: 600; color: #0369a1; margin-bottom: 4px;">Discovered on network:</div>
                 <div id="discovered-devices"></div>
@@ -457,6 +472,65 @@
                 await scanForDevices();
             }
         }
+
+        // Manual WLED Add Form
+        document.getElementById('add-wled-btn').addEventListener('click', () => {
+            document.getElementById('add-wled-form').classList.remove('hidden');
+            document.getElementById('add-wled-host').focus();
+        });
+
+        document.getElementById('add-wled-cancel').addEventListener('click', () => {
+            document.getElementById('add-wled-form').classList.add('hidden');
+            document.getElementById('add-wled-host').value = '';
+            document.getElementById('add-wled-start').value = '0';
+            document.getElementById('add-wled-end').value = '';
+        });
+
+        document.getElementById('add-wled-submit').addEventListener('click', async () => {
+            const host = document.getElementById('add-wled-host').value.trim();
+            const start = parseInt(document.getElementById('add-wled-start').value) || 0;
+            const end = parseInt(document.getElementById('add-wled-end').value);
+
+            if (!host) {
+                alert('Please enter an IP address');
+                return;
+            }
+            if (isNaN(end)) {
+                alert('Please enter the end LED index');
+                return;
+            }
+
+            const btn = document.getElementById('add-wled-submit');
+            btn.textContent = 'Adding...';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/wled/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ host, start, end })
+                });
+
+                const result = await resp.json();
+
+                if (result.status === 'added') {
+                    // Clear form and hide
+                    document.getElementById('add-wled-form').classList.add('hidden');
+                    document.getElementById('add-wled-host').value = '';
+                    document.getElementById('add-wled-start').value = '0';
+                    document.getElementById('add-wled-end').value = '';
+                    // Refresh list
+                    await loadSettings();
+                } else if (result.status === 'exists') {
+                    alert('This WLED device is already configured');
+                }
+            } catch (e) {
+                alert('Failed to add device');
+            }
+
+            btn.textContent = 'Add';
+            btn.disabled = false;
+        });
 
         // Typeahead component factory
         function createTypeahead(inputId, dropdownId, options = {}) {
