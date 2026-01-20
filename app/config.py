@@ -109,3 +109,42 @@ def reload_config():
     _settings = load_settings()
     _leagues = load_leagues()
     return {"settings": _settings, "leagues": list(_leagues.keys())}
+
+
+def add_wled_instance(host: str, start: int = 0, end: int = 300) -> dict:
+    """
+    Add a WLED instance to settings.yaml.
+
+    Returns the updated settings.
+    """
+    global _settings
+
+    settings_path = CONFIG_DIR / "settings.yaml"
+
+    # Load raw settings (not the processed version)
+    raw_settings = _load_yaml(settings_path)
+
+    # Ensure wled_instances exists
+    if "wled_instances" not in raw_settings:
+        raw_settings["wled_instances"] = []
+
+    # Check if already exists
+    for inst in raw_settings["wled_instances"]:
+        if inst.get("host") == host:
+            return {"status": "exists", "message": f"{host} already configured"}
+
+    # Add new instance
+    raw_settings["wled_instances"].append({
+        "host": host,
+        "start": start,
+        "end": end,
+    })
+
+    # Write back
+    with open(settings_path, "w") as f:
+        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+
+    # Reload cache
+    _settings = load_settings()
+
+    return {"status": "added", "message": f"{host} added to config"}

@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from espn import ESPNClient, GameInfo
 from wled import WLEDController, WLEDConfig
 from teams import get_team_colors, get_team_display
-from config import get_settings, get_leagues, reload_config
+from config import get_settings, get_leagues, reload_config, add_wled_instance
 from discovery import discover_wled_devices
 
 
@@ -161,15 +161,35 @@ async def api_reload_config():
 async def api_discover_wled():
     """Discover WLED devices on the local network via mDNS."""
     devices = await discover_wled_devices(timeout=3.0)
+
+    # Check which devices are already configured
+    configured_hosts = {
+        inst.get("host") for inst in get_settings().get("wled_instances", [])
+    }
+
     return [
         {
             "name": d.name,
             "ip": d.ip,
             "host": d.host,
             "mac": d.mac,
+            "configured": d.ip in configured_hosts or d.host in configured_hosts,
         }
         for d in devices
     ]
+
+
+class AddWLEDRequest(BaseModel):
+    host: str
+    start: int = 0
+    end: int = 300
+
+
+@app.post("/api/wled/add")
+async def api_add_wled(req: AddWLEDRequest):
+    """Add a discovered WLED device to settings.yaml."""
+    result = add_wled_instance(req.host, req.start, req.end)
+    return result
 
 
 @app.get("/api/teams/{league}")

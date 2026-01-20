@@ -121,6 +121,7 @@ League definitions live in `config/leagues/` as YAML files. Each includes team c
 | `/api/settings` | GET | Current config |
 | `/api/reload` | POST | Hot-reload config from disk |
 | `/api/discover` | GET | Scan for WLED devices via mDNS |
+| `/api/wled/add` | POST | Add discovered device to config |
 
 ## Requirements
 

@@ -402,7 +402,9 @@
         }
 
         // WLED Discovery
-        document.getElementById('scan-btn').addEventListener('click', async () => {
+        document.getElementById('scan-btn').addEventListener('click', scanForDevices);
+
+        async function scanForDevices() {
             const btn = document.getElementById('scan-btn');
             const discoveredList = document.getElementById('discovered-list');
             const discoveredDevices = document.getElementById('discovered-devices');
@@ -418,9 +420,15 @@
                     discoveredDevices.innerHTML = '<div style="color: #666; font-size: 12px;">No WLED devices found</div>';
                 } else {
                     discoveredDevices.innerHTML = devices.map(d => `
-                        <div class="status-row" style="background: #fff; padding: 6px 10px; margin: 4px 0; border-radius: 4px; border: 1px solid #e0e7ff;">
-                            <span><strong>${d.name}</strong></span>
-                            <span style="font-family: monospace; font-size: 12px; color: #666;">${d.ip}</span>
+                        <div class="status-row" style="background: #fff; padding: 6px 10px; margin: 4px 0; border-radius: 4px; border: 1px solid #e0e7ff; display: flex; justify-content: space-between; align-items: center;">
+                            <span>
+                                <strong>${d.name}</strong>
+                                <span style="font-family: monospace; font-size: 12px; color: #666; margin-left: 8px;">${d.ip}</span>
+                            </span>
+                            ${d.configured
+                                ? '<span style="font-size: 11px; color: #22c55e; font-weight: 500;">Added</span>'
+                                : `<button onclick="addDevice('${d.ip}', '${d.name}')" class="btn" style="padding: 2px 8px; font-size: 11px; background: #0066cc; color: white; border: none;">Add</button>`
+                            }
                         </div>
                     `).join('');
                 }
@@ -432,7 +440,23 @@
 
             btn.textContent = 'Scan Network';
             btn.disabled = false;
-        });
+        }
+
+        async function addDevice(ip, name) {
+            const resp = await fetch('/api/wled/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ host: ip, start: 0, end: 300 })
+            });
+
+            const result = await resp.json();
+
+            if (result.status === 'added') {
+                // Refresh both lists
+                await loadSettings();
+                await scanForDevices();
+            }
+        }
 
         // Typeahead component factory
         function createTypeahead(inputId, dropdownId, options = {}) {
