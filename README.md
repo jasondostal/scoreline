@@ -146,7 +146,8 @@ All methods write to the same config file. Changes via UI take effect immediatel
 Working and usable. Active development toward v1.0 with planned features:
 
 - [x] mDNS discovery for WLED devices
-- [ ] Per-instance game selection (different games on different strips)
+- [x] Per-instance game selection (different games on different strips)
+- [x] Auto-reload config on YAML changes
 - [ ] Configurable effects and segment sizing
 - [ ] Team auto-watch (lights turn on when your team plays)
 - [ ] Post-game actions (turn off, switch to preset, etc.)
