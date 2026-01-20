@@ -36,30 +36,55 @@ def build_wled_config(host: str, start: int, end: int) -> WLEDConfig:
     )
 
 
-# App state
+# App state - per-instance game tracking
+class InstanceState:
+    """State for a single WLED instance."""
+    def __init__(self, host: str, start: int, end: int):
+        self.host = host
+        self.start = start
+        self.end = end
+        self.controller: Optional[WLEDController] = None
+        self.game: Optional[dict] = None  # {league, game_id, last_info}
+
+
 class AppState:
     espn: Optional[ESPNClient] = None
-    wled_controllers: list[WLEDController] = []  # Multiple WLED instances
-    current_game: Optional[dict] = None
+    instances: dict[str, InstanceState] = {}  # host -> InstanceState
     poll_task: Optional[asyncio.Task] = None
 
 
 state = AppState()
 
 
+def init_instances():
+    """Initialize WLED instances from config."""
+    settings = get_settings()
+    state.instances = {}
+    for inst in settings.get("wled_instances", []):
+        host = inst["host"]
+        state.instances[host] = InstanceState(
+            host=host,
+            start=inst.get("start", 0),
+            end=inst.get("end", 629),
+        )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     state.espn = ESPNClient()
-    state.wled_controllers = []
+    init_instances()
+    # Start the unified poll task
+    state.poll_task = asyncio.create_task(poll_all_games())
     yield
     # Shutdown
     if state.poll_task:
         state.poll_task.cancel()
     if state.espn:
         await state.espn.close()
-    for wled in state.wled_controllers:
-        await wled.close()
+    for inst in state.instances.values():
+        if inst.controller:
+            await inst.controller.close()
 
 
 app = FastAPI(title="Game Lights", lifespan=lifespan)
@@ -91,36 +116,43 @@ class GameStatus(BaseModel):
 
 
 # Background polling
-async def poll_game():
-    """Background task to poll ESPN and update all WLED instances."""
+async def poll_all_games():
+    """Background task to poll ESPN and update each WLED instance with its game."""
     while True:
         try:
-            if state.current_game and state.espn and state.wled_controllers:
-                league = state.current_game["league"]
-                game_id = state.current_game["game_id"]
-                sport = get_leagues().get(league, {}).get("sport", "football")
+            if state.espn:
+                # Collect unique games to poll (avoid duplicate API calls)
+                games_to_poll: dict[str, list[InstanceState]] = {}  # game_key -> instances
+                for inst in state.instances.values():
+                    if inst.game and inst.controller:
+                        key = f"{inst.game['league']}:{inst.game['game_id']}"
+                        if key not in games_to_poll:
+                            games_to_poll[key] = []
+                        games_to_poll[key].append(inst)
 
-                game = await state.espn.get_game_detail(sport, league, game_id)
+                # Poll each unique game and update its instances
+                for game_key, instances in games_to_poll.items():
+                    league, game_id = game_key.split(":", 1)
+                    sport = get_leagues().get(league, {}).get("sport", "football")
 
-                if game:
-                    state.current_game["last_info"] = game
+                    game = await state.espn.get_game_detail(sport, league, game_id)
 
-                    # Get colors
-                    home_colors = get_team_colors(league, game.home_team)
-                    away_colors = get_team_colors(league, game.away_team)
+                    if game:
+                        home_colors = get_team_colors(league, game.home_team)
+                        away_colors = get_team_colors(league, game.away_team)
 
-                    # Update all WLED instances
-                    for wled in state.wled_controllers:
-                        await wled.set_game_mode(
-                            home_win_pct=game.home_win_pct,
-                            home_colors=home_colors,
-                            away_colors=away_colors,
-                        )
+                        for inst in instances:
+                            inst.game["last_info"] = game
+                            await inst.controller.set_game_mode(
+                                home_win_pct=game.home_win_pct,
+                                home_colors=home_colors,
+                                away_colors=away_colors,
+                            )
 
-                    print(f"Updated {len(state.wled_controllers)} instance(s): "
-                          f"{game.away_team} @ {game.home_team} | "
-                          f"{game.away_score}-{game.home_score} | "
-                          f"Home win: {game.home_win_pct:.1%}")
+                        print(f"[{league.upper()}] {game.away_team} @ {game.home_team} | "
+                              f"{game.away_score}-{game.home_score} | "
+                              f"Home: {game.home_win_pct:.1%} | "
+                              f"{len(instances)} instance(s)")
 
         except Exception as e:
             print(f"Poll error: {e}")
@@ -152,9 +184,15 @@ async def api_get_settings():
 
 @app.post("/api/reload")
 async def api_reload_config():
-    """Hot-reload config from disk."""
+    """Hot-reload config from disk and reinitialize instances."""
+    # Close existing controllers
+    for inst in state.instances.values():
+        if inst.controller:
+            await inst.controller.close()
+
     result = reload_config()
-    return {"status": "reloaded", **result}
+    init_instances()
+    return {"status": "reloaded", "instances": len(state.instances), **result}
 
 
 @app.get("/api/discover")
@@ -231,94 +269,136 @@ async def get_games(league: str):
     ]
 
 
-@app.post("/api/watch")
-async def watch_game(req: WatchRequest):
-    """Start watching a game."""
-    # Stop existing poll
-    if state.poll_task:
-        state.poll_task.cancel()
-        try:
-            await state.poll_task
-        except asyncio.CancelledError:
-            pass
+class InstanceWatchRequest(BaseModel):
+    league: str
+    game_id: str
 
-    # Close existing WLED controllers
-    for wled in state.wled_controllers:
-        await wled.close()
 
-    # Use request instances, or fall back to config
-    instances = req.wled_instances
-    if not instances:
-        settings = get_settings()
-        instances = [
-            WLEDInstance(host=i["host"], start=i.get("start", 0), end=i.get("end", 629))
-            for i in settings.get("wled_instances", [])
-        ]
+@app.get("/api/instances")
+async def list_instances():
+    """Get all WLED instances and their current status."""
+    result = []
+    for host, inst in state.instances.items():
+        item = {
+            "host": host,
+            "start": inst.start,
+            "end": inst.end,
+            "watching": inst.game is not None,
+        }
+        if inst.game:
+            item["league"] = inst.game["league"]
+            item["game_id"] = inst.game["game_id"]
+            info = inst.game.get("last_info")
+            if info:
+                item["home_team"] = info.home_team
+                item["away_team"] = info.away_team
+                item["home_display"] = get_team_display(inst.game["league"], info.home_team)
+                item["away_display"] = get_team_display(inst.game["league"], info.away_team)
+                item["home_score"] = info.home_score
+                item["away_score"] = info.away_score
+                item["home_win_pct"] = info.home_win_pct
+        result.append(item)
+    return result
 
-    if not instances:
-        raise HTTPException(400, "No WLED instances configured (check config/settings.yaml)")
 
-    # Create new WLED controllers
-    state.wled_controllers = []
-    for instance in instances:
-        config = build_wled_config(instance.host, instance.start, instance.end)
-        state.wled_controllers.append(WLEDController(config))
+@app.post("/api/instance/{host}/watch")
+async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
+    """Start watching a game on a specific WLED instance."""
+    if host not in state.instances:
+        raise HTTPException(404, f"Unknown instance: {host}")
 
-    state.current_game = {
+    inst = state.instances[host]
+
+    # Create controller if needed
+    if not inst.controller:
+        config = build_wled_config(inst.host, inst.start, inst.end)
+        inst.controller = WLEDController(config)
+
+    # Set the game
+    inst.game = {
         "league": req.league,
         "game_id": req.game_id,
         "last_info": None,
     }
 
-    # Start polling
-    state.poll_task = asyncio.create_task(poll_game())
+    return {"status": "watching", "host": host, "game_id": req.game_id}
 
-    return {"status": "watching", "game_id": req.game_id}
+
+@app.post("/api/instance/{host}/stop")
+async def stop_instance(host: str):
+    """Stop watching on a specific instance and turn off its lights."""
+    if host not in state.instances:
+        raise HTTPException(404, f"Unknown instance: {host}")
+
+    inst = state.instances[host]
+    inst.game = None
+
+    if inst.controller:
+        await inst.controller.turn_off()
+
+    return {"status": "stopped", "host": host}
+
+
+@app.post("/api/watch")
+async def watch_game(req: WatchRequest):
+    """Start watching a game on ALL instances (legacy/convenience)."""
+    if not state.instances:
+        raise HTTPException(400, "No WLED instances configured (check config/settings.yaml)")
+
+    for host, inst in state.instances.items():
+        if not inst.controller:
+            config = build_wled_config(inst.host, inst.start, inst.end)
+            inst.controller = WLEDController(config)
+
+        inst.game = {
+            "league": req.league,
+            "game_id": req.game_id,
+            "last_info": None,
+        }
+
+    return {"status": "watching", "game_id": req.game_id, "instances": len(state.instances)}
 
 
 @app.post("/api/stop")
 async def stop_watching():
-    """Stop watching and turn off lights."""
-    if state.poll_task:
-        state.poll_task.cancel()
-        try:
-            await state.poll_task
-        except asyncio.CancelledError:
-            pass
-        state.poll_task = None
-
-    state.current_game = None
-
-    # Turn off all WLED instances
-    for wled in state.wled_controllers:
-        await wled.turn_off()
+    """Stop watching on ALL instances and turn off all lights."""
+    for inst in state.instances.values():
+        inst.game = None
+        if inst.controller:
+            await inst.controller.turn_off()
 
     return {"status": "stopped"}
 
 
 @app.get("/api/status")
-async def get_status() -> GameStatus:
-    """Get current watching status."""
-    if not state.current_game:
-        return GameStatus(watching=False)
+async def get_status():
+    """Get current watching status (summary across all instances)."""
+    watching_instances = [i for i in state.instances.values() if i.game]
+    if not watching_instances:
+        return {"watching": False, "instances": len(state.instances)}
 
-    info = state.current_game.get("last_info")
-    if not info:
-        return GameStatus(
-            watching=True,
-            game_id=state.current_game["game_id"],
-        )
+    # Return info from first watching instance for backwards compatibility
+    inst = watching_instances[0]
+    info = inst.game.get("last_info") if inst.game else None
 
-    return GameStatus(
-        watching=True,
-        game_id=state.current_game["game_id"],
-        home_team=info.home_team,
-        away_team=info.away_team,
-        home_score=info.home_score,
-        away_score=info.away_score,
-        home_win_pct=info.home_win_pct,
-        period=info.period,
-    )
+    result = {
+        "watching": True,
+        "instances_watching": len(watching_instances),
+        "instances_total": len(state.instances),
+        "game_id": inst.game["game_id"] if inst.game else None,
+    }
+
+    if info:
+        result.update({
+            "home_team": info.home_team,
+            "away_team": info.away_team,
+            "home_score": info.home_score,
+            "away_score": info.away_score,
+            "home_win_pct": info.home_win_pct,
+            "period": info.period,
+        })
+
+    return result
 
 
 class TestRequest(BaseModel):
@@ -326,37 +406,31 @@ class TestRequest(BaseModel):
     league: str = "nfl"
     home: str = "GB"
     away: str = "CHI"
-    wled_instances: list[WLEDInstance] = []
+    host: Optional[str] = None  # Specific instance, or all if None
 
 
 @app.post("/api/test")
 async def test_percentage(req: TestRequest):
     """Test mode: manually set win percentage (0-100) with custom teams."""
-    # Use request instances, or fall back to config
-    instances = req.wled_instances
-    if not instances:
-        settings = get_settings()
-        instances = [
-            WLEDInstance(host=i["host"], start=i.get("start", 0), end=i.get("end", 629))
-            for i in settings.get("wled_instances", [])
-        ]
-
-    if not instances:
+    if not state.instances:
         raise HTTPException(400, "No WLED instances configured (check config/settings.yaml)")
 
     home_colors = get_team_colors(req.league, req.home)
     away_colors = get_team_colors(req.league, req.away)
 
-    # Create temporary controllers for test
-    for instance in instances:
-        config = build_wled_config(instance.host, instance.start, instance.end)
-        controller = WLEDController(config)
-        await controller.set_game_mode(
+    # Target specific instance or all
+    targets = [state.instances[req.host]] if req.host else state.instances.values()
+
+    for inst in targets:
+        if not inst.controller:
+            config = build_wled_config(inst.host, inst.start, inst.end)
+            inst.controller = WLEDController(config)
+
+        await inst.controller.set_game_mode(
             home_win_pct=req.pct / 100,
             home_colors=home_colors,
             away_colors=away_colors,
         )
-        await controller.close()
 
     return {"status": "ok", "pct": req.pct, "home": req.home, "away": req.away}
 

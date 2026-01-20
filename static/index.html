@@ -393,27 +393,122 @@
         let selectedGame = null;
         let isWatching = false;
 
-        // WLED Instances (loaded from server config)
-        let wledInstances = [];
+        // WLED Instances with per-instance game selection
+        let instanceStates = [];  // From /api/instances
 
-        async function loadSettings() {
-            const resp = await fetch('/api/settings');
-            const settings = await resp.json();
-            wledInstances = settings.wled_instances || [];
-            renderWledList();
+        async function loadInstances() {
+            const resp = await fetch('/api/instances');
+            instanceStates = await resp.json();
+            renderInstanceCards();
         }
 
-        function renderWledList() {
+        function renderInstanceCards() {
             const list = document.getElementById('wled-list');
-            if (wledInstances.length === 0) {
+            if (instanceStates.length === 0) {
                 list.innerHTML = '<div class="hint" style="margin: 8px 0; color: #dc2626;">No WLED instances configured</div>';
                 return;
             }
-            list.innerHTML = wledInstances.map(inst => `
-                <div class="status-row" style="background: #f5f5f5; padding: 6px 10px; margin: 4px 0; border-radius: 4px;">
-                    <span><strong>${inst.host}</strong> <span style="color: #666;">[${inst.start || 0}-${inst.end || 629}]</span></span>
+
+            list.innerHTML = instanceStates.map(inst => {
+                const isWatching = inst.watching;
+                const gameInfo = inst.home_team ?
+                    `${inst.away_display || inst.away_team} @ ${inst.home_display || inst.home_team}` : '';
+                const scoreInfo = inst.home_score !== undefined ?
+                    `${inst.away_score}-${inst.home_score}` : '';
+                const pctInfo = inst.home_win_pct !== undefined ?
+                    `Home: ${(inst.home_win_pct * 100).toFixed(0)}%` : '';
+
+                return `
+                <div class="instance-card" style="background: ${isWatching ? '#f0fdf4' : '#f5f5f5'}; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid ${isWatching ? '#bbf7d0' : '#e0e0e0'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span>
+                            <strong style="font-family: monospace;">${inst.host}</strong>
+                            <span style="color: #666; font-size: 12px; margin-left: 8px;">[${inst.start}-${inst.end}]</span>
+                        </span>
+                        ${isWatching ? `<span style="font-size: 11px; color: #22c55e; font-weight: 600;">● LIVE</span>` : ''}
+                    </div>
+                    ${isWatching ? `
+                        <div style="font-size: 13px; margin-bottom: 8px;">
+                            <div style="font-weight: 500;">${gameInfo}</div>
+                            <div style="color: #666;">${scoreInfo} ${pctInfo ? '| ' + pctInfo : ''}</div>
+                        </div>
+                        <button onclick="stopInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #dc2626; color: white; border: none;">Stop</button>
+                    ` : `
+                        <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                            <select id="league-${inst.host}" onchange="loadGamesForInstance('${inst.host}')" style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                                <option value="">League...</option>
+                                ${leagues.map(l => `<option value="${l.id}">${l.name}</option>`).join('')}
+                            </select>
+                            <select id="game-${inst.host}" style="flex: 2; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;" disabled>
+                                <option value="">Select league first...</option>
+                            </select>
+                        </div>
+                        <button onclick="watchOnInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #22c55e; color: white; border: none;">Watch</button>
+                    `}
                 </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        async function loadGamesForInstance(host) {
+            const leagueSelect = document.getElementById(`league-${host}`);
+            const gameSelect = document.getElementById(`game-${host}`);
+            const league = leagueSelect.value;
+
+            if (!league) {
+                gameSelect.innerHTML = '<option value="">Select league first...</option>';
+                gameSelect.disabled = true;
+                return;
+            }
+
+            gameSelect.innerHTML = '<option value="">Loading...</option>';
+            const resp = await fetch(`/api/games/${league}`);
+            const games = await resp.json();
+
+            if (games.length === 0) {
+                gameSelect.innerHTML = '<option value="">No games available</option>';
+                gameSelect.disabled = true;
+            } else {
+                gameSelect.innerHTML = games.map(g =>
+                    `<option value="${g.id}">${g.away_display} @ ${g.home_display} (${g.detail})</option>`
+                ).join('');
+                gameSelect.disabled = false;
+            }
+        }
+
+        async function watchOnInstance(host) {
+            const leagueSelect = document.getElementById(`league-${host}`);
+            const gameSelect = document.getElementById(`game-${host}`);
+
+            if (!leagueSelect.value || !gameSelect.value) {
+                alert('Please select a league and game');
+                return;
+            }
+
+            await fetch(`/api/instance/${host}/watch`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    league: leagueSelect.value,
+                    game_id: gameSelect.value
+                })
+            });
+
+            await loadInstances();
+        }
+
+        async function stopInstance(host) {
+            await fetch(`/api/instance/${host}/stop`, { method: 'POST' });
+            await loadInstances();
+        }
+
+        // Legacy: load settings for backwards compat
+        async function loadSettings() {
+            await loadInstances();
+        }
+
+        function renderWledList() {
+            renderInstanceCards();
         }
 
         // WLED Discovery
@@ -820,9 +915,7 @@
 
         // Initial load
         async function init() {
-            // Load settings (WLED instances) from server
-            await loadSettings();
-
+            // Load leagues FIRST (needed for instance card dropdowns)
             const resp = await fetch('/api/leagues');
             leagues = await resp.json();
             leagueTypeahead.setItems(leagues.map(l => ({
@@ -830,7 +923,10 @@
                 display: l.name
             })));
 
-            // Check if already watching
+            // Now load instances (they need leagues to be populated)
+            await loadInstances();
+
+            // Check if any instance is watching
             const statusResp = await fetch('/api/status');
             const status = await statusResp.json();
             if (status.watching) {
@@ -838,6 +934,9 @@
                 updateUI();
                 pollStatus();
             }
+
+            // Start periodic instance refresh (live scores)
+            setInterval(loadInstances, 10000);
 
             // Focus first input
             document.getElementById('league-input').focus();
