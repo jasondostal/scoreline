@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Lights</title>
+    <title>Scoreline</title>
     <style>
         * {
             box-sizing: border-box;
@@ -271,7 +271,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Game Lights</h1>
+        <h1>Scoreline</h1>
 
         <!-- Status Panel -->
         <div id="status-panel" class="status-panel">
@@ -333,8 +333,15 @@
 
         <!-- WLED Settings (from config/settings.yaml) -->
         <div class="test-controls">
-            <div class="section-label">WLED Instances</div>
+            <div class="section-label" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>WLED Instances</span>
+                <button id="scan-btn" class="btn" style="padding: 4px 10px; font-size: 12px; background: #f5f5f5; border: 1px solid #ccc;">Scan Network</button>
+            </div>
             <div id="wled-list"></div>
+            <div id="discovered-list" class="hidden" style="margin-top: 8px; padding: 8px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 4px;">
+                <div style="font-size: 11px; font-weight: 600; color: #0369a1; margin-bottom: 4px;">Discovered on network:</div>
+                <div id="discovered-devices"></div>
+            </div>
             <div class="hint">Configured in config/settings.yaml</div>
         </div>
 
@@ -393,6 +400,39 @@
                 </div>
             `).join('');
         }
+
+        // WLED Discovery
+        document.getElementById('scan-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('scan-btn');
+            const discoveredList = document.getElementById('discovered-list');
+            const discoveredDevices = document.getElementById('discovered-devices');
+
+            btn.textContent = 'Scanning...';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/discover');
+                const devices = await resp.json();
+
+                if (devices.length === 0) {
+                    discoveredDevices.innerHTML = '<div style="color: #666; font-size: 12px;">No WLED devices found</div>';
+                } else {
+                    discoveredDevices.innerHTML = devices.map(d => `
+                        <div class="status-row" style="background: #fff; padding: 6px 10px; margin: 4px 0; border-radius: 4px; border: 1px solid #e0e7ff;">
+                            <span><strong>${d.name}</strong></span>
+                            <span style="font-family: monospace; font-size: 12px; color: #666;">${d.ip}</span>
+                        </div>
+                    `).join('');
+                }
+                discoveredList.classList.remove('hidden');
+            } catch (e) {
+                discoveredDevices.innerHTML = '<div style="color: #dc2626; font-size: 12px;">Scan failed</div>';
+                discoveredList.classList.remove('hidden');
+            }
+
+            btn.textContent = 'Scan Network';
+            btn.disabled = false;
+        });
 
         // Typeahead component factory
         function createTypeahead(inputId, dropdownId, options = {}) {

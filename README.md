@@ -120,6 +120,7 @@ League definitions live in `config/leagues/` as YAML files. Each includes team c
 | `/api/test` | POST | Test mode - set arbitrary win % |
 | `/api/settings` | GET | Current config |
 | `/api/reload` | POST | Hot-reload config from disk |
+| `/api/discover` | GET | Scan for WLED devices via mDNS |
 
 ## Requirements
 
@@ -131,7 +132,7 @@ League definitions live in `config/leagues/` as YAML files. Each includes team c
 
 Working and usable. Active development toward v1.0 with planned features:
 
-- [ ] mDNS discovery for WLED devices
+- [x] mDNS discovery for WLED devices
 - [ ] Per-instance game selection (different games on different strips)
 - [ ] Configurable effects and segment sizing
 - [ ] Team auto-watch (lights turn on when your team plays)

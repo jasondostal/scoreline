@@ -16,6 +16,7 @@ from espn import ESPNClient, GameInfo
 from wled import WLEDController, WLEDConfig
 from teams import get_team_colors, get_team_display
 from config import get_settings, get_leagues, reload_config
+from discovery import discover_wled_devices
 
 
 def build_wled_config(host: str, start: int, end: int) -> WLEDConfig:
@@ -154,6 +155,21 @@ async def api_reload_config():
     """Hot-reload config from disk."""
     result = reload_config()
     return {"status": "reloaded", **result}
+
+
+@app.get("/api/discover")
+async def api_discover_wled():
+    """Discover WLED devices on the local network via mDNS."""
+    devices = await discover_wled_devices(timeout=3.0)
+    return [
+        {
+            "name": d.name,
+            "ip": d.ip,
+            "host": d.host,
+            "mac": d.mac,
+        }
+        for d in devices
+    ]
 
 
 @app.get("/api/teams/{league}")
