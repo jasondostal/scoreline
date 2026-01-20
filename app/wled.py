@@ -29,6 +29,11 @@ class WLEDConfig:
     transition_ms: int = 500  # Smooth transitions
     chase_intensity: int = 190  # Controls chase segment size (higher = smaller segments)
     chase_speed: int = 185  # Base chase speed
+    divider_color: list[int] = None  # [R, G, B] for battle line
+
+    def __post_init__(self):
+        if self.divider_color is None:
+            self.divider_color = [200, 80, 0]  # Dark orange default
 
 
 class WLEDController:
@@ -155,7 +160,7 @@ class WLEDController:
                 "sel": False,
             })
 
-        # Segment 2: Orange jiggle divider
+        # Segment 2: Jiggle divider (battle line)
         if contested > 0:
             segments.append({
                 "id": 2,
@@ -165,7 +170,7 @@ class WLEDController:
                 "spc": 0,
                 "on": True,
                 "bri": 255,
-                "col": [[200, 80, 0], [0, 0, 0], [0, 0, 0]],  # Dark orange
+                "col": [self.config.divider_color, [0, 0, 0], [0, 0, 0]],
                 "fx": EFFECT_SCANNER,
                 "sx": 180,  # Jiggle speed
                 "ix": 200,  # Scanner width
@@ -271,18 +276,3 @@ class WLEDController:
     async def restore_preset(self, preset_id: int) -> bool:
         """Restore a saved preset."""
         return await self.set_state({"ps": preset_id})
-
-
-# Factory function
-def create_controller(
-    host: str = "192.168.20.108",
-    roofline_start: int = 0,
-    roofline_end: int = 629
-) -> WLEDController:
-    """Create a WLED controller with default config."""
-    config = WLEDConfig(
-        host=host,
-        roofline_start=roofline_start,
-        roofline_end=roofline_end,
-    )
-    return WLEDController(config)

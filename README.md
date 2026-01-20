@@ -15,37 +15,34 @@ Scoreline polls ESPN for real-time game data and translates win probability into
 
 ### Docker (Recommended)
 
-**Option A: Pull the image** (easiest)
-
 ```bash
-# Create your config directory
-mkdir -p scoreline/config/leagues
-cd scoreline
+mkdir scoreline && cd scoreline
 
-# Grab the configs
-curl -o config/settings.yaml https://raw.githubusercontent.com/jasondostal/scoreline/main/config/settings.yaml
-for league in nfl nba mlb nhl mls; do
-  curl -o config/leagues/$league.yaml https://raw.githubusercontent.com/jasondostal/scoreline/main/config/leagues/$league.yaml
-done
-
-# Edit config/settings.yaml with your WLED IP, then:
+# First run creates config/settings.yaml and config/leagues/ automatically
 docker run -d --name scoreline \
   -p 8084:8080 \
   -v ./config:/app/config \
   ghcr.io/jasondostal/scoreline:latest
+
+# Edit the generated config with your WLED IP
+nano config/settings.yaml
+
+# Restart to pick up changes
+docker restart scoreline
 ```
 
-**Option B: Clone the repo**
+Open `http://localhost:8084` and pick a game.
+
+### Using Docker Compose
 
 ```bash
 git clone https://github.com/jasondostal/scoreline.git
 cd scoreline
-
-# Edit config/settings.yaml with your WLED IP address
 docker compose up -d
-```
 
-Open `http://localhost:8084` and pick a game.
+# Edit config/settings.yaml with your WLED IP, then restart
+docker compose restart
+```
 
 ### Manual
 
@@ -79,12 +76,12 @@ Multiple WLED instances are supported - each can display its own game.
 
 ## Data Directory
 
-All configuration lives in a single directory you control:
+All configuration lives in a single directory you control. **First run auto-populates it with defaults** - just mount an empty directory and the container creates everything:
 
 ```
 config/
 ├── settings.yaml      # Your WLED instances and preferences
-└── leagues/           # League definitions
+└── leagues/           # League definitions (editable!)
     ├── nfl.yaml
     ├── nba.yaml
     ├── mlb.yaml
@@ -92,14 +89,14 @@ config/
     └── mls.yaml
 ```
 
-Mount it wherever you want:
+Mount it wherever fits your setup:
 
 ```yaml
 volumes:
   - /path/to/your/scoreline/config:/app/config
 ```
 
-Back it up with the rest of your homelab configs. The container writes nothing else.
+Back it up with the rest of your homelab configs. Your edits persist across container updates.
 
 ## Supported Leagues
 

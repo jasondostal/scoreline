@@ -1,6 +1,6 @@
 """
-YAML-based configuration for Game Lights.
-Loads settings and leagues from config/ directory.
+YAML-based configuration for Scoreline.
+Loads settings from user config, leagues from user config or built-in defaults.
 """
 
 import os
@@ -8,8 +8,11 @@ from pathlib import Path
 from typing import Any
 import yaml
 
-# Config directory - relative to app, or override with env var
+# User config directory (mounted volume)
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/app/config"))
+
+# Built-in defaults (baked into container)
+DEFAULTS_DIR = Path(os.environ.get("DEFAULTS_DIR", "/app/defaults"))
 
 
 def _load_yaml(path: Path) -> dict:
@@ -24,32 +27,57 @@ def load_settings() -> dict:
     """Load settings.yaml - WLED instances, poll interval, etc."""
     settings = _load_yaml(CONFIG_DIR / "settings.yaml")
 
-    # Defaults
+    # Display settings with defaults
+    display = settings.get("display", {})
+    display_settings = {
+        "divider_color": display.get("divider_color", [200, 80, 0]),
+        "min_team_pct": display.get("min_team_pct", 0.05),
+        "contested_zone_pixels": display.get("contested_zone_pixels", 6),
+        "dark_buffer_pixels": display.get("dark_buffer_pixels", 4),
+        "transition_ms": display.get("transition_ms", 500),
+        "chase_speed": display.get("chase_speed", 185),
+        "chase_intensity": display.get("chase_intensity", 190),
+    }
+
     return {
         "wled_instances": settings.get("wled_instances", []),
         "poll_interval": settings.get("poll_interval", 30),
         "default_league": settings.get("default_league", None),
+        "display": display_settings,
     }
 
 
 def load_leagues() -> dict:
-    """Load all league YAML files from config/leagues/."""
-    leagues_dir = CONFIG_DIR / "leagues"
+    """Load league YAML files. User config overlays built-in defaults."""
     leagues = {}
 
-    if not leagues_dir.exists():
-        return leagues
+    # Load built-in defaults first
+    defaults_dir = DEFAULTS_DIR / "leagues"
+    if defaults_dir.exists():
+        for yaml_file in defaults_dir.glob("*.yaml"):
+            league_id = yaml_file.stem
+            data = _load_yaml(yaml_file)
+            if data:
+                leagues[league_id] = {
+                    "name": data.get("name", league_id.upper()),
+                    "sport": data.get("sport", "football"),
+                    "espn_league": data.get("espn_league"),  # For MLS etc.
+                    "teams": data.get("teams", {}),
+                }
 
-    for yaml_file in leagues_dir.glob("*.yaml"):
-        league_id = yaml_file.stem  # filename without extension
-        data = _load_yaml(yaml_file)
-
-        if data:
-            leagues[league_id] = {
-                "name": data.get("name", league_id.upper()),
-                "sport": data.get("sport", "football"),
-                "teams": data.get("teams", {}),
-            }
+    # User config overlays/extends defaults
+    user_dir = CONFIG_DIR / "leagues"
+    if user_dir.exists():
+        for yaml_file in user_dir.glob("*.yaml"):
+            league_id = yaml_file.stem
+            data = _load_yaml(yaml_file)
+            if data:
+                leagues[league_id] = {
+                    "name": data.get("name", league_id.upper()),
+                    "sport": data.get("sport", "football"),
+                    "espn_league": data.get("espn_league"),
+                    "teams": data.get("teams", {}),
+                }
 
     return leagues
 

@@ -18,6 +18,23 @@ from teams import get_team_colors, get_team_display
 from config import get_settings, get_leagues, reload_config
 
 
+def build_wled_config(host: str, start: int, end: int) -> WLEDConfig:
+    """Build WLEDConfig with display settings from config file."""
+    display = get_settings().get("display", {})
+    return WLEDConfig(
+        host=host,
+        roofline_start=start,
+        roofline_end=end,
+        min_team_pct=display.get("min_team_pct", 0.05),
+        contested_zone_pixels=display.get("contested_zone_pixels", 6),
+        dark_buffer_pixels=display.get("dark_buffer_pixels", 4),
+        transition_ms=display.get("transition_ms", 500),
+        chase_speed=display.get("chase_speed", 185),
+        chase_intensity=display.get("chase_intensity", 190),
+        divider_color=display.get("divider_color", [200, 80, 0]),
+    )
+
+
 # App state
 class AppState:
     espn: Optional[ESPNClient] = None
@@ -208,12 +225,8 @@ async def watch_game(req: WatchRequest):
     # Create new WLED controllers
     state.wled_controllers = []
     for instance in instances:
-        controller = WLEDController(WLEDConfig(
-            host=instance.host,
-            roofline_start=instance.start,
-            roofline_end=instance.end,
-        ))
-        state.wled_controllers.append(controller)
+        config = build_wled_config(instance.host, instance.start, instance.end)
+        state.wled_controllers.append(WLEDController(config))
 
     state.current_game = {
         "league": req.league,
@@ -300,11 +313,8 @@ async def test_percentage(req: TestRequest):
 
     # Create temporary controllers for test
     for instance in instances:
-        controller = WLEDController(WLEDConfig(
-            host=instance.host,
-            roofline_start=instance.start,
-            roofline_end=instance.end,
-        ))
+        config = build_wled_config(instance.host, instance.start, instance.end)
+        controller = WLEDController(config)
         await controller.set_game_mode(
             home_win_pct=req.pct / 100,
             home_colors=home_colors,
