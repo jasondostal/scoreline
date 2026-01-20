@@ -5,13 +5,158 @@ name: NBA
 sport: basketball
 
 teams:
+  # Atlantic Division
+  BOS:
+    name: Boston Celtics
+    display: Celtics
+    colors: [[0, 122, 51], [255, 255, 255]]  # Green, White
+
+  BKN:
+    name: Brooklyn Nets
+    display: Nets
+    colors: [[0, 0, 0], [255, 255, 255]]  # Black, White
+
+  NY:
+    name: New York Knicks
+    display: Knicks
+    colors: [[0, 107, 182], [245, 132, 38]]  # Blue, Orange
+
+  PHI:
+    name: Philadelphia 76ers
+    display: 76ers
+    colors: [[0, 107, 182], [237, 23, 76]]  # Blue, Red
+
+  TOR:
+    name: Toronto Raptors
+    display: Raptors
+    colors: [[206, 17, 65], [0, 0, 0]]  # Red, Black
+
+  # Central Division
+  CHI:
+    name: Chicago Bulls
+    display: Bulls
+    colors: [[206, 17, 65], [0, 0, 0]]  # Red, Black
+
+  CLE:
+    name: Cleveland Cavaliers
+    display: Cavaliers
+    colors: [[134, 0, 56], [253, 187, 48]]  # Wine, Gold
+
+  DET:
+    name: Detroit Pistons
+    display: Pistons
+    colors: [[200, 16, 46], [29, 66, 138]]  # Red, Blue
+
+  IND:
+    name: Indiana Pacers
+    display: Pacers
+    colors: [[0, 45, 98], [253, 187, 48]]  # Navy, Gold
+
   MIL:
     name: Milwaukee Bucks
     display: Bucks
     colors: [[0, 71, 27], [240, 235, 210]]  # Green, Cream
 
-  # Add more teams as needed - just follow the pattern above
-  # LAL:
-  #   name: Los Angeles Lakers
-  #   display: Lakers
-  #   colors: [[85, 37, 130], [253, 185, 39]]  # Purple, Gold
+  # Southeast Division
+  ATL:
+    name: Atlanta Hawks
+    display: Hawks
+    colors: [[225, 68, 52], [196, 214, 0]]  # Red, Volt Green
+
+  CHA:
+    name: Charlotte Hornets
+    display: Hornets
+    colors: [[29, 17, 96], [0, 120, 140]]  # Purple, Teal
+
+  MIA:
+    name: Miami Heat
+    display: Heat
+    colors: [[152, 0, 46], [249, 160, 27]]  # Red, Yellow
+
+  ORL:
+    name: Orlando Magic
+    display: Magic
+    colors: [[0, 125, 197], [196, 206, 211]]  # Blue, Silver
+
+  WSH:
+    name: Washington Wizards
+    display: Wizards
+    colors: [[0, 43, 92], [227, 24, 55]]  # Navy, Red
+
+  # Northwest Division
+  DEN:
+    name: Denver Nuggets
+    display: Nuggets
+    colors: [[13, 34, 64], [255, 198, 39]]  # Navy, Gold
+
+  MIN:
+    name: Minnesota Timberwolves
+    display: Timberwolves
+    colors: [[12, 35, 64], [35, 97, 146]]  # Navy, Blue
+
+  OKC:
+    name: Oklahoma City Thunder
+    display: Thunder
+    colors: [[0, 125, 195], [239, 59, 36]]  # Blue, Orange
+
+  POR:
+    name: Portland Trail Blazers
+    display: Blazers
+    colors: [[224, 58, 62], [0, 0, 0]]  # Red, Black
+
+  UTAH:
+    name: Utah Jazz
+    display: Jazz
+    colors: [[0, 43, 92], [249, 160, 27]]  # Navy, Yellow
+
+  # Pacific Division
+  GS:
+    name: Golden State Warriors
+    display: Warriors
+    colors: [[29, 66, 138], [255, 199, 44]]  # Blue, Gold
+
+  LAC:
+    name: Los Angeles Clippers
+    display: Clippers
+    colors: [[200, 16, 46], [29, 66, 148]]  # Red, Blue
+
+  LAL:
+    name: Los Angeles Lakers
+    display: Lakers
+    colors: [[85, 37, 130], [253, 185, 39]]  # Purple, Gold
+
+  PHX:
+    name: Phoenix Suns
+    display: Suns
+    colors: [[29, 17, 96], [229, 95, 32]]  # Purple, Orange
+
+  SAC:
+    name: Sacramento Kings
+    display: Kings
+    colors: [[91, 43, 130], [99, 113, 122]]  # Purple, Silver
+
+  # Southwest Division
+  DAL:
+    name: Dallas Mavericks
+    display: Mavericks
+    colors: [[0, 83, 188], [0, 43, 92]]  # Blue, Navy
+
+  HOU:
+    name: Houston Rockets
+    display: Rockets
+    colors: [[206, 17, 65], [196, 206, 211]]  # Red, Silver
+
+  MEM:
+    name: Memphis Grizzlies
+    display: Grizzlies
+    colors: [[93, 118, 169], [18, 23, 63]]  # Beale Street Blue, Navy
+
+  NO:
+    name: New Orleans Pelicans
+    display: Pelicans
+    colors: [[0, 22, 65], [225, 58, 62]]  # Navy, Red
+
+  SA:
+    name: San Antonio Spurs
+    display: Spurs
+    colors: [[196, 206, 211], [0, 0, 0]]  # Silver, Black

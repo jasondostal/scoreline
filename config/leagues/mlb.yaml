@@ -1,0 +1,162 @@
+# MLB Team Colors for Game Lights
+# Colors are [R, G, B] - saturated for LED punch
+
+name: MLB
+sport: baseball
+
+teams:
+  # AL East
+  BAL:
+    name: Baltimore Orioles
+    display: Orioles
+    colors: [[223, 70, 1], [0, 0, 0]]  # Orange, Black
+
+  BOS:
+    name: Boston Red Sox
+    display: Red Sox
+    colors: [[189, 48, 57], [12, 35, 64]]  # Red, Navy
+
+  NYY:
+    name: New York Yankees
+    display: Yankees
+    colors: [[12, 35, 64], [255, 255, 255]]  # Navy, White
+
+  TB:
+    name: Tampa Bay Rays
+    display: Rays
+    colors: [[9, 44, 92], [143, 188, 230]]  # Navy, Light Blue
+
+  TOR:
+    name: Toronto Blue Jays
+    display: Blue Jays
+    colors: [[19, 74, 142], [232, 41, 28]]  # Blue, Red
+
+  # AL Central
+  CWS:
+    name: Chicago White Sox
+    display: White Sox
+    colors: [[39, 37, 31], [196, 206, 211]]  # Black, Silver
+
+  CLE:
+    name: Cleveland Guardians
+    display: Guardians
+    colors: [[0, 56, 93], [227, 25, 55]]  # Navy, Red
+
+  DET:
+    name: Detroit Tigers
+    display: Tigers
+    colors: [[12, 35, 64], [250, 70, 22]]  # Navy, Orange
+
+  KC:
+    name: Kansas City Royals
+    display: Royals
+    colors: [[0, 70, 135], [189, 155, 96]]  # Blue, Gold
+
+  MIN:
+    name: Minnesota Twins
+    display: Twins
+    colors: [[0, 43, 92], [211, 17, 69]]  # Navy, Red
+
+  # AL West
+  HOU:
+    name: Houston Astros
+    display: Astros
+    colors: [[0, 45, 98], [235, 110, 31]]  # Navy, Orange
+
+  LAA:
+    name: Los Angeles Angels
+    display: Angels
+    colors: [[186, 0, 33], [0, 50, 99]]  # Red, Navy
+
+  OAK:
+    name: Oakland Athletics
+    display: Athletics
+    colors: [[0, 56, 49], [239, 178, 30]]  # Green, Gold
+
+  SEA:
+    name: Seattle Mariners
+    display: Mariners
+    colors: [[12, 44, 86], [0, 92, 92]]  # Navy, Teal
+
+  TEX:
+    name: Texas Rangers
+    display: Rangers
+    colors: [[0, 50, 120], [192, 17, 31]]  # Blue, Red
+
+  # NL East
+  ATL:
+    name: Atlanta Braves
+    display: Braves
+    colors: [[206, 17, 65], [19, 39, 79]]  # Red, Navy
+
+  MIA:
+    name: Miami Marlins
+    display: Marlins
+    colors: [[0, 163, 224], [239, 51, 64]]  # Blue, Red
+
+  NYM:
+    name: New York Mets
+    display: Mets
+    colors: [[0, 45, 114], [252, 89, 16]]  # Blue, Orange
+
+  PHI:
+    name: Philadelphia Phillies
+    display: Phillies
+    colors: [[232, 24, 40], [40, 72, 152]]  # Red, Blue
+
+  WSH:
+    name: Washington Nationals
+    display: Nationals
+    colors: [[171, 0, 3], [20, 34, 90]]  # Red, Navy
+
+  # NL Central
+  CHC:
+    name: Chicago Cubs
+    display: Cubs
+    colors: [[14, 51, 134], [204, 52, 51]]  # Blue, Red
+
+  CIN:
+    name: Cincinnati Reds
+    display: Reds
+    colors: [[198, 1, 31], [0, 0, 0]]  # Red, Black
+
+  MIL:
+    name: Milwaukee Brewers
+    display: Brewers
+    colors: [[18, 40, 75], [182, 146, 46]]  # Navy, Gold
+
+  PIT:
+    name: Pittsburgh Pirates
+    display: Pirates
+    colors: [[253, 184, 39], [39, 37, 31]]  # Gold, Black
+
+  STL:
+    name: St. Louis Cardinals
+    display: Cardinals
+    colors: [[196, 30, 58], [12, 35, 64]]  # Red, Navy
+
+  # NL West
+  ARI:
+    name: Arizona Diamondbacks
+    display: Diamondbacks
+    colors: [[167, 25, 48], [227, 212, 173]]  # Red, Sand
+
+  COL:
+    name: Colorado Rockies
+    display: Rockies
+    colors: [[51, 0, 111], [196, 206, 211]]  # Purple, Silver
+
+  LAD:
+    name: Los Angeles Dodgers
+    display: Dodgers
+    colors: [[0, 90, 156], [255, 255, 255]]  # Blue, White
+
+  SD:
+    name: San Diego Padres
+    display: Padres
+    colors: [[47, 36, 28], [255, 196, 37]]  # Brown, Gold
+
+  SF:
+    name: San Francisco Giants
+    display: Giants
+    colors: [[253, 90, 30], [39, 37, 31]]  # Orange, Black

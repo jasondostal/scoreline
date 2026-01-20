@@ -7,12 +7,6 @@ services:
     ports:
       - "8084:8080"
     volumes:
-      - ./config:/app/config:ro
-    networks:
-      - homelab
+      - ./config:/app/config
     environment:
       - TZ=America/Chicago
-
-networks:
-  homelab:
-    external: true

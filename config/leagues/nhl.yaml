@@ -1,0 +1,170 @@
+# NHL Team Colors for Game Lights
+# Colors are [R, G, B] - saturated for LED punch
+
+name: NHL
+sport: hockey
+
+teams:
+  # Atlantic Division
+  BOS:
+    name: Boston Bruins
+    display: Bruins
+    colors: [[252, 181, 20], [0, 0, 0]]  # Gold, Black
+
+  BUF:
+    name: Buffalo Sabres
+    display: Sabres
+    colors: [[0, 38, 84], [252, 181, 20]]  # Navy, Gold
+
+  DET:
+    name: Detroit Red Wings
+    display: Red Wings
+    colors: [[206, 17, 38], [255, 255, 255]]  # Red, White
+
+  FLA:
+    name: Florida Panthers
+    display: Panthers
+    colors: [[4, 30, 66], [200, 16, 46]]  # Navy, Red
+
+  MTL:
+    name: Montreal Canadiens
+    display: Canadiens
+    colors: [[175, 30, 45], [25, 33, 104]]  # Red, Blue
+
+  OTT:
+    name: Ottawa Senators
+    display: Senators
+    colors: [[200, 16, 46], [0, 0, 0]]  # Red, Black
+
+  TB:
+    name: Tampa Bay Lightning
+    display: Lightning
+    colors: [[0, 40, 104], [255, 255, 255]]  # Blue, White
+
+  TOR:
+    name: Toronto Maple Leafs
+    display: Maple Leafs
+    colors: [[0, 32, 91], [255, 255, 255]]  # Blue, White
+
+  # Metropolitan Division
+  CAR:
+    name: Carolina Hurricanes
+    display: Hurricanes
+    colors: [[206, 17, 38], [0, 0, 0]]  # Red, Black
+
+  CBJ:
+    name: Columbus Blue Jackets
+    display: Blue Jackets
+    colors: [[0, 38, 84], [206, 17, 38]]  # Navy, Red
+
+  NJ:
+    name: New Jersey Devils
+    display: Devils
+    colors: [[206, 17, 38], [0, 0, 0]]  # Red, Black
+
+  NYI:
+    name: New York Islanders
+    display: Islanders
+    colors: [[0, 83, 155], [244, 125, 48]]  # Blue, Orange
+
+  NYR:
+    name: New York Rangers
+    display: Rangers
+    colors: [[0, 56, 168], [206, 17, 38]]  # Blue, Red
+
+  PHI:
+    name: Philadelphia Flyers
+    display: Flyers
+    colors: [[247, 73, 2], [0, 0, 0]]  # Orange, Black
+
+  PIT:
+    name: Pittsburgh Penguins
+    display: Penguins
+    colors: [[252, 181, 20], [0, 0, 0]]  # Gold, Black
+
+  WSH:
+    name: Washington Capitals
+    display: Capitals
+    colors: [[200, 16, 46], [4, 30, 66]]  # Red, Navy
+
+  # Central Division
+  ARI:
+    name: Utah Hockey Club
+    display: Utah HC
+    colors: [[105, 179, 231], [0, 0, 0]]  # Ice Blue, Black
+
+  CHI:
+    name: Chicago Blackhawks
+    display: Blackhawks
+    colors: [[207, 10, 44], [0, 0, 0]]  # Red, Black
+
+  COL:
+    name: Colorado Avalanche
+    display: Avalanche
+    colors: [[111, 38, 61], [35, 97, 146]]  # Burgundy, Blue
+
+  DAL:
+    name: Dallas Stars
+    display: Stars
+    colors: [[0, 104, 71], [143, 143, 140]]  # Green, Silver
+
+  MIN:
+    name: Minnesota Wild
+    display: Wild
+    colors: [[2, 73, 48], [175, 35, 36]]  # Green, Red
+
+  NSH:
+    name: Nashville Predators
+    display: Predators
+    colors: [[255, 184, 28], [4, 30, 66]]  # Gold, Navy
+
+  STL:
+    name: St. Louis Blues
+    display: Blues
+    colors: [[0, 47, 135], [252, 181, 20]]  # Blue, Gold
+
+  WPG:
+    name: Winnipeg Jets
+    display: Jets
+    colors: [[4, 30, 66], [0, 76, 151]]  # Navy, Blue
+
+  # Pacific Division
+  ANA:
+    name: Anaheim Ducks
+    display: Ducks
+    colors: [[252, 76, 2], [0, 0, 0]]  # Orange, Black
+
+  CGY:
+    name: Calgary Flames
+    display: Flames
+    colors: [[200, 16, 46], [241, 190, 72]]  # Red, Gold
+
+  EDM:
+    name: Edmonton Oilers
+    display: Oilers
+    colors: [[4, 30, 66], [252, 76, 2]]  # Navy, Orange
+
+  LA:
+    name: Los Angeles Kings
+    display: Kings
+    colors: [[162, 170, 173], [0, 0, 0]]  # Silver, Black
+
+  SJ:
+    name: San Jose Sharks
+    display: Sharks
+    colors: [[0, 109, 117], [0, 0, 0]]  # Teal, Black
+
+  SEA:
+    name: Seattle Kraken
+    display: Kraken
+    colors: [[0, 22, 40], [153, 217, 217]]  # Deep Sea Blue, Ice Blue
+
+  VAN:
+    name: Vancouver Canucks
+    display: Canucks
+    colors: [[0, 32, 91], [10, 134, 61]]  # Blue, Green
+
+  VGK:
+    name: Vegas Golden Knights
+    display: Golden Knights
+    colors: [[185, 151, 91], [51, 63, 72]]  # Gold, Steel Gray

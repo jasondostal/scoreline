@@ -1,0 +1,159 @@
+# MLS Team Colors for Game Lights
+# Colors are [R, G, B] - saturated for LED punch
+
+name: MLS
+sport: soccer
+espn_league: usa.1
+
+teams:
+  # Eastern Conference
+  ATL:
+    name: Atlanta United FC
+    display: Atlanta United
+    colors: [[128, 0, 0], [195, 158, 109]]  # Red, Gold
+
+  CHA:
+    name: Charlotte FC
+    display: Charlotte FC
+    colors: [[26, 156, 197], [0, 0, 0]]  # Blue, Black
+
+  CHI:
+    name: Chicago Fire FC
+    display: Chicago Fire
+    colors: [[141, 198, 63], [20, 62, 140]]  # Green, Blue
+
+  CIN:
+    name: FC Cincinnati
+    display: FC Cincinnati
+    colors: [[244, 68, 37], [6, 30, 68]]  # Orange, Navy
+
+  CLB:
+    name: Columbus Crew
+    display: Crew
+    colors: [[254, 221, 0], [0, 0, 0]]  # Gold, Black
+
+  DC:
+    name: D.C. United
+    display: D.C. United
+    colors: [[0, 0, 0], [239, 51, 64]]  # Black, Red
+
+  MIA:
+    name: Inter Miami CF
+    display: Inter Miami
+    colors: [[242, 106, 141], [0, 0, 0]]  # Pink, Black
+
+  MTL:
+    name: CF Montreal
+    display: CF Montreal
+    colors: [[0, 33, 71], [255, 255, 255]]  # Navy, White
+
+  NE:
+    name: New England Revolution
+    display: Revolution
+    colors: [[0, 31, 91], [206, 14, 45]]  # Navy, Red
+
+  NYC:
+    name: New York City FC
+    display: NYCFC
+    colors: [[108, 171, 221], [255, 255, 255]]  # Sky Blue, White
+
+  NYRB:
+    name: New York Red Bulls
+    display: Red Bulls
+    colors: [[210, 34, 42], [255, 255, 255]]  # Red, White
+
+  ORL:
+    name: Orlando City SC
+    display: Orlando City
+    colors: [[99, 54, 157], [255, 255, 255]]  # Purple, White
+
+  PHI:
+    name: Philadelphia Union
+    display: Union
+    colors: [[7, 27, 45], [184, 166, 97]]  # Navy, Gold
+
+  TOR:
+    name: Toronto FC
+    display: Toronto FC
+    colors: [[181, 0, 21], [162, 163, 166]]  # Red, Silver
+
+  NSH:
+    name: Nashville SC
+    display: Nashville SC
+    colors: [[236, 227, 64], [31, 30, 45]]  # Gold, Navy
+
+  # Western Conference
+  AUS:
+    name: Austin FC
+    display: Austin FC
+    colors: [[0, 180, 82], [0, 0, 0]]  # Verde, Black
+
+  COL:
+    name: Colorado Rapids
+    display: Rapids
+    colors: [[150, 10, 41], [142, 176, 191]]  # Burgundy, Sky Blue
+
+  DAL:
+    name: FC Dallas
+    display: FC Dallas
+    colors: [[232, 32, 39], [33, 61, 107]]  # Red, Blue
+
+  HOU:
+    name: Houston Dynamo FC
+    display: Dynamo
+    colors: [[245, 130, 32], [101, 173, 209]]  # Orange, Sky Blue
+
+  LA:
+    name: LA Galaxy
+    display: Galaxy
+    colors: [[0, 36, 93], [255, 199, 44]]  # Navy, Gold
+
+  LAFC:
+    name: Los Angeles FC
+    display: LAFC
+    colors: [[0, 0, 0], [201, 151, 61]]  # Black, Gold
+
+  MIN:
+    name: Minnesota United FC
+    display: Minnesota United
+    colors: [[155, 170, 177], [35, 31, 32]]  # Silver, Black
+
+  POR:
+    name: Portland Timbers
+    display: Timbers
+    colors: [[0, 72, 43], [211, 183, 96]]  # Green, Gold
+
+  RSL:
+    name: Real Salt Lake
+    display: Real Salt Lake
+    colors: [[179, 25, 66], [0, 37, 93]]  # Claret, Navy
+
+  SEA:
+    name: Seattle Sounders FC
+    display: Sounders
+    colors: [[0, 85, 149], [0, 55, 40]]  # Blue, Green
+
+  SJ:
+    name: San Jose Earthquakes
+    display: Earthquakes
+    colors: [[0, 56, 118], [0, 0, 0]]  # Blue, Black
+
+  SKC:
+    name: Sporting Kansas City
+    display: Sporting KC
+    colors: [[0, 58, 112], [147, 177, 193]]  # Blue, Silver
+
+  VAN:
+    name: Vancouver Whitecaps FC
+    display: Whitecaps
+    colors: [[0, 36, 93], [155, 196, 213]]  # Navy, Light Blue
+
+  STL:
+    name: St. Louis City SC
+    display: St. Louis City
+    colors: [[227, 25, 55], [0, 23, 52]]  # Red, Navy
+
+  SD:
+    name: San Diego FC
+    display: San Diego FC
+    colors: [[0, 51, 51], [255, 209, 0]]  # Dark Teal, Gold

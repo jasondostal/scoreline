@@ -15,12 +15,33 @@ Scoreline polls ESPN for real-time game data and translates win probability into
 
 ### Docker (Recommended)
 
+**Option A: Pull the image** (easiest)
+
+```bash
+# Create your config directory
+mkdir -p scoreline/config/leagues
+cd scoreline
+
+# Grab the configs
+curl -o config/settings.yaml https://raw.githubusercontent.com/jasondostal/scoreline/main/config/settings.yaml
+for league in nfl nba mlb nhl mls; do
+  curl -o config/leagues/$league.yaml https://raw.githubusercontent.com/jasondostal/scoreline/main/config/leagues/$league.yaml
+done
+
+# Edit config/settings.yaml with your WLED IP, then:
+docker run -d --name scoreline \
+  -p 8084:8080 \
+  -v ./config:/app/config \
+  ghcr.io/jasondostal/scoreline:latest
+```
+
+**Option B: Clone the repo**
+
 ```bash
 git clone https://github.com/jasondostal/scoreline.git
 cd scoreline
 
 # Edit config/settings.yaml with your WLED IP address
-# Then:
 docker compose up -d
 ```
 
@@ -54,14 +75,41 @@ poll_interval: 30          # Seconds between ESPN updates
 default_league: nfl        # League shown on startup
 ```
 
-Multiple WLED instances are supported - each will mirror the same game.
+Multiple WLED instances are supported - each can display its own game.
+
+## Data Directory
+
+All configuration lives in a single directory you control:
+
+```
+config/
+├── settings.yaml      # Your WLED instances and preferences
+└── leagues/           # League definitions
+    ├── nfl.yaml
+    ├── nba.yaml
+    ├── mlb.yaml
+    ├── nhl.yaml
+    └── mls.yaml
+```
+
+Mount it wherever you want:
+
+```yaml
+volumes:
+  - /path/to/your/scoreline/config:/app/config
+```
+
+Back it up with the rest of your homelab configs. The container writes nothing else.
 
 ## Supported Leagues
 
-- NFL
-- NBA
+- NFL (32 teams)
+- NBA (30 teams)
+- MLB (30 teams)
+- NHL (32 teams)
+- MLS (29 teams)
 
-League definitions live in `config/leagues/` as YAML files. Each includes team colors and ESPN sport mapping.
+League definitions live in `config/leagues/` as YAML files. Each includes team colors and ESPN sport mapping. Drop in your own YAML to add a league.
 
 ## API
 
