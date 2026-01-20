@@ -1,0 +1,27 @@
+# Personal/private docs
+COLLABORATION_ANALYSIS*
+*.private.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+
+# Config with secrets (keep settings.yaml.example tracked instead)
+# config/settings.yaml  # Uncomment if settings contain secrets

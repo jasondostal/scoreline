@@ -1,0 +1,174 @@
+# NFL Team Colors for Game Lights
+# Colors are [R, G, B] - saturated for LED punch, not official muted colors
+
+name: NFL
+sport: football
+
+teams:
+  # NFC North
+  GB:
+    name: Green Bay Packers
+    display: Packers
+    colors: [[8, 255, 0], [255, 200, 0]]  # Saturated Green, Gold
+
+  CHI:
+    name: Chicago Bears
+    display: Bears
+    colors: [[0, 0, 255], [255, 160, 0]]  # Blue, Orange
+
+  MIN:
+    name: Minnesota Vikings
+    display: Vikings
+    colors: [[79, 38, 131], [255, 198, 47]]  # Purple, Gold
+
+  DET:
+    name: Detroit Lions
+    display: Lions
+    colors: [[0, 118, 182], [176, 183, 188]]  # Blue, Silver
+
+  # NFC West
+  SEA:
+    name: Seattle Seahawks
+    display: Seahawks
+    colors: [[0, 34, 68], [105, 190, 40]]  # Navy, Action Green
+
+  LAR:
+    name: Los Angeles Rams
+    display: Rams
+    colors: [[0, 53, 148], [255, 209, 0]]  # Royal Blue, Sol Yellow
+
+  SF:
+    name: San Francisco 49ers
+    display: 49ers
+    colors: [[170, 0, 0], [173, 153, 93]]  # Red, Gold
+
+  ARI:
+    name: Arizona Cardinals
+    display: Cardinals
+    colors: [[151, 35, 63], [255, 182, 18]]  # Cardinal Red, Gold
+
+  # AFC North
+  PIT:
+    name: Pittsburgh Steelers
+    display: Steelers
+    colors: [[255, 182, 18], [16, 24, 32]]  # Gold, Black
+
+  BAL:
+    name: Baltimore Ravens
+    display: Ravens
+    colors: [[26, 25, 95], [158, 124, 12]]  # Purple, Gold
+
+  CLE:
+    name: Cleveland Browns
+    display: Browns
+    colors: [[49, 29, 0], [255, 60, 0]]  # Brown, Orange
+
+  CIN:
+    name: Cincinnati Bengals
+    display: Bengals
+    colors: [[251, 79, 20], [0, 0, 0]]  # Orange, Black
+
+  # AFC West
+  KC:
+    name: Kansas City Chiefs
+    display: Chiefs
+    colors: [[227, 24, 55], [255, 182, 18]]  # Red, Gold
+
+  LV:
+    name: Las Vegas Raiders
+    display: Raiders
+    colors: [[165, 172, 175], [0, 0, 0]]  # Silver, Black
+
+  LAC:
+    name: Los Angeles Chargers
+    display: Chargers
+    colors: [[0, 128, 198], [255, 194, 14]]  # Powder Blue, Gold
+
+  DEN:
+    name: Denver Broncos
+    display: Broncos
+    colors: [[251, 79, 20], [0, 34, 68]]  # Orange, Navy
+
+  # NFC East
+  DAL:
+    name: Dallas Cowboys
+    display: Cowboys
+    colors: [[0, 53, 148], [176, 183, 188]]  # Navy, Silver
+
+  PHI:
+    name: Philadelphia Eagles
+    display: Eagles
+    colors: [[0, 76, 84], [165, 172, 175]]  # Midnight Green, Silver
+
+  NYG:
+    name: New York Giants
+    display: Giants
+    colors: [[1, 35, 82], [163, 13, 48]]  # Blue, Red
+
+  WAS:
+    name: Washington Commanders
+    display: Commanders
+    colors: [[90, 20, 20], [255, 182, 18]]  # Burgundy, Gold
+
+  # NFC South
+  TB:
+    name: Tampa Bay Buccaneers
+    display: Buccaneers
+    colors: [[213, 10, 10], [52, 48, 43]]  # Red, Pewter
+
+  NO:
+    name: New Orleans Saints
+    display: Saints
+    colors: [[211, 188, 141], [16, 24, 31]]  # Gold, Black
+
+  ATL:
+    name: Atlanta Falcons
+    display: Falcons
+    colors: [[167, 25, 48], [0, 0, 0]]  # Red, Black
+
+  CAR:
+    name: Carolina Panthers
+    display: Panthers
+    colors: [[0, 133, 202], [16, 24, 32]]  # Blue, Black
+
+  # AFC East
+  BUF:
+    name: Buffalo Bills
+    display: Bills
+    colors: [[0, 51, 141], [198, 12, 48]]  # Blue, Red
+
+  MIA:
+    name: Miami Dolphins
+    display: Dolphins
+    colors: [[0, 142, 151], [252, 76, 2]]  # Aqua, Orange
+
+  NE:
+    name: New England Patriots
+    display: Patriots
+    colors: [[0, 34, 68], [198, 12, 48]]  # Navy, Red
+
+  NYJ:
+    name: New York Jets
+    display: Jets
+    colors: [[18, 87, 64], [255, 255, 255]]  # Green, White
+
+  # AFC South
+  IND:
+    name: Indianapolis Colts
+    display: Colts
+    colors: [[0, 44, 95], [255, 255, 255]]  # Blue, White
+
+  TEN:
+    name: Tennessee Titans
+    display: Titans
+    colors: [[12, 35, 64], [75, 146, 219]]  # Navy, Titans Blue
+
+  HOU:
+    name: Houston Texans
+    display: Texans
+    colors: [[3, 32, 47], [167, 25, 48]]  # Deep Steel Blue, Battle Red
+
+  JAX:
+    name: Jacksonville Jaguars
+    display: Jaguars
+    colors: [[0, 103, 120], [215, 162, 42]]  # Teal, Gold

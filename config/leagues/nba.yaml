@@ -1,0 +1,17 @@
+# NBA Team Colors for Game Lights
+# Colors are [R, G, B] - saturated for LED punch
+
+name: NBA
+sport: basketball
+
+teams:
+  MIL:
+    name: Milwaukee Bucks
+    display: Bucks
+    colors: [[0, 71, 27], [240, 235, 210]]  # Green, Cream
+
+  # Add more teams as needed - just follow the pattern above
+  # LAL:
+  #   name: Los Angeles Lakers
+  #   display: Lakers
+  #   colors: [[85, 37, 130], [253, 185, 39]]  # Purple, Gold

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Lights</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        /* Dense layout sections */
+        .section {
+            margin-bottom: 12px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        /* Smart typeahead component */
+        .typeahead {
+            position: relative;
+        }
+
+        .typeahead-input {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-family: inherit;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .typeahead-input:focus {
+            border-color: #0066cc;
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
+        }
+
+        .typeahead-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 240px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
+            display: none;
+        }
+
+        .typeahead-dropdown.open {
+            display: block;
+        }
+
+        .typeahead-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.1s;
+        }
+
+        .typeahead-option:hover,
+        .typeahead-option.highlighted {
+            background: #f0f4ff;
+        }
+
+        .typeahead-option.selected {
+            background: #e0e8ff;
+        }
+
+        .typeahead-option .main {
+            font-weight: 500;
+        }
+
+        .typeahead-option .detail {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .typeahead-option .score {
+            font-family: "SF Mono", Monaco, Consolas, monospace;
+            font-size: 13px;
+            color: #333;
+        }
+
+        /* Status display */
+        .status-panel {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .status-panel.watching {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .status-row:not(:last-child) {
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .status-value {
+            font-weight: 500;
+        }
+
+        .status-value.win-pct {
+            font-family: "SF Mono", Monaco, Consolas, monospace;
+            font-size: 16px;
+        }
+
+        /* Win probability bar */
+        .win-bar {
+            height: 24px;
+            background: #e5e5e5;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            margin: 8px 0;
+        }
+
+        .win-bar-segment {
+            height: 100%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 500;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.15s;
+        }
+
+        .btn:focus {
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.3);
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+        }
+
+        .btn-primary:disabled {
+            background: #99c2e8;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        /* Test controls */
+        .test-controls {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .test-slider {
+            width: 100%;
+            margin: 8px 0;
+        }
+
+        .test-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Keyboard hints */
+        kbd {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-family: "SF Mono", Monaco, Consolas, monospace;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-shadow: 0 1px 0 #ccc;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Game Lights</h1>
+
+        <!-- Status Panel -->
+        <div id="status-panel" class="status-panel">
+            <div class="status-row">
+                <span class="status-label">Status</span>
+                <span id="status-text" class="status-value">Not watching</span>
+            </div>
+        </div>
+
+        <!-- Live Game Panel (shown when watching) -->
+        <div id="live-panel" class="status-panel watching hidden">
+            <div class="status-row">
+                <span id="away-team" class="status-value">AWAY</span>
+                <span id="away-score" class="status-value score">0</span>
+            </div>
+            <div class="status-row">
+                <span id="home-team" class="status-value">HOME</span>
+                <span id="home-score" class="status-value score">0</span>
+            </div>
+            <div id="win-bar" class="win-bar">
+                <div id="home-bar" class="win-bar-segment" style="width: 50%; background: #184834;">50%</div>
+                <div id="away-bar" class="win-bar-segment" style="width: 50%; background: #0b162a;">50%</div>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Period</span>
+                <span id="period" class="status-value">--</span>
+            </div>
+        </div>
+
+        <!-- Game Selection (shown when not watching) -->
+        <div id="selection-panel">
+            <div class="section">
+                <div class="section-label">League</div>
+                <div class="typeahead">
+                    <input type="text" id="league-input" class="typeahead-input"
+                           placeholder="Type to filter..." autocomplete="off">
+                    <div id="league-dropdown" class="typeahead-dropdown"></div>
+                </div>
+                <div class="hint"><kbd>↑</kbd> <kbd>↓</kbd> navigate, <kbd>Enter</kbd> select, <kbd>Tab</kbd> next</div>
+            </div>
+
+            <div class="section">
+                <div class="section-label">Game</div>
+                <div class="typeahead">
+                    <input type="text" id="game-input" class="typeahead-input"
+                           placeholder="Select league first..." disabled autocomplete="off">
+                    <div id="game-dropdown" class="typeahead-dropdown"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Stop button (shown when watching) -->
+        <div id="stop-panel" class="hidden">
+            <div class="btn-row">
+                <button id="stop-btn" class="btn btn-danger">Stop Watching</button>
+            </div>
+        </div>
+
+        <!-- WLED Settings (from config/settings.yaml) -->
+        <div class="test-controls">
+            <div class="section-label">WLED Instances</div>
+            <div id="wled-list"></div>
+            <div class="hint">Configured in config/settings.yaml</div>
+        </div>
+
+        <!-- Test Controls -->
+        <div class="test-controls">
+            <div class="section-label">Simulator</div>
+            <div class="section" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <select id="sim-league" class="typeahead-input" style="flex: 1;">
+                    <option value="">League...</option>
+                </select>
+                <select id="sim-away" class="typeahead-input" style="flex: 1;" disabled>
+                    <option value="">Away...</option>
+                </select>
+                <select id="sim-home" class="typeahead-input" style="flex: 1;" disabled>
+                    <option value="">Home...</option>
+                </select>
+            </div>
+            <div class="test-label">
+                <span id="sim-away-label">Away 100%</span>
+                <span id="test-pct">50%</span>
+                <span id="sim-home-label">Home 100%</span>
+            </div>
+            <input type="range" id="test-slider" class="test-slider"
+                   min="0" max="100" value="50">
+            <div class="hint">Pick teams and drag to simulate win probability</div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let leagues = [];
+        let games = [];
+        let selectedLeague = null;
+        let selectedGame = null;
+        let isWatching = false;
+
+        // WLED Instances (loaded from server config)
+        let wledInstances = [];
+
+        async function loadSettings() {
+            const resp = await fetch('/api/settings');
+            const settings = await resp.json();
+            wledInstances = settings.wled_instances || [];
+            renderWledList();
+        }
+
+        function renderWledList() {
+            const list = document.getElementById('wled-list');
+            if (wledInstances.length === 0) {
+                list.innerHTML = '<div class="hint" style="margin: 8px 0; color: #dc2626;">No WLED instances configured</div>';
+                return;
+            }
+            list.innerHTML = wledInstances.map(inst => `
+                <div class="status-row" style="background: #f5f5f5; padding: 6px 10px; margin: 4px 0; border-radius: 4px;">
+                    <span><strong>${inst.host}</strong> <span style="color: #666;">[${inst.start || 0}-${inst.end || 629}]</span></span>
+                </div>
+            `).join('');
+        }
+
+        // Typeahead component factory
+        function createTypeahead(inputId, dropdownId, options = {}) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            let items = [];
+            let filtered = [];
+            let highlightIndex = -1;
+            let onSelect = options.onSelect || (() => {});
+
+            function render() {
+                dropdown.innerHTML = filtered.map((item, i) => `
+                    <div class="typeahead-option ${i === highlightIndex ? 'highlighted' : ''}"
+                         data-index="${i}">
+                        <span class="main">${item.display || item.name}</span>
+                        ${item.detail ? `<span class="detail">${item.detail}</span>` : ''}
+                        ${item.score !== undefined ? `<span class="score">${item.score}</span>` : ''}
+                    </div>
+                `).join('');
+            }
+
+            function filter(query) {
+                const q = query.toLowerCase();
+                filtered = items.filter(item => {
+                    const searchable = (item.display || item.name || '').toLowerCase();
+                    return searchable.includes(q);
+                });
+                highlightIndex = filtered.length > 0 ? 0 : -1;
+                render();
+            }
+
+            function select(index) {
+                if (index >= 0 && index < filtered.length) {
+                    const item = filtered[index];
+                    input.value = item.display || item.name;
+                    dropdown.classList.remove('open');
+                    onSelect(item);
+                }
+            }
+
+            input.addEventListener('focus', () => {
+                // Show all items on focus (not filtered by current value)
+                // Makes switching leagues easy - just click and pick
+                filter('');
+                if (input.value) input.select(); // Select text so typing replaces it
+                dropdown.classList.add('open');
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => dropdown.classList.remove('open'), 150);
+            });
+
+            input.addEventListener('input', () => {
+                filter(input.value);
+                dropdown.classList.add('open');
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (!dropdown.classList.contains('open')) {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                        filter(input.value);
+                        dropdown.classList.add('open');
+                        e.preventDefault();
+                        return;
+                    }
+                }
+
+                switch (e.key) {
+                    case 'ArrowDown':
+                        highlightIndex = Math.min(highlightIndex + 1, filtered.length - 1);
+                        render();
+                        e.preventDefault();
+                        break;
+                    case 'ArrowUp':
+                        highlightIndex = Math.max(highlightIndex - 1, 0);
+                        render();
+                        e.preventDefault();
+                        break;
+                    case 'Enter':
+                        select(highlightIndex);
+                        e.preventDefault();
+                        break;
+                    case 'Escape':
+                        dropdown.classList.remove('open');
+                        break;
+                    case 'Tab':
+                        if (highlightIndex >= 0) {
+                            select(highlightIndex);
+                        }
+                        break;
+                }
+            });
+
+            dropdown.addEventListener('click', (e) => {
+                const option = e.target.closest('.typeahead-option');
+                if (option) {
+                    select(parseInt(option.dataset.index));
+                }
+            });
+
+            return {
+                setItems(newItems) {
+                    items = newItems;
+                    filter('');
+                },
+                clear() {
+                    items = [];
+                    filtered = [];
+                    input.value = '';
+                },
+                enable() {
+                    input.disabled = false;
+                },
+                disable() {
+                    input.disabled = true;
+                },
+                setPlaceholder(text) {
+                    input.placeholder = text;
+                }
+            };
+        }
+
+        // Initialize typeaheads
+        const leagueTypeahead = createTypeahead('league-input', 'league-dropdown', {
+            onSelect: async (item) => {
+                selectedLeague = item;
+                selectedGame = null;
+                gameTypeahead.clear();
+
+                // Fetch games for this league
+                gameTypeahead.setPlaceholder('Loading games...');
+                const resp = await fetch(`/api/games/${item.id}`);
+                games = await resp.json();
+
+                if (games.length === 0) {
+                    gameTypeahead.setPlaceholder('No active games');
+                    gameTypeahead.disable();
+                } else {
+                    gameTypeahead.setItems(games.map(g => ({
+                        ...g,
+                        display: `${g.away_display} @ ${g.home_display}`,
+                        detail: g.detail,
+                        score: g.status === 'in' ? `${g.away_score}-${g.home_score}` : ''
+                    })));
+                    gameTypeahead.enable();
+                    gameTypeahead.setPlaceholder('Type to filter...');
+                    document.getElementById('game-input').focus();
+                }
+            }
+        });
+
+        const gameTypeahead = createTypeahead('game-input', 'game-dropdown', {
+            onSelect: async (item) => {
+                selectedGame = item;
+
+                // Auto-start watching (WLED config comes from server)
+                const resp = await fetch('/api/watch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        league: selectedLeague.id,
+                        game_id: selectedGame.id
+                    })
+                });
+
+                if (resp.ok) {
+                    isWatching = true;
+                    updateUI();
+                    pollStatus();
+                }
+            }
+        });
+
+        // Stop button
+        document.getElementById('stop-btn').addEventListener('click', async () => {
+            await fetch('/api/stop', { method: 'POST' });
+            isWatching = false;
+            selectedGame = null;
+            updateUI();
+        });
+
+        // Simulator controls
+        const simLeague = document.getElementById('sim-league');
+        const simAway = document.getElementById('sim-away');
+        const simHome = document.getElementById('sim-home');
+        const testSlider = document.getElementById('test-slider');
+
+        async function updateSimulator() {
+            const league = simLeague.value;
+            const away = simAway.value;
+            const home = simHome.value;
+            const pct = testSlider.value;
+
+            if (league && away && home) {
+                document.getElementById('test-pct').textContent = pct + '%';
+                await fetch('/api/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pct: parseInt(pct),
+                        league: league,
+                        home: home,
+                        away: away
+                    })
+                });
+            }
+        }
+
+        simLeague.addEventListener('change', async () => {
+            const league = simLeague.value;
+            if (!league) {
+                simAway.disabled = true;
+                simHome.disabled = true;
+                return;
+            }
+
+            const resp = await fetch(`/api/teams/${league}`);
+            const teams = await resp.json();
+
+            const options = '<option value="">Pick team...</option>' +
+                teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+
+            simAway.innerHTML = options;
+            simHome.innerHTML = options;
+            simAway.disabled = false;
+            simHome.disabled = false;
+        });
+
+        simAway.addEventListener('change', () => {
+            document.getElementById('sim-away-label').textContent =
+                simAway.options[simAway.selectedIndex]?.text || 'Away';
+            updateSimulator();
+        });
+
+        simHome.addEventListener('change', () => {
+            document.getElementById('sim-home-label').textContent =
+                simHome.options[simHome.selectedIndex]?.text || 'Home';
+            updateSimulator();
+        });
+
+        testSlider.addEventListener('input', () => updateSimulator());
+
+        // Initialize simulator leagues dropdown immediately
+        (async function initSimulator() {
+            const resp = await fetch('/api/leagues');
+            const simLeagues = await resp.json();
+            simLeague.innerHTML = '<option value="">League...</option>' +
+                simLeagues.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+        })();
+
+        // UI updates
+        function updateUI() {
+            // Picker always visible - just switch games anytime
+            document.getElementById('stop-panel').classList.toggle('hidden', !isWatching);
+            document.getElementById('live-panel').classList.toggle('hidden', !isWatching);
+            document.getElementById('status-panel').classList.toggle('hidden', isWatching);
+        }
+
+        // Poll status when watching
+        async function pollStatus() {
+            if (!isWatching) return;
+
+            try {
+                const resp = await fetch('/api/status');
+                const status = await resp.json();
+
+                if (status.watching && status.home_team) {
+                    document.getElementById('home-team').textContent = status.home_team;
+                    document.getElementById('away-team').textContent = status.away_team;
+                    document.getElementById('home-score').textContent = status.home_score;
+                    document.getElementById('away-score').textContent = status.away_score;
+                    document.getElementById('period').textContent = status.period || '--';
+
+                    const homePct = Math.round((status.home_win_pct || 0.5) * 100);
+                    const awayPct = 100 - homePct;
+                    document.getElementById('home-bar').style.width = homePct + '%';
+                    document.getElementById('home-bar').textContent = homePct + '%';
+                    document.getElementById('away-bar').style.width = awayPct + '%';
+                    document.getElementById('away-bar').textContent = awayPct + '%';
+                }
+            } catch (e) {
+                console.error('Status poll error:', e);
+            }
+
+            setTimeout(pollStatus, 5000);
+        }
+
+        // Initial load
+        async function init() {
+            // Load settings (WLED instances) from server
+            await loadSettings();
+
+            const resp = await fetch('/api/leagues');
+            leagues = await resp.json();
+            leagueTypeahead.setItems(leagues.map(l => ({
+                ...l,
+                display: l.name
+            })));
+
+            // Check if already watching
+            const statusResp = await fetch('/api/status');
+            const status = await statusResp.json();
+            if (status.watching) {
+                isWatching = true;
+                updateUI();
+                pollStatus();
+            }
+
+            // Focus first input
+            document.getElementById('league-input').focus();
+        }
+
+        init();
+
+        // Global keyboard shortcuts (respecting input focus)
+        document.addEventListener('keydown', (e) => {
+            if (e.target.matches('input, select, textarea')) {
+                return;
+            }
+            // Could add global shortcuts here
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+services:
+  game-lights:
+    build: .
+    container_name: game-lights
+    restart: unless-stopped
+    ports:
+      - "8084:8080"
+    volumes:
+      - ./config:/app/config:ro
+    networks:
+      - homelab
+    environment:
+      - TZ=America/Chicago
+
+networks:
+  homelab:
+    external: true

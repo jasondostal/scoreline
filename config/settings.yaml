@@ -1,0 +1,20 @@
+# Game Lights Configuration
+# Edit this file to configure your setup
+
+# WLED instances to control
+# Each instance needs a host and LED segment range
+wled_instances:
+  - host: "192.168.1.100"  # Replace with your WLED IP
+    start: 0
+    end: 629
+
+  # Add more instances if you have multiple WLED controllers:
+  # - host: "192.168.1.101"
+  #   start: 0
+  #   end: 300
+
+# Polling interval in seconds (how often to check ESPN)
+poll_interval: 30
+
+# Default league to show first (optional)
+default_league: nfl
