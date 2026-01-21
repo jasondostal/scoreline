@@ -130,6 +130,23 @@
             50% { opacity: 1; }
         }
 
+        .dignity-marker {
+            position: absolute;
+            bottom: -12px;
+            font-size: 10px;
+            color: #dc2626;
+            line-height: 1;
+            transform: translateX(-50%);
+        }
+
+        .dignity-marker::after {
+            content: '⌃';
+        }
+
+        .dignity-marker[style*="right"] {
+            transform: translateX(50%);
+        }
+
         .strip-label {
             position: absolute;
             font-size: 9px;
@@ -379,6 +396,16 @@
                 const dividerPctWidth = (contestedPx / totalPixels * 100).toFixed(1);
                 const awayPctWidth = (awayPixels / totalPixels * 100).toFixed(1);
 
+                // Divider gradient based on preset
+                const presetGradients = {
+                    default: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)',
+                    intense: 'linear-gradient(90deg, #cc0000, #ff3300, #cc0000)',
+                    ice: 'linear-gradient(90deg, #4080ff, #80b0ff, #4080ff)',
+                    pulse: 'linear-gradient(90deg, #aaa, #ddd, #aaa)',
+                    chaos: 'linear-gradient(90deg, #ff4400, #ff8800, #ff4400)',
+                };
+                const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.default;
+
                 // Status badges
                 const statusBadge = isWatching
                     ? (isOverride
@@ -402,7 +429,7 @@
                         </span>
                         <span style="display: flex; align-items: center; gap: 6px;">
                             ${statusBadge}
-                            <button class="settings-toggle" onclick="toggleSettings('${inst.host}')" title="Settings">⚙️</button>
+                            <button class="settings-toggle" onclick="toggleSettings('${inst.host}')" title="Settings">${isExpanded ? '▴' : '▾'}</button>
                         </span>
                     </div>
 
@@ -450,16 +477,21 @@
                         <div class="hint" style="margin: 4px 0 12px 0;">When a watched team is playing, their game auto-starts.</div>
 
                         <div class="section-label" style="margin-bottom: 8px;">Strip Preview</div>
-                        <div class="strip-preview" id="preview-${hostId}">
-                            <div class="strip-segment home" style="width: ${homePctWidth}%">
-                                <span class="strip-label">${homePixels}px</span>
+                        <div style="position: relative;">
+                            <div class="strip-preview" id="preview-${hostId}">
+                                <div class="strip-segment home" style="width: ${homePctWidth}%">
+                                    <span class="strip-label">${homePixels}px</span>
+                                </div>
+                                <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
+                                <div class="strip-segment divider" style="width: ${dividerPctWidth}%; background: ${dividerGradient};"></div>
+                                <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
+                                <div class="strip-segment away" style="width: ${awayPctWidth}%">
+                                    <span class="strip-label">${awayPixels}px</span>
+                                </div>
                             </div>
-                            <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
-                            <div class="strip-segment divider" style="width: ${dividerPctWidth}%"></div>
-                            <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
-                            <div class="strip-segment away" style="width: ${awayPctWidth}%">
-                                <span class="strip-label">${awayPixels}px</span>
-                            </div>
+                            <!-- Dignity markers -->
+                            <div id="dignity-marker-left-${hostId}" class="dignity-marker" style="left: ${minPct * 100}%;" title="Min dignity: ${Math.round(minPct * 100)}%"></div>
+                            <div id="dignity-marker-right-${hostId}" class="dignity-marker" style="right: ${minPct * 100}%;" title="Min dignity: ${Math.round(minPct * 100)}%"></div>
                         </div>
 
                         <div class="settings-row">
@@ -467,7 +499,7 @@
                             <input type="range" class="settings-slider"
                                    id="dignity-${hostId}"
                                    min="1" max="20" value="${Math.round(minPct * 100)}"
-                                   oninput="updateDignityPreview('${inst.host}', this.value); autoSaveInstanceSettings('${inst.host}')">
+                                   oninput="updateDignityPreview('${inst.host}', this.value); updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
                             <span class="settings-value" id="dignity-value-${hostId}">${Math.round(minPct * 100)}% (${minDignityPixels}px)</span>
                         </div>
 
@@ -478,7 +510,7 @@
                             <input type="range" class="settings-slider"
                                    id="buffer-${hostId}"
                                    min="0" max="20" value="${darkBufferPx}"
-                                   oninput="updateBattleZonePreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
+                                   oninput="updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
                             <span class="settings-value" id="buffer-value-${hostId}">${darkBufferPx}px</span>
                         </div>
 
@@ -487,8 +519,21 @@
                             <input type="range" class="settings-slider"
                                    id="divider-${hostId}"
                                    min="2" max="30" value="${contestedPx}"
-                                   oninput="updateBattleZonePreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
+                                   oninput="updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
                             <span class="settings-value" id="divider-value-${hostId}">${contestedPx}px</span>
+                        </div>
+
+                        <div class="settings-row">
+                            <span class="settings-label">Style</span>
+                            <select id="divider-preset-${hostId}"
+                                    onchange="updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')"
+                                    style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                                <option value="default" ${(inst.divider_preset || 'default') === 'default' ? 'selected' : ''}>Default (Orange Scanner)</option>
+                                <option value="intense" ${inst.divider_preset === 'intense' ? 'selected' : ''}>Intense (Red Fire)</option>
+                                <option value="ice" ${inst.divider_preset === 'ice' ? 'selected' : ''}>Ice (Blue Scanner)</option>
+                                <option value="pulse" ${inst.divider_preset === 'pulse' ? 'selected' : ''}>Pulse (White Breathe)</option>
+                                <option value="chaos" ${inst.divider_preset === 'chaos' ? 'selected' : ''}>Chaos (Orange Strobe)</option>
+                            </select>
                         </div>
 
                         <div class="hint" style="margin: 4px 0 12px 0;">Buffer = black bars, Divider = animated center. Total: <span id="battlezone-total-${hostId}">${battleZone}px</span></div>
@@ -540,6 +585,13 @@
                         </div>
 
                         <div class="hint" style="margin: 4px 0;">What happens when the game ends. "Restore" returns to whatever was playing before.</div>
+
+                        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
+                            <button onclick="confirmDeleteInstance('${inst.host}')"
+                                    style="background: none; border: none; color: #dc2626; font-size: 12px; cursor: pointer; padding: 4px 0;">
+                                Remove this instance
+                            </button>
+                        </div>
                     </div>
                 </div>
                 `;
@@ -568,46 +620,86 @@
             const availablePixels = totalPixels - battleZone;
             const minDignityPixels = Math.round(availablePixels * minPct);
 
-            // Update display
+            // Update value display
             document.getElementById(`dignity-value-${hostId}`).textContent = `${pctValue}% (${minDignityPixels}px)`;
 
-            // Show both sides at minimum dignity - floor for both teams
-            // Layout: [home min] [contested middle] [away min]
-            const minPixels = minDignityPixels;
-            const contestedPixels = totalPixels - (minPixels * 2);
-
-            const minPctWidth = (minPixels / totalPixels * 100).toFixed(1);
-            const contestedPctWidth = (contestedPixels / totalPixels * 100).toFixed(1);
-
-            const preview = document.getElementById(`preview-${hostId}`);
-            if (preview) {
-                preview.innerHTML = `
-                    <div class="strip-segment home" style="width: ${minPctWidth}%">
-                        <span class="strip-label">${minPixels}px</span>
-                    </div>
-                    <div class="strip-segment" style="width: ${contestedPctWidth}%; background: linear-gradient(90deg, rgba(34,197,94,0.2) 0%, rgba(100,100,100,0.3) 50%, rgba(59,130,246,0.2) 100%);">
-                        <span class="strip-label" style="color: #888;">contested</span>
-                    </div>
-                    <div class="strip-segment away" style="width: ${minPctWidth}%">
-                        <span class="strip-label">${minPixels}px</span>
-                    </div>
-                `;
+            // Update marker positions
+            const leftMarker = document.getElementById(`dignity-marker-left-${hostId}`);
+            const rightMarker = document.getElementById(`dignity-marker-right-${hostId}`);
+            if (leftMarker) {
+                leftMarker.style.left = `${minPct * 100}%`;
+                leftMarker.title = `Min dignity: ${pctValue}%`;
+            }
+            if (rightMarker) {
+                rightMarker.style.right = `${minPct * 100}%`;
+                rightMarker.title = `Min dignity: ${pctValue}%`;
             }
         }
 
-        function updateBattleZonePreview(host) {
+        // Divider preset colors for preview
+        const DIVIDER_PRESETS = {
+            default: { color: 'rgb(200, 80, 0)', gradient: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)' },
+            intense: { color: 'rgb(255, 50, 0)', gradient: 'linear-gradient(90deg, #cc0000, #ff3300, #cc0000)' },
+            ice: { color: 'rgb(100, 150, 255)', gradient: 'linear-gradient(90deg, #4080ff, #80b0ff, #4080ff)' },
+            pulse: { color: 'rgb(200, 200, 200)', gradient: 'linear-gradient(90deg, #aaa, #ddd, #aaa)' },
+            chaos: { color: 'rgb(255, 100, 0)', gradient: 'linear-gradient(90deg, #ff4400, #ff8800, #ff4400)' },
+        };
+
+        function updateStripPreview(host) {
             const hostId = host.replace(/\./g, '-');
+            const inst = instanceStates.find(i => i.host === host);
+            if (!inst) return;
+
             const bufferSlider = document.getElementById(`buffer-${hostId}`);
             const dividerSlider = document.getElementById(`divider-${hostId}`);
+            const dignitySlider = document.getElementById(`dignity-${hostId}`);
+            const presetSelect = document.getElementById(`divider-preset-${hostId}`);
 
             const bufferPx = parseInt(bufferSlider.value);
             const dividerPx = parseInt(dividerSlider.value);
+            const minPct = parseInt(dignitySlider.value) / 100;
+            const preset = presetSelect?.value || 'default';
             const totalPx = (bufferPx * 2) + dividerPx;
 
-            // Update displays
+            // Update text displays
             document.getElementById(`buffer-value-${hostId}`).textContent = `${bufferPx}px`;
             document.getElementById(`divider-value-${hostId}`).textContent = `${dividerPx}px`;
             document.getElementById(`battlezone-total-${hostId}`).textContent = `${totalPx}px`;
+
+            // Calculate strip segments
+            const totalPixels = inst.end - inst.start;
+            const battleZone = totalPx;
+            const availablePixels = totalPixels - battleZone;
+            const previewPct = inst.watching && inst.home_win_pct !== undefined ? inst.home_win_pct : 0.5;
+            const clampedPct = Math.max(minPct, Math.min(1 - minPct, previewPct));
+            const homePixels = Math.round(availablePixels * clampedPct);
+            const awayPixels = availablePixels - homePixels;
+
+            // Convert to percentages
+            const homePctWidth = (homePixels / totalPixels * 100).toFixed(1);
+            const bufferPctWidth = (bufferPx / totalPixels * 100).toFixed(1);
+            const dividerPctWidth = (dividerPx / totalPixels * 100).toFixed(1);
+            const awayPctWidth = (awayPixels / totalPixels * 100).toFixed(1);
+
+            // Get divider style from preset
+            const dividerStyle = DIVIDER_PRESETS[preset] || DIVIDER_PRESETS.default;
+
+            // Update preview
+            const preview = document.getElementById(`preview-${hostId}`);
+            if (preview) {
+                preview.innerHTML = `
+                    <div class="strip-segment home" style="width: ${homePctWidth}%">
+                        <span class="strip-label">${homePixels}px</span>
+                    </div>
+                    <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
+                    <div class="strip-segment divider" style="width: ${dividerPctWidth}%; background: ${dividerStyle.gradient};">
+                    </div>
+                    <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
+                    <div class="strip-segment away" style="width: ${awayPctWidth}%">
+                        <span class="strip-label">${awayPixels}px</span>
+                    </div>
+                `;
+            }
         }
 
         // Debounced auto-save for instance settings
@@ -623,6 +715,7 @@
             const dignitySlider = document.getElementById(`dignity-${hostId}`);
             const bufferSlider = document.getElementById(`buffer-${hostId}`);
             const dividerSlider = document.getElementById(`divider-${hostId}`);
+            const dividerPresetSelect = document.getElementById(`divider-preset-${hostId}`);
             const chaseSpeedSlider = document.getElementById(`chase-speed-${hostId}`);
             const chaseIntensitySlider = document.getElementById(`chase-intensity-${hostId}`);
 
@@ -630,6 +723,7 @@
                 min_team_pct: parseInt(dignitySlider.value) / 100,
                 dark_buffer_pixels: parseInt(bufferSlider.value),
                 contested_zone_pixels: parseInt(dividerSlider.value),
+                divider_preset: dividerPresetSelect.value,
                 chase_speed: parseInt(chaseSpeedSlider.value),
                 chase_intensity: parseInt(chaseIntensitySlider.value),
             };
@@ -812,6 +906,22 @@
         async function stopInstance(host) {
             await fetch(`/api/instance/${host}/stop`, { method: 'POST' });
             await loadInstances();
+        }
+
+        async function confirmDeleteInstance(host) {
+            if (!confirm(`Remove ${host} from Scoreline?\n\nThis will remove the instance from your config. The WLED device itself is not affected.`)) {
+                return;
+            }
+
+            const resp = await fetch(`/api/instance/${host}`, { method: 'DELETE' });
+            const result = await resp.json();
+
+            if (result.status === 'removed') {
+                expandedSettings.delete(host);
+                await loadInstances();
+            } else {
+                alert(result.message || 'Failed to remove instance');
+            }
         }
 
         // WLED Discovery

@@ -23,10 +23,10 @@ from espn import ESPNClient, GameInfo
 from wled import WLEDController, WLEDConfig
 from teams import get_team_colors, get_team_display
 from config import (
-    get_settings, get_leagues, reload_config, add_wled_instance, CONFIG_DIR,
-    get_instance_display_settings, get_all_watched_teams, get_instance_watch_teams,
-    update_instance_watch_teams, get_instance_post_game_settings,
-    update_instance_post_game_settings,
+    get_settings, get_leagues, reload_config, add_wled_instance, remove_wled_instance,
+    CONFIG_DIR, get_instance_display_settings, get_all_watched_teams,
+    get_instance_watch_teams, update_instance_watch_teams,
+    get_instance_post_game_settings, update_instance_post_game_settings,
 )
 from discovery import discover_wled_devices
 
@@ -45,6 +45,7 @@ def build_wled_config(host: str, start: int, end: int) -> WLEDConfig:
         chase_speed=display.get("chase_speed", 185),
         chase_intensity=display.get("chase_intensity", 190),
         divider_color=display.get("divider_color", [200, 80, 0]),
+        divider_preset=display.get("divider_preset", "default"),
     )
 
 
@@ -530,6 +531,7 @@ async def list_instances():
             "dark_buffer_pixels": inst_display.get("dark_buffer_pixels", global_display.get("dark_buffer_pixels", 4)),
             "chase_speed": inst_display.get("chase_speed", global_display.get("chase_speed", 185)),
             "chase_intensity": inst_display.get("chase_intensity", global_display.get("chase_intensity", 190)),
+            "divider_preset": inst_display.get("divider_preset", global_display.get("divider_preset", "default")),
             # Post-game settings
             "post_game_action": post_game.get("action", "flash_then_off"),
             "post_game_preset_id": post_game.get("preset_id"),
@@ -593,10 +595,27 @@ async def stop_instance(host: str):
     return {"status": "stopped", "host": host}
 
 
+@app.delete("/api/instance/{host}")
+async def delete_instance(host: str):
+    """Remove a WLED instance from config."""
+    # Stop watching if active
+    if host in state.instances:
+        inst = state.instances[host]
+        if inst.controller:
+            await inst.controller.turn_off()
+            await inst.controller.close()
+        del state.instances[host]
+
+    # Remove from config
+    result = remove_wled_instance(host)
+    return result
+
+
 class InstanceSettingsRequest(BaseModel):
     min_team_pct: Optional[float] = None
     contested_zone_pixels: Optional[int] = None
     dark_buffer_pixels: Optional[int] = None
+    divider_preset: Optional[str] = None
     chase_speed: Optional[int] = None
     chase_intensity: Optional[int] = None
 

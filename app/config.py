@@ -31,6 +31,7 @@ def load_settings() -> dict:
     display = settings.get("display", {})
     display_settings = {
         "divider_color": display.get("divider_color", [200, 80, 0]),
+        "divider_preset": display.get("divider_preset", "default"),
         "min_team_pct": display.get("min_team_pct", 0.05),
         "contested_zone_pixels": display.get("contested_zone_pixels", 6),
         "dark_buffer_pixels": display.get("dark_buffer_pixels", 4),
@@ -229,6 +230,40 @@ def add_wled_instance(host: str, start: int = 0, end: int = 300) -> dict:
     return {"status": "added", "message": f"{host} added to config"}
 
 
+def remove_wled_instance(host: str) -> dict:
+    """
+    Remove a WLED instance from settings.yaml.
+
+    Returns status of the operation.
+    """
+    global _settings
+
+    settings_path = CONFIG_DIR / "settings.yaml"
+    raw_settings = _load_yaml(settings_path)
+
+    if "wled_instances" not in raw_settings:
+        return {"status": "error", "message": "No instances configured"}
+
+    # Find and remove the instance
+    original_len = len(raw_settings["wled_instances"])
+    raw_settings["wled_instances"] = [
+        inst for inst in raw_settings["wled_instances"]
+        if inst.get("host") != host
+    ]
+
+    if len(raw_settings["wled_instances"]) == original_len:
+        return {"status": "error", "message": f"{host} not found in config"}
+
+    # Write back
+    with open(settings_path, "w") as f:
+        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+
+    # Reload cache
+    _settings = load_settings()
+
+    return {"status": "removed", "message": f"{host} removed from config"}
+
+
 def update_instance_settings(host: str, display_settings: dict) -> dict:
     """
     Update display settings for a specific WLED instance.
@@ -287,6 +322,7 @@ def get_instance_display_settings(host: str) -> dict:
                 "chase_speed": inst_display.get("chase_speed", global_display.get("chase_speed", 185)),
                 "chase_intensity": inst_display.get("chase_intensity", global_display.get("chase_intensity", 190)),
                 "divider_color": inst_display.get("divider_color", global_display.get("divider_color", [200, 80, 0])),
+                "divider_preset": inst_display.get("divider_preset", global_display.get("divider_preset", "default")),
             }
 
     # Fallback to global

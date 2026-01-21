@@ -15,7 +15,19 @@ EFFECT_CHASE = 28      # Original Chase
 EFFECT_CHASE_2 = 37    # Chase 2 - better segment size control via intensity
 EFFECT_SOLID = 0
 EFFECT_SCANNER = 16    # Scanner - bounces back and forth
+EFFECT_BREATHE = 2     # Breathe - pulsing glow
+EFFECT_STROBE = 18     # Strobe - flashing
+EFFECT_FIRE = 66       # Fire 2012 - flickering fire
 EFFECT_BLEND = 115     # "Blends" - not great for contested zone (makes mud)
+
+# Divider presets: name -> (color, effect_id, speed, intensity)
+DIVIDER_PRESETS = {
+    "default": ([200, 80, 0], EFFECT_SCANNER, 180, 200),      # Orange scanner
+    "intense": ([255, 50, 0], EFFECT_FIRE, 128, 200),         # Red fire
+    "ice": ([100, 150, 255], EFFECT_SCANNER, 180, 200),       # Blue scanner
+    "pulse": ([200, 200, 200], EFFECT_BREATHE, 100, 128),     # White breathe
+    "chaos": ([255, 100, 0], EFFECT_STROBE, 200, 128),        # Orange strobe
+}
 
 
 @dataclass
@@ -30,11 +42,14 @@ class WLEDConfig:
     transition_ms: int = 500  # Smooth transitions
     chase_intensity: int = 190  # Controls chase segment size (higher = smaller segments)
     chase_speed: int = 185  # Base chase speed
-    divider_color: list[int] = None  # [R, G, B] for battle line
+    divider_preset: str = "default"  # Preset name from DIVIDER_PRESETS
+    divider_color: list[int] = None  # Override color (optional)
 
-    def __post_init__(self):
-        if self.divider_color is None:
-            self.divider_color = [200, 80, 0]  # Dark orange default
+    def get_divider_settings(self) -> tuple:
+        """Get divider (color, effect, speed, intensity) from preset or override."""
+        preset = DIVIDER_PRESETS.get(self.divider_preset, DIVIDER_PRESETS["default"])
+        color = self.divider_color if self.divider_color else preset[0]
+        return (color, preset[1], preset[2], preset[3])
 
 
 class WLEDController:
@@ -186,8 +201,9 @@ class WLEDController:
             })
             next_id += 1
 
-        # Jiggle divider (battle line)
+        # Jiggle divider (battle line) - uses preset settings
         if contested > 0:
+            div_color, div_effect, div_speed, div_intensity = self.config.get_divider_settings()
             segments.append({
                 "id": next_id,
                 "start": jiggle_start,
@@ -196,10 +212,10 @@ class WLEDController:
                 "spc": 0,
                 "on": True,
                 "bri": 255,
-                "col": [self.config.divider_color, [0, 0, 0], [0, 0, 0]],
-                "fx": EFFECT_SCANNER,
-                "sx": 180,
-                "ix": 200,
+                "col": [div_color, [0, 0, 0], [0, 0, 0]],
+                "fx": div_effect,
+                "sx": div_speed,
+                "ix": div_intensity,
                 "rev": False,
                 "sel": False,
             })

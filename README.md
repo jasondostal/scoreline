@@ -29,6 +29,7 @@ When a game ends, Scoreline can:
 - **Minimum dignity** - Losing team always keeps at least X% of the strip
 - **Dark buffer** - Black pixels separating teams from the battle line
 - **Divider size** - Width of the animated center divider
+- **Divider style** - Preset animations: default (orange scanner), intense (red fire), ice (blue scanner), pulse (white breathe), chaos (orange strobe)
 - **Chase speed & intensity** - Control the team color chase effect
 
 ### Quality of Life
@@ -96,7 +97,7 @@ auto_watch_interval: 300         # Seconds between auto-watch scans
 
 # Global defaults (all optional - sensible defaults built in)
 display:
-  divider_color: [200, 80, 0]
+  divider_preset: default          # default | intense | ice | pulse | chaos
   min_team_pct: 0.05
   contested_zone_pixels: 6
   dark_buffer_pixels: 4
