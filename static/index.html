@@ -68,6 +68,10 @@
         .test-controls {
             margin-top: 16px;
             padding-top: 12px;
+        }
+
+        /* Only add border-top to subsequent test-controls sections */
+        .test-controls + .test-controls {
             border-top: 1px solid #e0e0e0;
         }
 
@@ -703,9 +707,19 @@
                     </div>
 
                     ${isWatching ? `
-                        <div style="font-size: 13px; margin-bottom: 8px;">
-                            <div style="font-weight: 500;">${gameInfo}</div>
-                            <div style="color: #666;">${scoreInfo} ${pctInfo ? '| ' + pctInfo : ''}</div>
+                        <div style="font-size: 12px; margin-bottom: 8px; padding: 6px 8px; background: #f8fafc; border-radius: 4px; border: 1px solid #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500;">${inst.away_display || inst.away_team}</span>
+                                <span style="font-family: monospace; font-weight: 600; font-size: 14px;">${inst.away_score ?? '-'}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                                <span style="font-weight: 500;">${inst.home_display || inst.home_team}</span>
+                                <span style="font-family: monospace; font-weight: 600; font-size: 14px;">${inst.home_score ?? '-'}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 4px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b;">
+                                <span>${inst.period || ''}</span>
+                                <span>${inst.home_win_pct !== undefined ? `${(inst.home_win_pct * 100).toFixed(0)}% ${inst.home_display || inst.home_team}` : ''}</span>
+                            </div>
                         </div>
                     ` : ''}
 

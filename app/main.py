@@ -506,6 +506,40 @@ class InstanceWatchRequest(BaseModel):
     game_id: str
 
 
+async def check_wled_simulation_state(inst: InstanceState) -> bool:
+    """
+    Check if WLED is still showing our game mode (simulation active).
+
+    Returns True if WLED appears to be in game mode (has our segments),
+    False if it was changed externally (preset, off, or different segments).
+    """
+    if not inst.controller:
+        return False
+
+    try:
+        wled_state = await inst.controller.get_state()
+
+        # If WLED is off, simulation is stale
+        if not wled_state.get("on", False):
+            return False
+
+        # Check for our game mode segments by name
+        segments = wled_state.get("seg", [])
+        segment_names = {seg.get("n", "") for seg in segments if isinstance(seg, dict)}
+
+        # Our game mode creates HOME and AWAY segments
+        if "HOME" in segment_names or "AWAY" in segment_names:
+            return True
+
+        # No game mode segments found - WLED was changed externally
+        return False
+
+    except Exception as e:
+        logger.warning(f"[SYNC] {inst.host}: Failed to check WLED state: {e}")
+        # On error, assume simulation is still valid (don't lose state on network hiccup)
+        return True
+
+
 @app.get("/api/instances")
 async def list_instances():
     """Get all WLED instances and their current status, including display settings."""
@@ -526,12 +560,23 @@ async def list_instances():
         # Get post-game settings for this instance
         post_game = get_instance_post_game_settings(host)
 
+        # Sync check: if instance claims to be simulating, verify WLED state
+        # This detects when WLED was changed externally (wife's pink twinkles scenario)
+        simulating = inst.simulating
+        if simulating:
+            still_active = await check_wled_simulation_state(inst)
+            if not still_active:
+                logger.info(f"[SYNC] {host}: Simulation stale (WLED changed externally), clearing flag")
+                inst.simulating = False
+                simulating = False
+                # Don't restore preset here - just reflect reality
+
         item = {
             "host": host,
             "start": inst.start,
             "end": inst.end,
             "watching": inst.game is not None,
-            "simulating": inst.simulating,
+            "simulating": simulating,
             "watch_teams": get_instance_watch_teams(host),
             # Display settings (per-instance override > global > default)
             "min_team_pct": inst_display.get("min_team_pct", global_display.get("min_team_pct", 0.05)),
@@ -556,6 +601,9 @@ async def list_instances():
                 item["home_score"] = info.home_score
                 item["away_score"] = info.away_score
                 item["home_win_pct"] = info.home_win_pct
+                # Mini scoreboard: period/clock info
+                item["period"] = info.period
+                item["status"] = info.status  # pre, in, post
         result.append(item)
     return result
 
