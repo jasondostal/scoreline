@@ -463,7 +463,11 @@ async def get_teams(league: str):
 
     teams = get_leagues()[league].get("teams", {})
     return [
-        {"id": abbr, "name": team["display"]}
+        {
+            "id": abbr,
+            "name": team["display"],
+            "colors": team.get("colors", [[128, 128, 128], [64, 64, 64]])
+        }
         for abbr, team in sorted(teams.items(), key=lambda x: x[1]["display"])
     ]
 

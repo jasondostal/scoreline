@@ -280,6 +280,29 @@
             background: #86efac;
             cursor: not-allowed;
         }
+
+        /* Simulator preset buttons */
+        .sim-preset-btn {
+            padding: 4px 10px;
+            font-size: 11px;
+            font-family: inherit;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .sim-preset-btn:hover {
+            background: #e5e5e5;
+            border-color: #ccc;
+        }
+
+        .sim-preset-btn.active {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+        }
     </style>
 </head>
 <body>
@@ -315,9 +338,14 @@
             <div class="hint">Configured in config/settings.yaml</div>
         </div>
 
-        <!-- Test Controls -->
+        <!-- Simulator -->
         <div class="test-controls">
-            <div class="section-label">Simulator</div>
+            <div class="section-label" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>🎮 Simulator</span>
+                <select id="sim-target" style="padding: 2px 6px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px;">
+                    <option value="">All instances</option>
+                </select>
+            </div>
             <div class="section" style="display: flex; gap: 8px; margin-bottom: 8px;">
                 <select id="sim-league" style="flex: 1;">
                     <option value="">League...</option>
@@ -329,6 +357,18 @@
                     <option value="">Home...</option>
                 </select>
             </div>
+
+            <!-- Strip Preview -->
+            <div id="sim-preview-container" class="hidden" style="margin-bottom: 8px;">
+                <div class="strip-preview" id="sim-preview">
+                    <div class="strip-segment home" style="width: 45%"></div>
+                    <div class="strip-segment buffer" style="width: 1%"></div>
+                    <div class="strip-segment divider" style="width: 2%"></div>
+                    <div class="strip-segment buffer" style="width: 1%"></div>
+                    <div class="strip-segment away" style="width: 45%"></div>
+                </div>
+            </div>
+
             <div class="test-label">
                 <span id="sim-away-label">Away 100%</span>
                 <span id="test-pct">50%</span>
@@ -336,7 +376,17 @@
             </div>
             <input type="range" id="test-slider" class="test-slider"
                    min="0" max="100" value="50">
-            <div class="hint">Pick teams and drag to simulate win probability</div>
+
+            <!-- Scenario Presets -->
+            <div style="display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap;">
+                <button onclick="setSimPct(50)" class="sim-preset-btn">Nail-biter</button>
+                <button onclick="setSimPct(85)" class="sim-preset-btn">Home dominant</button>
+                <button onclick="setSimPct(15)" class="sim-preset-btn">Away upset</button>
+                <button onclick="setSimPct(95)" class="sim-preset-btn">Blowout</button>
+                <button onclick="toggleAutoPlay()" id="auto-play-btn" class="sim-preset-btn" style="margin-left: auto;">▶ Auto-play</button>
+            </div>
+
+            <div class="hint">Pick teams, drag slider, or use presets. Auto-play simulates momentum swings.</div>
         </div>
     </div>
 
@@ -407,6 +457,12 @@
                 const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.default;
 
                 // Status badges
+                const isSimTarget = simTargetHost === null
+                    ? (simTeamColors.home && simTeamColors.away)  // All instances targeted
+                    : simTargetHost === inst.host;  // This specific instance targeted
+                const simBadge = isSimTarget
+                    ? `<span style="font-size: 10px; color: #dc2626; font-weight: 500;">SIM</span>`
+                    : '';
                 const statusBadge = isWatching
                     ? (isOverride
                         ? `<span style="font-size: 10px; color: #d97706; font-weight: 600; background: #fef3c7; padding: 2px 6px; border-radius: 3px;">⚡ OVERRIDE</span>`
@@ -428,6 +484,7 @@
                             <span style="color: #666; font-size: 12px; margin-left: 8px;">[${inst.start}-${inst.end}] ${totalPixels}px</span>
                         </span>
                         <span style="display: flex; align-items: center; gap: 6px;">
+                            ${simBadge}
                             ${statusBadge}
                             <button class="settings-toggle" onclick="toggleSettings('${inst.host}')" title="Settings">${isExpanded ? '▴' : '▾'}</button>
                         </span>
@@ -1044,27 +1101,205 @@
         const simLeague = document.getElementById('sim-league');
         const simAway = document.getElementById('sim-away');
         const simHome = document.getElementById('sim-home');
+        const simTarget = document.getElementById('sim-target');
         const testSlider = document.getElementById('test-slider');
+
+        // Team colors cache for preview
+        let simTeamColors = { home: null, away: null };
+        let simTargetHost = null;  // Track which instance is being simulated
+        let autoPlayInterval = null;
+        let autoPlayDirection = 1;
+
+        function updateSimTargetDropdown() {
+            const current = simTarget.value;
+            simTarget.innerHTML = '<option value="">All instances</option>' +
+                instanceStates.map(inst => `<option value="${inst.host}">${inst.host}</option>`).join('');
+            simTarget.value = current;
+        }
 
         async function updateSimulator() {
             const league = simLeague.value;
             const away = simAway.value;
             const home = simHome.value;
-            const pct = testSlider.value;
+            const pct = parseInt(testSlider.value);
+            const target = simTarget.value || null;
+
+            // Track target for badge display
+            const oldTarget = simTargetHost;
+            simTargetHost = (league && away && home) ? target : null;
+
+            // Re-render cards if target changed (to update SIM badge)
+            if (oldTarget !== simTargetHost) {
+                renderInstanceCards();
+            }
+
+            document.getElementById('test-pct').textContent = pct + '%';
+            updateSimPreview(pct);
+
+            // Update targeted instance preview(s) to match simulator
+            if (league && away && home && simTeamColors.home && simTeamColors.away) {
+                updateInstanceSimPreview(pct, target);
+            }
 
             if (league && away && home) {
-                document.getElementById('test-pct').textContent = pct + '%';
                 await fetch('/api/test', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        pct: parseInt(pct),
+                        pct: pct,
                         league: league,
                         home: home,
-                        away: away
+                        away: away,
+                        host: target
                     })
                 });
             }
+        }
+
+        function updateInstanceSimPreview(pct, targetHost) {
+            // Update the strip preview on targeted instance card(s)
+            const targets = targetHost
+                ? instanceStates.filter(i => i.host === targetHost)
+                : instanceStates;
+
+            for (const inst of targets) {
+                const hostId = inst.host.replace(/\./g, '-');
+                const preview = document.getElementById(`preview-${hostId}`);
+                if (!preview) continue;
+
+                const minPct = inst.min_team_pct || 0.05;
+                const contestedPx = inst.contested_zone_pixels || 6;
+                const darkBufferPx = inst.dark_buffer_pixels || 4;
+                const totalPixels = inst.end - inst.start;
+                const battleZone = contestedPx + (darkBufferPx * 2);
+                const availablePixels = totalPixels - battleZone;
+
+                const homePct = pct / 100;
+                const clampedPct = Math.max(minPct, Math.min(1 - minPct, homePct));
+                const homePixels = Math.round(availablePixels * clampedPct);
+                const awayPixels = availablePixels - homePixels;
+
+                const homePctWidth = (homePixels / totalPixels * 100).toFixed(1);
+                const bufferPctWidth = (darkBufferPx / totalPixels * 100).toFixed(1);
+                const dividerPctWidth = (contestedPx / totalPixels * 100).toFixed(1);
+                const awayPctWidth = (awayPixels / totalPixels * 100).toFixed(1);
+
+                const presetGradients = {
+                    default: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)',
+                    intense: 'linear-gradient(90deg, #cc0000, #ff3300, #cc0000)',
+                    ice: 'linear-gradient(90deg, #4080ff, #80b0ff, #4080ff)',
+                    pulse: 'linear-gradient(90deg, #aaa, #ddd, #aaa)',
+                    chaos: 'linear-gradient(90deg, #ff4400, #ff8800, #ff4400)',
+                };
+                const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.default;
+
+                const hc = simTeamColors.home;
+                const ac = simTeamColors.away;
+
+                preview.innerHTML = `
+                    <div class="strip-segment" style="width: ${homePctWidth}%; background: linear-gradient(90deg, rgb(${hc[0].join(',')}) 0%, rgb(${hc[1].join(',')}) 100%);">
+                        <span class="strip-label">${homePixels}px</span>
+                    </div>
+                    <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
+                    <div class="strip-segment divider" style="width: ${dividerPctWidth}%; background: ${dividerGradient};"></div>
+                    <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
+                    <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(90deg, rgb(${ac[0].join(',')}) 0%, rgb(${ac[1].join(',')}) 100%);">
+                        <span class="strip-label">${awayPixels}px</span>
+                    </div>
+                `;
+            }
+        }
+
+        function updateSimPreview(pct) {
+            const preview = document.getElementById('sim-preview');
+            if (!preview || !simTeamColors.home || !simTeamColors.away) return;
+
+            // Get settings from target instance or first instance
+            const targetHost = simTarget.value;
+            const inst = targetHost
+                ? instanceStates.find(i => i.host === targetHost)
+                : instanceStates[0];
+
+            if (!inst) return;
+
+            const minPct = inst.min_team_pct || 0.05;
+            const contestedPx = inst.contested_zone_pixels || 6;
+            const darkBufferPx = inst.dark_buffer_pixels || 4;
+            const totalPixels = inst.end - inst.start;
+            const battleZone = contestedPx + (darkBufferPx * 2);
+            const availablePixels = totalPixels - battleZone;
+
+            const homePct = pct / 100;
+            const clampedPct = Math.max(minPct, Math.min(1 - minPct, homePct));
+            const homePixels = Math.round(availablePixels * clampedPct);
+            const awayPixels = availablePixels - homePixels;
+
+            const homePctWidth = (homePixels / totalPixels * 100).toFixed(1);
+            const bufferPctWidth = (darkBufferPx / totalPixels * 100).toFixed(1);
+            const dividerPctWidth = (contestedPx / totalPixels * 100).toFixed(1);
+            const awayPctWidth = (awayPixels / totalPixels * 100).toFixed(1);
+
+            const presetGradients = {
+                default: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)',
+                intense: 'linear-gradient(90deg, #cc0000, #ff3300, #cc0000)',
+                ice: 'linear-gradient(90deg, #4080ff, #80b0ff, #4080ff)',
+                pulse: 'linear-gradient(90deg, #aaa, #ddd, #aaa)',
+                chaos: 'linear-gradient(90deg, #ff4400, #ff8800, #ff4400)',
+            };
+            const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.default;
+
+            const hc = simTeamColors.home;
+            const ac = simTeamColors.away;
+
+            preview.innerHTML = `
+                <div class="strip-segment" style="width: ${homePctWidth}%; background: linear-gradient(90deg, rgb(${hc[0].join(',')}) 0%, rgb(${hc[1].join(',')}) 100%);"></div>
+                <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
+                <div class="strip-segment divider" style="width: ${dividerPctWidth}%; background: ${dividerGradient};"></div>
+                <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
+                <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(90deg, rgb(${ac[0].join(',')}) 0%, rgb(${ac[1].join(',')}) 100%);"></div>
+            `;
+        }
+
+        function setSimPct(pct) {
+            testSlider.value = pct;
+            updateSimulator();
+        }
+
+        function toggleAutoPlay() {
+            const btn = document.getElementById('auto-play-btn');
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                btn.textContent = '▶ Auto-play';
+                btn.classList.remove('active');
+            } else {
+                btn.textContent = '⏸ Stop';
+                btn.classList.add('active');
+                autoPlayInterval = setInterval(() => {
+                    let pct = parseInt(testSlider.value);
+                    // Random momentum: usually small moves, occasionally big swings
+                    const swing = Math.random() < 0.1 ? (Math.random() * 15 + 5) : (Math.random() * 5 + 1);
+                    pct += autoPlayDirection * swing;
+
+                    // Bounce off edges and occasionally reverse
+                    if (pct >= 90 || (pct > 60 && Math.random() < 0.15)) {
+                        autoPlayDirection = -1;
+                    } else if (pct <= 10 || (pct < 40 && Math.random() < 0.15)) {
+                        autoPlayDirection = 1;
+                    }
+
+                    pct = Math.max(5, Math.min(95, pct));
+                    testSlider.value = Math.round(pct);
+                    updateSimulator();
+                }, 800);
+            }
+        }
+
+        async function loadTeamColors(league, team) {
+            const resp = await fetch(`/api/teams/${league}`);
+            const teams = await resp.json();
+            const t = teams.find(x => x.id === team);
+            return t ? t.colors : [[128, 128, 128], [64, 64, 64]];
         }
 
         simLeague.addEventListener('change', async () => {
@@ -1072,6 +1307,7 @@
             if (!league) {
                 simAway.disabled = true;
                 simHome.disabled = true;
+                document.getElementById('sim-preview-container').classList.add('hidden');
                 return;
             }
 
@@ -1085,17 +1321,38 @@
             simHome.innerHTML = options;
             simAway.disabled = false;
             simHome.disabled = false;
+
+            // Store teams for color lookup
+            simLeague._teams = teams;
         });
 
-        simAway.addEventListener('change', () => {
-            document.getElementById('sim-away-label').textContent =
-                simAway.options[simAway.selectedIndex]?.text || 'Away';
+        simAway.addEventListener('change', async () => {
+            const label = simAway.options[simAway.selectedIndex]?.text || 'Away';
+            document.getElementById('sim-away-label').textContent = label;
+
+            if (simLeague._teams && simAway.value) {
+                const team = simLeague._teams.find(t => t.id === simAway.value);
+                simTeamColors.away = team?.colors || [[128, 128, 128], [64, 64, 64]];
+            }
+
+            if (simAway.value && simHome.value) {
+                document.getElementById('sim-preview-container').classList.remove('hidden');
+            }
             updateSimulator();
         });
 
-        simHome.addEventListener('change', () => {
-            document.getElementById('sim-home-label').textContent =
-                simHome.options[simHome.selectedIndex]?.text || 'Home';
+        simHome.addEventListener('change', async () => {
+            const label = simHome.options[simHome.selectedIndex]?.text || 'Home';
+            document.getElementById('sim-home-label').textContent = label;
+
+            if (simLeague._teams && simHome.value) {
+                const team = simLeague._teams.find(t => t.id === simHome.value);
+                simTeamColors.home = team?.colors || [[128, 128, 128], [64, 64, 64]];
+            }
+
+            if (simAway.value && simHome.value) {
+                document.getElementById('sim-preview-container').classList.remove('hidden');
+            }
             updateSimulator();
         });
 
@@ -1117,6 +1374,9 @@
 
             // Load instances
             await loadInstances();
+
+            // Populate simulator target dropdown
+            updateSimTargetDropdown();
 
             // Periodic refresh for live scores (skip if user is interacting with form)
             setInterval(() => {
