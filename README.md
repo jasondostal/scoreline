@@ -4,6 +4,8 @@ Live sports win probability visualized on your LED strip.
 
 Scoreline polls ESPN for real-time game data and translates win probability into a dynamic light display on [WLED](https://kno.wled.ge/)-controlled LEDs. Watch the "battle line" shift as momentum swings.
 
+![Scoreline LED visualization](scoreline.jpg)
+
 ## Features
 
 ### Core
@@ -32,12 +34,19 @@ When a game ends, Scoreline can:
 - **Divider style** - Preset animations: default (orange scanner), intense (red fire), ice (blue scanner), pulse (white breathe), chaos (orange strobe)
 - **Chase speed & intensity** - Control the team color chase effect
 
+### Simulator
+- **Test without live games** - Drag a slider to preview any win percentage
+- **Live preview** - See exactly how your LED strip will look before game day
+- **Team picker** - Select any two teams from any league
+- **Auto-play mode** - Watch it cycle through scenarios automatically
+
 ### Quality of Life
 - **Preset preservation** - Saves your current WLED state before taking over, can restore after
+- **Sync-on-load** - Detects if WLED was changed externally and reflects reality
+- **Mini scoreboard** - Live game scores displayed in the web UI per instance
 - **Blackout mode** - Pixels outside your configured range go dark during games
 - **mDNS discovery** - Auto-find WLED devices on your network
 - **Hot-reload config** - YAML changes detected automatically
-- **Non-destructive UI** - Refresh won't reset forms while you're interacting
 
 ## Quick Start
 
