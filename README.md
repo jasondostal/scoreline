@@ -80,35 +80,30 @@ Edit `config/settings.yaml`:
 
 ```yaml
 wled_instances:
-  - host: 192.168.1.100
-    start: 0
-    end: 629
-    watch_teams:           # Auto-watch these teams
-      - nfl:GB
-      - nba:MIL
-    display:               # Per-instance overrides
+  - host: 192.168.1.100         # Your WLED IP
+    start: 0                     # First LED index
+    end: 300                     # Last LED index
+    watch_teams:                 # Auto-watch these teams (optional)
+      - nfl:KC
+      - nba:LAL
+    display:                     # Per-instance overrides (optional)
       chase_speed: 185
-      chase_intensity: 190
-      min_team_pct: 0.05
-    post_game:             # What happens when game ends
-      action: restore      # off | fade_off | flash_then_off | restore | preset
-      preset_id: 5         # Only needed for action: preset
+    post_game:                   # What happens when game ends (optional)
+      action: restore            # off | fade_off | flash_then_off | restore | preset
 
 poll_interval: 30
-auto_watch_interval: 300   # How often to scan for favorite team games (seconds)
+auto_watch_interval: 300         # Seconds between auto-watch scans
 
-display:                   # Global defaults
+# Global defaults (all optional - sensible defaults built in)
+display:
   divider_color: [200, 80, 0]
   min_team_pct: 0.05
   contested_zone_pixels: 6
   dark_buffer_pixels: 4
-  chase_speed: 185
-  chase_intensity: 190
 
-post_game:                 # Global defaults
+post_game:
   action: flash_then_off
   flash_count: 3
-  flash_duration_ms: 500
   fade_duration_s: 3
 ```
 
