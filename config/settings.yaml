@@ -2,14 +2,6 @@ wled_instances:
 - host: wledhouse.witekdivers.com
   start: 0
   end: 629
-  display:
-    min_team_pct: 0.15
-    contested_zone_pixels: 6
-    dark_buffer_pixels: 6
-    chase_speed: 185
-    chase_intensity: 190
-  post_game:
-    action: preset
 poll_interval: 30
 display:
   divider_color:
