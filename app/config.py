@@ -50,12 +50,22 @@ def load_settings() -> dict:
         "preset_id": post_game.get("preset_id"),  # For action: preset
     }
 
+    # Simulator defaults
+    simulator = settings.get("simulator", {})
+    simulator_settings = {
+        "league": simulator.get("league", "nfl"),
+        "home": simulator.get("home", "GB"),
+        "away": simulator.get("away", "CHI"),
+        "win_pct": simulator.get("win_pct", 50),
+    }
+
     return {
         "wled_instances": settings.get("wled_instances", []),
         "poll_interval": settings.get("poll_interval", 30),
         "auto_watch_interval": settings.get("auto_watch_interval", 300),  # 5 min default
         "display": display_settings,
         "post_game": post_game_settings,
+        "simulator": simulator_settings,
     }
 
 
@@ -389,3 +399,37 @@ def get_instance_post_game_settings(host: str) -> dict:
 
     # Fallback to global
     return global_post_game
+
+
+def get_simulator_defaults() -> dict:
+    """Get saved simulator defaults."""
+    return get_settings().get("simulator", {
+        "league": "nfl",
+        "home": "GB",
+        "away": "CHI",
+        "win_pct": 50,
+    })
+
+
+def update_simulator_defaults(simulator_settings: dict) -> dict:
+    """
+    Update simulator defaults in settings.yaml.
+    """
+    global _settings
+
+    settings_path = CONFIG_DIR / "settings.yaml"
+    raw_settings = _load_yaml(settings_path)
+
+    # Update simulator section
+    if "simulator" not in raw_settings:
+        raw_settings["simulator"] = {}
+    raw_settings["simulator"].update(simulator_settings)
+
+    # Write back
+    with open(settings_path, "w") as f:
+        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+
+    # Reload cache
+    _settings = load_settings()
+
+    return {"status": "updated", "simulator": raw_settings["simulator"]}

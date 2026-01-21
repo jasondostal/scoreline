@@ -81,7 +81,15 @@ class WLEDController:
 
     async def set_state(self, state: dict) -> bool:
         """Push state update to WLED."""
+        import logging
+        logger = logging.getLogger(__name__)
+
         try:
+            # Log what we're sending
+            import json
+            logger.info(f"[WLED] {self.config.host} sending state with {len(state.get('seg', []))} segments")
+            logger.debug(f"[WLED] Payload: {json.dumps(state)}")
+
             resp = await self.client.post(
                 f"{self.base_url}/json/state",
                 json=state
@@ -89,7 +97,7 @@ class WLEDController:
             resp.raise_for_status()
             return True
         except Exception as e:
-            print(f"WLED set_state error: {e}")
+            logger.error(f"WLED set_state error: {e}")
             return False
 
     def calculate_segments(
@@ -151,9 +159,11 @@ class WLEDController:
         next_id = 0
 
         # Segment for pixels BEFORE our range (black out)
+        # Note: WLED uses exclusive stop (like Python), so stop = last_pixel + 1
         if start > 0:
             segments.append({
                 "id": next_id,
+                "n": "BLACKOUT-L",
                 "start": 0,
                 "stop": start,
                 "grp": 1,
@@ -170,6 +180,7 @@ class WLEDController:
         if home_pixels > 0:
             segments.append({
                 "id": next_id,
+                "n": "HOME",
                 "start": start,
                 "stop": home_end,
                 "grp": 1,
@@ -177,6 +188,7 @@ class WLEDController:
                 "on": True,
                 "bri": 255,
                 "col": [home_colors[0], home_colors[1], [0, 0, 0]],
+                "pal": 0,  # Default palette - crisp bars, no gradient
                 "fx": EFFECT_CHASE_2,
                 "sx": speed,
                 "ix": self.config.chase_intensity,
@@ -189,6 +201,7 @@ class WLEDController:
         if dark_buffer > 0:
             segments.append({
                 "id": next_id,
+                "n": "BUFFER-L",
                 "start": dark_left_start,
                 "stop": dark_left_end,
                 "grp": 1,
@@ -206,6 +219,7 @@ class WLEDController:
             div_color, div_effect, div_speed, div_intensity = self.config.get_divider_settings()
             segments.append({
                 "id": next_id,
+                "n": "DIVIDER",
                 "start": jiggle_start,
                 "stop": jiggle_end,
                 "grp": 1,
@@ -225,6 +239,7 @@ class WLEDController:
         if dark_buffer > 0:
             segments.append({
                 "id": next_id,
+                "n": "BUFFER-R",
                 "start": dark_right_start,
                 "stop": dark_right_end,
                 "grp": 1,
@@ -241,6 +256,7 @@ class WLEDController:
         if away_pixels > 0:
             segments.append({
                 "id": next_id,
+                "n": "AWAY",
                 "start": away_start,
                 "stop": end,
                 "grp": 1,
@@ -248,6 +264,7 @@ class WLEDController:
                 "on": True,
                 "bri": 255,
                 "col": [away_colors[0], away_colors[1], [0, 0, 0]],
+                "pal": 0,  # Default palette - crisp bars, no gradient
                 "fx": EFFECT_CHASE_2,
                 "sx": speed,
                 "ix": self.config.chase_intensity,
@@ -260,6 +277,7 @@ class WLEDController:
         # Use a high number - WLED will clamp to actual strip length
         segments.append({
             "id": next_id,
+            "n": "BLACKOUT-R",
             "start": end,
             "stop": 9999,
             "grp": 1,
@@ -270,6 +288,15 @@ class WLEDController:
             "fx": EFFECT_SOLID,
             "sel": False,
         })
+        next_id += 1
+
+        # Delete any extra segments that might exist from previous states
+        # WLED keeps segments until explicitly removed (stop=0 deletes a segment)
+        for extra_id in range(next_id, 16):  # WLED typically supports up to 16 segments
+            segments.append({
+                "id": extra_id,
+                "stop": 0,  # Setting stop=0 deletes the segment
+            })
 
         return segments
 

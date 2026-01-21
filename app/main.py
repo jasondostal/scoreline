@@ -27,6 +27,7 @@ from config import (
     CONFIG_DIR, get_instance_display_settings, get_all_watched_teams,
     get_instance_watch_teams, update_instance_watch_teams,
     get_instance_post_game_settings, update_instance_post_game_settings,
+    get_simulator_defaults, update_simulator_defaults,
 )
 from discovery import discover_wled_devices
 
@@ -848,30 +849,19 @@ async def test_percentage(req: TestRequest):
     targets = [state.instances[req.host]] if req.host else state.instances.values()
 
     for inst in targets:
-        # Build config - use simulator settings if provided, else instance defaults
-        if req.settings:
-            # Use simulator settings override
-            config = WLEDConfig(
-                host=inst.host,
-                roofline_start=inst.start,
-                roofline_end=inst.end,
-                min_team_pct=req.settings.min_team_pct or 0.05,
-                contested_zone_pixels=req.settings.contested_zone_pixels or 6,
-                dark_buffer_pixels=req.settings.dark_buffer_pixels or 4,
-                transition_ms=500,
-                chase_speed=req.settings.chase_speed or 185,
-                chase_intensity=req.settings.chase_intensity or 190,
-                divider_color=[200, 80, 0],  # Will be overridden by preset
-                divider_preset=req.settings.divider_preset or "default",
-            )
-            # Recreate controller with new settings
-            if inst.controller:
-                await inst.controller.close()
-            inst.controller = WLEDController(config)
-        elif not inst.controller:
-            # Use instance defaults
+        # Create controller if needed
+        if not inst.controller:
             config = build_wled_config(inst.host, inst.start, inst.end)
             inst.controller = WLEDController(config)
+
+        # Apply simulator settings override if provided (update config in place)
+        if req.settings:
+            inst.controller.config.min_team_pct = req.settings.min_team_pct or 0.05
+            inst.controller.config.contested_zone_pixels = req.settings.contested_zone_pixels or 6
+            inst.controller.config.dark_buffer_pixels = req.settings.dark_buffer_pixels or 4
+            inst.controller.config.chase_speed = req.settings.chase_speed or 185
+            inst.controller.config.chase_intensity = req.settings.chase_intensity or 190
+            inst.controller.config.divider_preset = req.settings.divider_preset or "default"
 
         await inst.controller.set_game_mode(
             home_win_pct=req.pct / 100,
@@ -880,6 +870,30 @@ async def test_percentage(req: TestRequest):
         )
 
     return {"status": "ok", "pct": req.pct, "home": req.home, "away": req.away}
+
+
+@app.get("/api/simulator")
+async def get_simulator_settings():
+    """Get saved simulator defaults."""
+    return get_simulator_defaults()
+
+
+class SimulatorDefaultsRequest(BaseModel):
+    league: str
+    home: str
+    away: str
+    win_pct: int
+
+
+@app.post("/api/simulator")
+async def save_simulator_settings(req: SimulatorDefaultsRequest):
+    """Save simulator defaults to settings.yaml."""
+    return update_simulator_defaults({
+        "league": req.league,
+        "home": req.home,
+        "away": req.away,
+        "win_pct": req.win_pct,
+    })
 
 
 # Mount static files

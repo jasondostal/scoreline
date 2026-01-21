@@ -555,6 +555,7 @@
                 <button onclick="setSimPct(15)" class="sim-preset-btn">Away upset</button>
                 <button onclick="setSimPct(95)" class="sim-preset-btn">Blowout</button>
                 <button onclick="toggleAutoPlay()" id="auto-play-btn" class="sim-preset-btn" style="margin-left: auto;">▶ Auto-play</button>
+                <button onclick="saveSimDefaults()" id="save-sim-btn" class="sim-preset-btn" title="Save current league/teams/pct as default">💾 Save</button>
             </div>
 
             <!-- Display Settings -->
@@ -1347,8 +1348,11 @@
             }).join('');
         }
 
+        // Debounce timer for simulator updates
+        let simUpdateTimer = null;
+
         function updateSimSettings() {
-            // Update value displays
+            // Update value displays immediately (responsive UI)
             const dignity = document.getElementById('sim-dignity').value;
             const buffer = document.getElementById('sim-buffer').value;
             const divider = document.getElementById('sim-divider').value;
@@ -1372,9 +1376,12 @@
                 chase_intensity: parseInt(intensity),
             };
 
-            // Update preview and send to WLED
+            // Update preview immediately (local, no network)
             updateSimPreview(parseInt(document.getElementById('test-slider').value));
-            updateSimulator();
+
+            // Debounce the WLED update - wait 150ms after last change
+            if (simUpdateTimer) clearTimeout(simUpdateTimer);
+            simUpdateTimer = setTimeout(() => updateSimulator(), 150);
         }
 
         async function toggleSimTarget(host) {
@@ -1630,7 +1637,101 @@
             updateSimulator();
         });
 
-        testSlider.addEventListener('input', () => updateSimulator());
+        testSlider.addEventListener('input', () => {
+            // Update display immediately
+            document.getElementById('test-pct').textContent = testSlider.value + '%';
+            updateSimPreview(parseInt(testSlider.value));
+            // Debounce WLED update
+            if (simUpdateTimer) clearTimeout(simUpdateTimer);
+            simUpdateTimer = setTimeout(() => updateSimulator(), 100);
+        });
+
+        // Load simulator defaults from server
+        async function loadSimDefaults() {
+            try {
+                const resp = await fetch('/api/simulator');
+                const defaults = await resp.json();
+
+                // Set slider
+                if (defaults.win_pct !== undefined) {
+                    testSlider.value = defaults.win_pct;
+                    document.getElementById('test-pct').textContent = defaults.win_pct + '%';
+                }
+
+                // Set league first, then load teams
+                if (defaults.league) {
+                    simLeague.value = defaults.league;
+                    // Trigger team loading
+                    const teamsResp = await fetch(`/api/teams/${defaults.league}`);
+                    const teams = await teamsResp.json();
+                    simLeague._teams = teams;
+
+                    const options = '<option value="">Pick team...</option>' +
+                        teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                    simAway.innerHTML = options;
+                    simHome.innerHTML = options;
+                    simAway.disabled = false;
+                    simHome.disabled = false;
+
+                    // Set selected teams
+                    if (defaults.away) {
+                        simAway.value = defaults.away;
+                        const awayTeam = teams.find(t => t.id === defaults.away);
+                        if (awayTeam) {
+                            simTeamColors.away = awayTeam.colors || GRAY_TEAM;
+                            document.getElementById('sim-away-label').textContent = awayTeam.name;
+                        }
+                    }
+                    if (defaults.home) {
+                        simHome.value = defaults.home;
+                        const homeTeam = teams.find(t => t.id === defaults.home);
+                        if (homeTeam) {
+                            simTeamColors.home = homeTeam.colors || GRAY_TEAM;
+                            document.getElementById('sim-home-label').textContent = homeTeam.name;
+                        }
+                    }
+                }
+
+                // Update preview with loaded values
+                updateSimPreview(parseInt(testSlider.value));
+            } catch (e) {
+                console.log('No saved simulator defaults');
+            }
+        }
+
+        // Save current simulator state as defaults
+        async function saveSimDefaults() {
+            const btn = document.getElementById('save-sim-btn');
+            const league = simLeague.value;
+            const home = simHome.value;
+            const away = simAway.value;
+            const pct = parseInt(testSlider.value);
+
+            if (!league || !home || !away) {
+                alert('Select a league and both teams first');
+                return;
+            }
+
+            btn.textContent = '...';
+            btn.disabled = true;
+
+            try {
+                await fetch('/api/simulator', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ league, home, away, win_pct: pct })
+                });
+                btn.textContent = '✓ Saved';
+                setTimeout(() => {
+                    btn.textContent = '💾 Save';
+                    btn.disabled = false;
+                }, 1500);
+            } catch (e) {
+                btn.textContent = '💾 Save';
+                btn.disabled = false;
+                alert('Failed to save');
+            }
+        }
 
         // Initialize simulator leagues dropdown and preview
         (async function initSimulator() {
@@ -1638,8 +1739,12 @@
             const simLeagues = await resp.json();
             simLeague.innerHTML = '<option value="">League...</option>' +
                 simLeagues.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-            // Show gray preview immediately
-            updateSimPreview(50);
+
+            // Load saved defaults (will populate league/teams/pct)
+            await loadSimDefaults();
+
+            // Show preview with loaded or default values
+            updateSimPreview(parseInt(testSlider.value));
         })();
 
         // Initial load

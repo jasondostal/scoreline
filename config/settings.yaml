@@ -1,16 +1,4 @@
 wled_instances:
-- host: 192.168.1.100
-  start: 0
-  end: 629
-  display:
-    chase_speed: 198
-    chase_intensity: 117
-    min_team_pct: 0.07
-    contested_zone_pixels: 5
-    dark_buffer_pixels: 3
-  post_game:
-    action: preset
-    preset_id: 1
 - host: wledhouse.witekdivers.com
   start: 0
   end: 629
@@ -26,3 +14,8 @@ display:
   transition_ms: 500
   chase_speed: 185
   chase_intensity: 190
+simulator:
+  league: nfl
+  home: GB
+  away: CHI
+  win_pct: 50
