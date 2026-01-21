@@ -2,60 +2,76 @@
 
 Live sports win probability visualized on your LED strip.
 
-Scoreline polls ESPN for real-time game data and translates win probability into a dynamic light display on [WLED](https://kno.wled.ge/)-controlled LEDs. Watch the colors shift as momentum swings.
+Scoreline polls ESPN for real-time game data and translates win probability into a dynamic light display on [WLED](https://kno.wled.ge/)-controlled LEDs. Watch the "battle line" shift as momentum swings.
 
-## How It Works
+## Features
 
-1. Pick a live game from the web UI
-2. Scoreline polls ESPN every 30 seconds for win probability
-3. Your LED strip splits proportionally between team colors
-4. Home team on one end, away team on the other - the boundary shifts with the game
+### Core
+- **Real-time win probability** - Polls ESPN every 30 seconds, updates LED segments proportionally
+- **5 leagues supported** - NFL, NBA, MLB, NHL, MLS (153 teams total)
+- **Multi-instance** - Run different games on different LED strips simultaneously
+- **Battle line visualization** - Home/away team colors chase inward toward an animated divider
+
+### Auto-Watch
+- **Favorite teams** - Configure teams to watch per WLED instance (e.g., `nfl:GB`, `nba:MIL`)
+- **Auto-start** - When your team's game goes live, lights turn on automatically
+- **Per-instance** - Each strip can watch different teams
+
+### Post-Game Actions
+When a game ends, Scoreline can:
+- **Flash winner colors** then fade off (default)
+- **Fade off** gracefully
+- **Turn off** immediately
+- **Restore previous preset** - Returns WLED to whatever was playing before the game
+- **Switch to preset** - Jump to a specific WLED preset (stay on)
+
+### Display Customization (Per-Instance)
+- **Minimum dignity** - Losing team always keeps at least X% of the strip
+- **Dark buffer** - Black pixels separating teams from the battle line
+- **Divider size** - Width of the animated center divider
+- **Chase speed & intensity** - Control the team color chase effect
+
+### Quality of Life
+- **Preset preservation** - Saves your current WLED state before taking over, can restore after
+- **Blackout mode** - Pixels outside your configured range go dark during games
+- **mDNS discovery** - Auto-find WLED devices on your network
+- **Hot-reload config** - YAML changes detected automatically
+- **Non-destructive UI** - Refresh won't reset forms while you're interacting
 
 ## Quick Start
 
-### Docker (Recommended)
+### Docker Compose (Recommended)
+
+```yaml
+services:
+  scoreline:
+    image: ghcr.io/jasondostal/scoreline:latest
+    container_name: scoreline
+    restart: unless-stopped
+    ports:
+      - "8084:8080"
+    volumes:
+      - ./config:/app/config
+    environment:
+      - TZ=America/Chicago
+```
 
 ```bash
-mkdir scoreline && cd scoreline
-
-# First run creates config/settings.yaml and config/leagues/ automatically
-docker run -d --name scoreline \
-  -p 8084:8080 \
-  -v ./config:/app/config \
-  ghcr.io/jasondostal/scoreline:latest
-
-# Edit the generated config with your WLED IP
-nano config/settings.yaml
-
-# Restart to pick up changes
-docker restart scoreline
+docker compose up -d
+# Edit config/settings.yaml with your WLED IP
+# Container auto-creates defaults on first run
 ```
 
 Open `http://localhost:8084` and pick a game.
 
-### Using Docker Compose
+### Docker Run
 
 ```bash
-git clone https://github.com/jasondostal/scoreline.git
-cd scoreline
-docker compose up -d
-
-# Edit config/settings.yaml with your WLED IP, then restart
-docker compose restart
-```
-
-### Manual
-
-```bash
-git clone https://github.com/jasondostal/scoreline.git
-cd scoreline
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# Edit config/settings.yaml with your WLED IP
-cd app
-uvicorn main:app --host 0.0.0.0 --port 8080
+mkdir scoreline && cd scoreline
+docker run -d --name scoreline \
+  -p 8084:8080 \
+  -v ./config:/app/config \
+  ghcr.io/jasondostal/scoreline:latest
 ```
 
 ## Configuration
@@ -64,39 +80,52 @@ Edit `config/settings.yaml`:
 
 ```yaml
 wled_instances:
-  - host: "192.168.1.100"  # Your WLED IP
-    start: 0               # First LED index
-    end: 629               # Last LED index
+  - host: 192.168.1.100
+    start: 0
+    end: 629
+    watch_teams:           # Auto-watch these teams
+      - nfl:GB
+      - nba:MIL
+    display:               # Per-instance overrides
+      chase_speed: 185
+      chase_intensity: 190
+      min_team_pct: 0.05
+    post_game:             # What happens when game ends
+      action: restore      # off | fade_off | flash_then_off | restore | preset
+      preset_id: 5         # Only needed for action: preset
 
-poll_interval: 30          # Seconds between ESPN updates
-default_league: nfl        # League shown on startup
+poll_interval: 30
+auto_watch_interval: 300   # How often to scan for favorite team games (seconds)
+
+display:                   # Global defaults
+  divider_color: [200, 80, 0]
+  min_team_pct: 0.05
+  contested_zone_pixels: 6
+  dark_buffer_pixels: 4
+  chase_speed: 185
+  chase_intensity: 190
+
+post_game:                 # Global defaults
+  action: flash_then_off
+  flash_count: 3
+  flash_duration_ms: 500
+  fade_duration_s: 3
 ```
-
-Multiple WLED instances are supported - each can display its own game.
 
 ## Data Directory
 
-All configuration lives in a single directory you control. **First run auto-populates it with defaults** - just mount an empty directory and the container creates everything:
+First run auto-populates with defaults:
 
 ```
 config/
-├── settings.yaml      # Your WLED instances and preferences
-└── leagues/           # League definitions (editable!)
+├── settings.yaml      # WLED instances, preferences, watch teams
+└── leagues/           # League definitions (team colors, ESPN mappings)
     ├── nfl.yaml
     ├── nba.yaml
     ├── mlb.yaml
     ├── nhl.yaml
     └── mls.yaml
 ```
-
-Mount it wherever fits your setup:
-
-```yaml
-volumes:
-  - /path/to/your/scoreline/config:/app/config
-```
-
-Back it up with the rest of your homelab configs. Your edits persist across container updates.
 
 ## Supported Leagues
 
@@ -106,7 +135,7 @@ Back it up with the rest of your homelab configs. Your edits persist across cont
 - NHL (32 teams)
 - MLS (29 teams)
 
-League definitions live in `config/leagues/` as YAML files. Each includes team colors and ESPN sport mapping. Drop in your own YAML to add a league.
+League files are YAML - drop in your own to add a league.
 
 ## API
 
@@ -114,47 +143,27 @@ League definitions live in `config/leagues/` as YAML files. Each includes team c
 |----------|--------|-------------|
 | `/api/leagues` | GET | List available leagues |
 | `/api/games/{league}` | GET | Get live games for a league |
-| `/api/watch` | POST | Start watching a game |
-| `/api/stop` | POST | Stop watching, turn off LEDs |
-| `/api/status` | GET | Current game status |
+| `/api/instances` | GET | List WLED instances and status |
+| `/api/instance/{host}/watch` | POST | Start watching a game |
+| `/api/instance/{host}/stop` | POST | Stop watching |
+| `/api/instance/{host}/settings` | POST | Update display settings |
+| `/api/instance/{host}/watch_teams` | GET/POST | Get/set auto-watch teams |
+| `/api/instance/{host}/post_game` | POST | Set post-game action |
+| `/api/status` | GET | Current watching status |
 | `/api/test` | POST | Test mode - set arbitrary win % |
-| `/api/settings` | GET | Current config |
-| `/api/reload` | POST | Hot-reload config from disk |
 | `/api/discover` | GET | Scan for WLED devices via mDNS |
 | `/api/wled/add` | POST | Add WLED device to config |
-
-## Adding WLED Devices
-
-Three ways to add WLED devices:
-
-1. **UI Form** - Click "Add WLED" in the web interface and enter the IP, start LED, and end LED
-2. **mDNS Discovery** - Click "Scan Network" to auto-discover WLED devices (requires host networking or running on same network segment)
-3. **Edit YAML** - Add entries directly to `config/settings.yaml`
-
-All methods write to the same config file. Changes via UI take effect immediately; YAML edits require a restart or hitting `/api/reload`.
-
-**Note on mDNS Discovery:** When running in Docker with bridge networking, mDNS discovery won't find devices on your LAN. For discovery to work, either run with `network_mode: host` or run Scoreline directly on a machine in the same network segment as your WLED devices. The UI form works regardless of network mode.
+| `/api/reload` | POST | Hot-reload config from disk |
 
 ## Requirements
 
-- WLED-controlled LED strip (any length)
-- Network access to your WLED device
+- WLED-controlled LED strip
+- Network access to WLED device
 - Docker or Python 3.11+
-
-## Project Status
-
-Working and usable. Active development toward v1.0 with planned features:
-
-- [x] mDNS discovery for WLED devices
-- [x] Per-instance game selection (different games on different strips)
-- [x] Auto-reload config on YAML changes
-- [x] Configurable effects and segment sizing
-- [ ] Team auto-watch (lights turn on when your team plays)
-- [ ] Post-game actions (turn off, switch to preset, etc.)
 
 ## License
 
-MIT - see [LICENSE](LICENSE)
+MIT
 
 ## Acknowledgments
 

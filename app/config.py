@@ -39,11 +39,91 @@ def load_settings() -> dict:
         "chase_intensity": display.get("chase_intensity", 190),
     }
 
+    # Post-game settings with defaults
+    post_game = settings.get("post_game", {})
+    post_game_settings = {
+        "action": post_game.get("action", "flash_then_off"),  # off | fade_off | flash_then_off | restore | preset
+        "flash_count": post_game.get("flash_count", 3),
+        "flash_duration_ms": post_game.get("flash_duration_ms", 500),
+        "fade_duration_s": post_game.get("fade_duration_s", 3),
+        "preset_id": post_game.get("preset_id"),  # For action: preset
+    }
+
     return {
         "wled_instances": settings.get("wled_instances", []),
         "poll_interval": settings.get("poll_interval", 30),
+        "auto_watch_interval": settings.get("auto_watch_interval", 300),  # 5 min default
         "display": display_settings,
+        "post_game": post_game_settings,
     }
+
+
+def get_instance_watch_teams(host: str) -> list[str]:
+    """
+    Get watch_teams for a specific instance.
+    Returns list of "league:team" strings, e.g. ["nfl:GB", "nba:MIL"]
+    """
+    settings_path = CONFIG_DIR / "settings.yaml"
+    raw_settings = _load_yaml(settings_path)
+
+    for inst in raw_settings.get("wled_instances", []):
+        if inst.get("host") == host:
+            return inst.get("watch_teams", [])
+    return []
+
+
+def get_all_watched_teams() -> dict[str, list[tuple[str, str]]]:
+    """
+    Get all watched teams across all instances.
+    Returns dict of league -> [(team, host), ...] for efficient scoreboard scanning.
+    """
+    settings_path = CONFIG_DIR / "settings.yaml"
+    raw_settings = _load_yaml(settings_path)
+
+    watched: dict[str, list[tuple[str, str]]] = {}
+
+    for inst in raw_settings.get("wled_instances", []):
+        host = inst.get("host")
+        for team_spec in inst.get("watch_teams", []):
+            if ":" in team_spec:
+                league, team = team_spec.split(":", 1)
+                if league not in watched:
+                    watched[league] = []
+                watched[league].append((team.upper(), host))
+
+    return watched
+
+
+def update_instance_watch_teams(host: str, watch_teams: list[str]) -> dict:
+    """
+    Update watch_teams for a specific WLED instance.
+    """
+    global _settings
+
+    settings_path = CONFIG_DIR / "settings.yaml"
+    raw_settings = _load_yaml(settings_path)
+
+    if "wled_instances" not in raw_settings:
+        return {"status": "error", "message": "No instances configured"}
+
+    found = False
+    for inst in raw_settings["wled_instances"]:
+        if inst.get("host") == host:
+            inst["watch_teams"] = watch_teams
+            found = True
+            break
+
+    if not found:
+        return {"status": "error", "message": f"Instance {host} not found"}
+
+    # Write back
+    with open(settings_path, "w") as f:
+        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+
+    # Reload cache
+    _settings = load_settings()
+
+    return {"status": "updated", "watch_teams": watch_teams}
 
 
 def load_leagues() -> dict:
@@ -211,3 +291,65 @@ def get_instance_display_settings(host: str) -> dict:
 
     # Fallback to global
     return global_display
+
+
+def update_instance_post_game_settings(host: str, post_game_settings: dict) -> dict:
+    """
+    Update post-game settings for a specific WLED instance.
+    """
+    global _settings
+
+    settings_path = CONFIG_DIR / "settings.yaml"
+    raw_settings = _load_yaml(settings_path)
+
+    if "wled_instances" not in raw_settings:
+        return {"status": "error", "message": "No instances configured"}
+
+    found = False
+    for inst in raw_settings["wled_instances"]:
+        if inst.get("host") == host:
+            if "post_game" not in inst:
+                inst["post_game"] = {}
+            inst["post_game"].update(post_game_settings)
+            found = True
+            break
+
+    if not found:
+        return {"status": "error", "message": f"Instance {host} not found"}
+
+    # Write back
+    with open(settings_path, "w") as f:
+        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+
+    # Reload cache
+    _settings = load_settings()
+
+    return {"status": "updated", "post_game": post_game_settings}
+
+
+def get_instance_post_game_settings(host: str) -> dict:
+    """
+    Get post-game settings for a specific instance, with fallback to global.
+    """
+    settings = get_settings()
+    global_post_game = settings.get("post_game", {})
+
+    # Load raw settings to check for per-instance overrides
+    settings_path = CONFIG_DIR / "settings.yaml"
+    raw_settings = _load_yaml(settings_path)
+
+    # Find instance-specific settings
+    for inst in raw_settings.get("wled_instances", []):
+        if inst.get("host") == host:
+            inst_post_game = inst.get("post_game", {})
+            # Merge: instance overrides global
+            return {
+                "action": inst_post_game.get("action", global_post_game.get("action", "flash_then_off")),
+                "flash_count": inst_post_game.get("flash_count", global_post_game.get("flash_count", 3)),
+                "flash_duration_ms": inst_post_game.get("flash_duration_ms", global_post_game.get("flash_duration_ms", 500)),
+                "fade_duration_s": inst_post_game.get("fade_duration_s", global_post_game.get("fade_duration_s", 3)),
+                "preset_id": inst_post_game.get("preset_id", global_post_game.get("preset_id")),
+            }
+
+    # Fallback to global
+    return global_post_game

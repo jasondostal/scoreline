@@ -64,35 +64,6 @@
             box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.3);
         }
 
-        .btn-primary {
-            background: #0066cc;
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: #0052a3;
-        }
-
-        .btn-primary:disabled {
-            background: #99c2e8;
-            cursor: not-allowed;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-            color: #fff;
-        }
-
-        .btn-danger:hover {
-            background: #b91c1c;
-        }
-
-        .btn-row {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
         /* Test controls */
         .test-controls {
             margin-top: 16px;
@@ -110,18 +81,6 @@
             justify-content: space-between;
             font-size: 12px;
             color: #666;
-        }
-
-        /* Keyboard hints */
-        kbd {
-            display: inline-block;
-            padding: 2px 6px;
-            font-size: 11px;
-            font-family: "SF Mono", Monaco, Consolas, monospace;
-            background: #f5f5f5;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            box-shadow: 0 1px 0 #ccc;
         }
 
         .hint {
@@ -242,6 +201,68 @@
             border-radius: 50%;
             cursor: pointer;
         }
+
+        /* Watch teams */
+        .watch-teams {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin: 6px 0;
+        }
+
+        .watch-team-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #e0f2fe;
+            border: 1px solid #7dd3fc;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-family: monospace;
+        }
+
+        .watch-team-tag button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #0369a1;
+            font-size: 12px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .watch-team-tag button:hover {
+            color: #dc2626;
+        }
+
+        .watch-add-form {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .watch-add-form select {
+            padding: 4px 6px;
+            font-size: 11px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .watch-add-form button {
+            padding: 4px 8px;
+            font-size: 11px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .watch-add-form button:disabled {
+            background: #86efac;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -281,13 +302,13 @@
         <div class="test-controls">
             <div class="section-label">Simulator</div>
             <div class="section" style="display: flex; gap: 8px; margin-bottom: 8px;">
-                <select id="sim-league" class="typeahead-input" style="flex: 1;">
+                <select id="sim-league" style="flex: 1;">
                     <option value="">League...</option>
                 </select>
-                <select id="sim-away" class="typeahead-input" style="flex: 1;" disabled>
+                <select id="sim-away" style="flex: 1;" disabled>
                     <option value="">Away...</option>
                 </select>
-                <select id="sim-home" class="typeahead-input" style="flex: 1;" disabled>
+                <select id="sim-home" style="flex: 1;" disabled>
                     <option value="">Home...</option>
                 </select>
             </div>
@@ -325,6 +346,8 @@
 
             list.innerHTML = instanceStates.map(inst => {
                 const isWatching = inst.watching;
+                const hasWatchTeams = (inst.watch_teams || []).length > 0;
+                const isOverride = isWatching && hasWatchTeams;  // Manually watching when auto-watch is configured
                 const gameInfo = inst.home_team ?
                     `${inst.away_display || inst.away_team} @ ${inst.home_display || inst.home_team}` : '';
                 const scoreInfo = inst.home_score !== undefined ?
@@ -356,39 +379,76 @@
                 const dividerPctWidth = (contestedPx / totalPixels * 100).toFixed(1);
                 const awayPctWidth = (awayPixels / totalPixels * 100).toFixed(1);
 
+                // Status badges
+                const statusBadge = isWatching
+                    ? (isOverride
+                        ? `<span style="font-size: 10px; color: #d97706; font-weight: 600; background: #fef3c7; padding: 2px 6px; border-radius: 3px;">⚡ OVERRIDE</span>`
+                        : `<span style="font-size: 11px; color: #22c55e; font-weight: 600;">● LIVE</span>`)
+                    : '';
+
+                // Stop/Resume button
+                const stopButton = isWatching
+                    ? (hasWatchTeams
+                        ? `<button onclick="stopInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #6366f1; color: white; border: none;">↩ Resume Auto-Watch</button>`
+                        : `<button onclick="stopInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #dc2626; color: white; border: none;">Stop</button>`)
+                    : '';
+
                 return `
-                <div class="instance-card" style="background: ${isWatching ? '#f0fdf4' : '#f5f5f5'}; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid ${isWatching ? '#bbf7d0' : '#e0e0e0'};">
+                <div class="instance-card" style="background: ${isWatching ? (isOverride ? '#fffbeb' : '#f0fdf4') : '#f5f5f5'}; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid ${isWatching ? (isOverride ? '#fcd34d' : '#bbf7d0') : '#e0e0e0'};">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span>
                             <strong style="font-family: monospace;">${inst.host}</strong>
                             <span style="color: #666; font-size: 12px; margin-left: 8px;">[${inst.start}-${inst.end}] ${totalPixels}px</span>
                         </span>
                         <span style="display: flex; align-items: center; gap: 6px;">
-                            ${isWatching ? `<span style="font-size: 11px; color: #22c55e; font-weight: 600;">● LIVE</span>` : ''}
+                            ${statusBadge}
                             <button class="settings-toggle" onclick="toggleSettings('${inst.host}')" title="Settings">⚙️</button>
                         </span>
                     </div>
+
                     ${isWatching ? `
                         <div style="font-size: 13px; margin-bottom: 8px;">
                             <div style="font-weight: 500;">${gameInfo}</div>
                             <div style="color: #666;">${scoreInfo} ${pctInfo ? '| ' + pctInfo : ''}</div>
                         </div>
-                        <button onclick="stopInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #dc2626; color: white; border: none;">Stop</button>
-                    ` : `
-                        <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-                            <select id="league-${inst.host}" onchange="loadGamesForInstance('${inst.host}')" style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
-                                <option value="">League...</option>
-                                ${leagues.map(l => `<option value="${l.id}">${l.name}</option>`).join('')}
-                            </select>
-                            <select id="game-${inst.host}" style="flex: 2; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;" disabled>
-                                <option value="">Select league first...</option>
-                            </select>
-                        </div>
-                        <button onclick="watchOnInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #22c55e; color: white; border: none;">Watch</button>
-                    `}
+                    ` : ''}
+
+                    <!-- Game selector - always visible -->
+                    <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                        <select id="league-${inst.host}" onchange="loadGamesForInstance('${inst.host}')" style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="">League...</option>
+                            ${leagues.map(l => `<option value="${l.id}">${l.name}</option>`).join('')}
+                        </select>
+                        <select id="game-${inst.host}" onchange="watchGameFromSelect('${inst.host}')" style="flex: 2; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;" disabled>
+                            <option value="">${isWatching ? 'Switch game...' : 'Select league first...'}</option>
+                        </select>
+                    </div>
+
+                    ${stopButton}
 
                     <!-- Settings Panel -->
                     <div id="settings-${hostId}" class="instance-settings ${isExpanded ? '' : 'hidden'}">
+                        <div class="section-label" style="margin-bottom: 6px;">Auto-Watch Teams</div>
+                        <div class="watch-teams" id="watch-teams-${hostId}">
+                            ${(inst.watch_teams || []).map(wt => `
+                                <span class="watch-team-tag">
+                                    ${wt}
+                                    <button onclick="removeWatchTeam('${inst.host}', '${wt}')" title="Remove">×</button>
+                                </span>
+                            `).join('') || '<span style="font-size: 11px; color: #888;">No teams - games won\'t auto-start</span>'}
+                        </div>
+                        <div class="watch-add-form">
+                            <select id="watch-league-${hostId}" onchange="loadWatchTeams('${inst.host}')">
+                                <option value="">League...</option>
+                                ${leagues.map(l => `<option value="${l.id}">${l.name}</option>`).join('')}
+                            </select>
+                            <select id="watch-team-${hostId}" disabled>
+                                <option value="">Team...</option>
+                            </select>
+                            <button onclick="addWatchTeam('${inst.host}')" id="watch-add-btn-${hostId}" disabled>Add</button>
+                        </div>
+                        <div class="hint" style="margin: 4px 0 12px 0;">When a watched team is playing, their game auto-starts.</div>
+
                         <div class="section-label" style="margin-bottom: 8px;">Strip Preview</div>
                         <div class="strip-preview" id="preview-${hostId}">
                             <div class="strip-segment home" style="width: ${homePctWidth}%">
@@ -411,10 +471,27 @@
                             <span class="settings-value" id="dignity-value-${hostId}">${Math.round(minPct * 100)}% (${minDignityPixels}px)</span>
                         </div>
 
+                        <div class="section-label" style="margin: 12px 0 8px 0;">Battle Zone</div>
+
                         <div class="settings-row">
-                            <span class="settings-label">Battle Zone</span>
-                            <span class="settings-value">${battleZone}px (${darkBufferPx}+${contestedPx}+${darkBufferPx})</span>
+                            <span class="settings-label">Buffer</span>
+                            <input type="range" class="settings-slider"
+                                   id="buffer-${hostId}"
+                                   min="0" max="20" value="${darkBufferPx}"
+                                   oninput="updateBattleZonePreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
+                            <span class="settings-value" id="buffer-value-${hostId}">${darkBufferPx}px</span>
                         </div>
+
+                        <div class="settings-row">
+                            <span class="settings-label">Divider</span>
+                            <input type="range" class="settings-slider"
+                                   id="divider-${hostId}"
+                                   min="2" max="30" value="${contestedPx}"
+                                   oninput="updateBattleZonePreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
+                            <span class="settings-value" id="divider-value-${hostId}">${contestedPx}px</span>
+                        </div>
+
+                        <div class="hint" style="margin: 4px 0 12px 0;">Buffer = black bars, Divider = animated center. Total: <span id="battlezone-total-${hostId}">${battleZone}px</span></div>
 
                         <div class="section-label" style="margin: 12px 0 8px 0;">Chase Effect</div>
 
@@ -437,6 +514,32 @@
                         </div>
 
                         <div class="hint" style="margin: 4px 0;">Lower speed = slower chase. Longer strips need slower values.</div>
+
+                        <div class="section-label" style="margin: 12px 0 8px 0;">Post-Game Action</div>
+
+                        <div class="settings-row">
+                            <span class="settings-label">Action</span>
+                            <select id="post-action-${hostId}"
+                                    onchange="updatePostGameUI('${inst.host}'); autoSavePostGame('${inst.host}')"
+                                    style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                                <option value="flash_then_off" ${(inst.post_game_action || 'flash_then_off') === 'flash_then_off' ? 'selected' : ''}>Flash winner, fade off</option>
+                                <option value="fade_off" ${inst.post_game_action === 'fade_off' ? 'selected' : ''}>Fade off</option>
+                                <option value="off" ${inst.post_game_action === 'off' ? 'selected' : ''}>Off (immediate)</option>
+                                <option value="restore" ${inst.post_game_action === 'restore' ? 'selected' : ''}>Restore previous preset</option>
+                                <option value="preset" ${inst.post_game_action === 'preset' ? 'selected' : ''}>Switch to preset...</option>
+                            </select>
+                        </div>
+
+                        <div class="settings-row" id="preset-row-${hostId}" style="${inst.post_game_action === 'preset' ? '' : 'display: none;'}">
+                            <span class="settings-label">Preset ID</span>
+                            <input type="number" id="post-preset-${hostId}"
+                                   value="${inst.post_game_preset_id || ''}"
+                                   placeholder="e.g. 1"
+                                   onchange="autoSavePostGame('${inst.host}')"
+                                   style="width: 80px; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+
+                        <div class="hint" style="margin: 4px 0;">What happens when the game ends. "Restore" returns to whatever was playing before.</div>
                     </div>
                 </div>
                 `;
@@ -492,6 +595,21 @@
             }
         }
 
+        function updateBattleZonePreview(host) {
+            const hostId = host.replace(/\./g, '-');
+            const bufferSlider = document.getElementById(`buffer-${hostId}`);
+            const dividerSlider = document.getElementById(`divider-${hostId}`);
+
+            const bufferPx = parseInt(bufferSlider.value);
+            const dividerPx = parseInt(dividerSlider.value);
+            const totalPx = (bufferPx * 2) + dividerPx;
+
+            // Update displays
+            document.getElementById(`buffer-value-${hostId}`).textContent = `${bufferPx}px`;
+            document.getElementById(`divider-value-${hostId}`).textContent = `${dividerPx}px`;
+            document.getElementById(`battlezone-total-${hostId}`).textContent = `${totalPx}px`;
+        }
+
         // Debounced auto-save for instance settings
         const saveTimers = {};
         function autoSaveInstanceSettings(host) {
@@ -503,11 +621,15 @@
         async function saveInstanceSettings(host) {
             const hostId = host.replace(/\./g, '-');
             const dignitySlider = document.getElementById(`dignity-${hostId}`);
+            const bufferSlider = document.getElementById(`buffer-${hostId}`);
+            const dividerSlider = document.getElementById(`divider-${hostId}`);
             const chaseSpeedSlider = document.getElementById(`chase-speed-${hostId}`);
             const chaseIntensitySlider = document.getElementById(`chase-intensity-${hostId}`);
 
             const settings = {
                 min_team_pct: parseInt(dignitySlider.value) / 100,
+                dark_buffer_pixels: parseInt(bufferSlider.value),
+                contested_zone_pixels: parseInt(dividerSlider.value),
                 chase_speed: parseInt(chaseSpeedSlider.value),
                 chase_intensity: parseInt(chaseIntensitySlider.value),
             };
@@ -522,6 +644,122 @@
                 console.error('Failed to save settings for', host);
             }
             // Don't reload - let the periodic refresh handle it to avoid UI flicker
+        }
+
+        // Post-game settings
+        function updatePostGameUI(host) {
+            const hostId = host.replace(/\./g, '-');
+            const action = document.getElementById(`post-action-${hostId}`).value;
+            const presetRow = document.getElementById(`preset-row-${hostId}`);
+            presetRow.style.display = action === 'preset' ? '' : 'none';
+        }
+
+        const postGameTimers = {};
+        function autoSavePostGame(host) {
+            if (postGameTimers[host]) clearTimeout(postGameTimers[host]);
+            postGameTimers[host] = setTimeout(() => savePostGame(host), 500);
+        }
+
+        async function savePostGame(host) {
+            const hostId = host.replace(/\./g, '-');
+            const action = document.getElementById(`post-action-${hostId}`).value;
+            const presetInput = document.getElementById(`post-preset-${hostId}`);
+            const presetId = presetInput.value ? parseInt(presetInput.value) : null;
+
+            const settings = {
+                action: action,
+                preset_id: presetId,
+            };
+
+            const resp = await fetch(`/api/instance/${host}/post_game`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+
+            if (!resp.ok) {
+                console.error('Failed to save post-game settings for', host);
+            }
+        }
+
+        // Watch Teams management
+        async function loadWatchTeams(host) {
+            const hostId = host.replace(/\./g, '-');
+            const leagueSelect = document.getElementById(`watch-league-${hostId}`);
+            const teamSelect = document.getElementById(`watch-team-${hostId}`);
+            const addBtn = document.getElementById(`watch-add-btn-${hostId}`);
+            const league = leagueSelect.value;
+
+            if (!league) {
+                teamSelect.innerHTML = '<option value="">Team...</option>';
+                teamSelect.disabled = true;
+                addBtn.disabled = true;
+                return;
+            }
+
+            teamSelect.innerHTML = '<option value="">Loading...</option>';
+            const resp = await fetch(`/api/teams/${league}`);
+            const teams = await resp.json();
+
+            teamSelect.innerHTML = '<option value="">Team...</option>' +
+                teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            teamSelect.disabled = false;
+
+            teamSelect.onchange = () => {
+                addBtn.disabled = !teamSelect.value;
+            };
+        }
+
+        async function addWatchTeam(host) {
+            const hostId = host.replace(/\./g, '-');
+            const leagueSelect = document.getElementById(`watch-league-${hostId}`);
+            const teamSelect = document.getElementById(`watch-team-${hostId}`);
+
+            const league = leagueSelect.value;
+            const team = teamSelect.value;
+            if (!league || !team) return;
+
+            const teamSpec = `${league}:${team}`;
+
+            // Get current watch teams
+            const inst = instanceStates.find(i => i.host === host);
+            const current = inst?.watch_teams || [];
+
+            // Don't add duplicates
+            if (current.includes(teamSpec)) {
+                alert('Team already in watch list');
+                return;
+            }
+
+            const newList = [...current, teamSpec];
+
+            await fetch(`/api/instance/${host}/watch_teams`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ watch_teams: newList })
+            });
+
+            // Reset dropdowns
+            leagueSelect.value = '';
+            teamSelect.innerHTML = '<option value="">Team...</option>';
+            teamSelect.disabled = true;
+            document.getElementById(`watch-add-btn-${hostId}`).disabled = true;
+
+            await loadInstances();
+        }
+
+        async function removeWatchTeam(host, teamSpec) {
+            const inst = instanceStates.find(i => i.host === host);
+            const current = inst?.watch_teams || [];
+            const newList = current.filter(t => t !== teamSpec);
+
+            await fetch(`/api/instance/${host}/watch_teams`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ watch_teams: newList })
+            });
+
+            await loadInstances();
         }
 
         async function loadGamesForInstance(host) {
@@ -550,13 +788,13 @@
             }
         }
 
-        async function watchOnInstance(host) {
+        // Selecting a game immediately starts watching
+        async function watchGameFromSelect(host) {
             const leagueSelect = document.getElementById(`league-${host}`);
             const gameSelect = document.getElementById(`game-${host}`);
 
             if (!leagueSelect.value || !gameSelect.value) {
-                alert('Please select a league and game');
-                return;
+                return;  // No selection yet
             }
 
             await fetch(`/api/instance/${host}/watch`, {
@@ -574,15 +812,6 @@
         async function stopInstance(host) {
             await fetch(`/api/instance/${host}/stop`, { method: 'POST' });
             await loadInstances();
-        }
-
-        // Legacy: load settings for backwards compat
-        async function loadSettings() {
-            await loadInstances();
-        }
-
-        function renderWledList() {
-            renderInstanceCards();
         }
 
         // WLED Discovery
@@ -637,7 +866,7 @@
 
             if (result.status === 'added') {
                 // Refresh both lists
-                await loadSettings();
+                await loadInstances();
                 await scanForDevices();
             }
         }
@@ -689,7 +918,7 @@
                     document.getElementById('add-wled-start').value = '0';
                     document.getElementById('add-wled-end').value = '';
                     // Refresh list
-                    await loadSettings();
+                    await loadInstances();
                 } else if (result.status === 'exists') {
                     alert('This WLED device is already configured');
                 }
@@ -779,8 +1008,14 @@
             // Load instances
             await loadInstances();
 
-            // Periodic refresh for live scores
-            setInterval(loadInstances, 10000);
+            // Periodic refresh for live scores (skip if user is interacting with form)
+            setInterval(() => {
+                const active = document.activeElement;
+                if (active && active.matches('input, select, textarea')) {
+                    return; // Don't refresh while user is typing/selecting
+                }
+                loadInstances();
+            }, 10000);
         }
 
         init();

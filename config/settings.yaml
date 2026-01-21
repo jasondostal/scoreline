@@ -5,9 +5,16 @@ wled_instances:
   display:
     chase_speed: 198
     chase_intensity: 117
-    min_team_pct: 0.05
+    min_team_pct: 0.07
+    contested_zone_pixels: 5
+    dark_buffer_pixels: 3
+  post_game:
+    action: preset
+    preset_id: 1
+- host: wledhouse.witekdivers.com
+  start: 0
+  end: 629
 poll_interval: 30
-default_league: nfl
 display:
   divider_color:
   - 200

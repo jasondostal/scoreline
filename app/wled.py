@@ -4,6 +4,7 @@ WLED controller for dynamic game-day lighting.
 Handles segment creation, color assignment, and the "battle line" effect.
 """
 
+import asyncio
 import httpx
 from typing import Optional
 from dataclasses import dataclass
@@ -56,6 +57,12 @@ class WLEDController:
         except Exception as e:
             print(f"WLED state error: {e}")
             return {}
+
+    async def get_current_preset(self) -> Optional[int]:
+        """Get currently active preset ID, or None if no preset active."""
+        state = await self.get_state()
+        ps = state.get("ps", -1)
+        return ps if ps >= 0 else None
 
     async def set_state(self, state: dict) -> bool:
         """Push state update to WLED."""
@@ -126,11 +133,28 @@ class WLEDController:
         speed = int(base_speed + (tension * 15))  # Subtle speed variation
 
         segments = []
+        next_id = 0
 
-        # Segment 0: Home team
+        # Segment for pixels BEFORE our range (black out)
+        if start > 0:
+            segments.append({
+                "id": next_id,
+                "start": 0,
+                "stop": start,
+                "grp": 1,
+                "spc": 0,
+                "on": True,
+                "bri": 255,
+                "col": [[0, 0, 0], [0, 0, 0], [0, 0, 0]],  # Black
+                "fx": EFFECT_SOLID,
+                "sel": False,
+            })
+            next_id += 1
+
+        # Home team segment
         if home_pixels > 0:
             segments.append({
-                "id": 0,
+                "id": next_id,
                 "start": start,
                 "stop": home_end,
                 "grp": 1,
@@ -140,30 +164,32 @@ class WLEDController:
                 "col": [home_colors[0], home_colors[1], [0, 0, 0]],
                 "fx": EFFECT_CHASE_2,
                 "sx": speed,
-                "ix": self.config.chase_intensity,  # Controls segment size
+                "ix": self.config.chase_intensity,
                 "rev": home_reversed,
                 "sel": False,
             })
+            next_id += 1
 
-        # Segment 1: Left dark buffer
+        # Left dark buffer
         if dark_buffer > 0:
             segments.append({
-                "id": 1,
+                "id": next_id,
                 "start": dark_left_start,
                 "stop": dark_left_end,
                 "grp": 1,
                 "spc": 0,
                 "on": True,
                 "bri": 255,
-                "col": [[0, 0, 0], [0, 0, 0], [0, 0, 0]],  # Black
+                "col": [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
                 "fx": EFFECT_SOLID,
                 "sel": False,
             })
+            next_id += 1
 
-        # Segment 2: Jiggle divider (battle line)
+        # Jiggle divider (battle line)
         if contested > 0:
             segments.append({
-                "id": 2,
+                "id": next_id,
                 "start": jiggle_start,
                 "stop": jiggle_end,
                 "grp": 1,
@@ -172,31 +198,33 @@ class WLEDController:
                 "bri": 255,
                 "col": [self.config.divider_color, [0, 0, 0], [0, 0, 0]],
                 "fx": EFFECT_SCANNER,
-                "sx": 180,  # Jiggle speed
-                "ix": 200,  # Scanner width
+                "sx": 180,
+                "ix": 200,
                 "rev": False,
                 "sel": False,
             })
+            next_id += 1
 
-        # Segment 3: Right dark buffer
+        # Right dark buffer
         if dark_buffer > 0:
             segments.append({
-                "id": 3,
+                "id": next_id,
                 "start": dark_right_start,
                 "stop": dark_right_end,
                 "grp": 1,
                 "spc": 0,
                 "on": True,
                 "bri": 255,
-                "col": [[0, 0, 0], [0, 0, 0], [0, 0, 0]],  # Black
+                "col": [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
                 "fx": EFFECT_SOLID,
                 "sel": False,
             })
+            next_id += 1
 
-        # Segment 4: Away team
+        # Away team segment
         if away_pixels > 0:
             segments.append({
-                "id": 4,
+                "id": next_id,
                 "start": away_start,
                 "stop": end,
                 "grp": 1,
@@ -206,10 +234,26 @@ class WLEDController:
                 "col": [away_colors[0], away_colors[1], [0, 0, 0]],
                 "fx": EFFECT_CHASE_2,
                 "sx": speed,
-                "ix": self.config.chase_intensity,  # Controls segment size
+                "ix": self.config.chase_intensity,
                 "rev": away_reversed,
                 "sel": False,
             })
+            next_id += 1
+
+        # Segment for pixels AFTER our range (black out)
+        # Use a high number - WLED will clamp to actual strip length
+        segments.append({
+            "id": next_id,
+            "start": end,
+            "stop": 9999,
+            "grp": 1,
+            "spc": 0,
+            "on": True,
+            "bri": 255,
+            "col": [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            "fx": EFFECT_SOLID,
+            "sel": False,
+        })
 
         return segments
 
@@ -276,3 +320,75 @@ class WLEDController:
     async def restore_preset(self, preset_id: int) -> bool:
         """Restore a saved preset."""
         return await self.set_state({"ps": preset_id})
+
+    async def flash_colors(
+        self,
+        colors: list[list[int]],
+        count: int = 3,
+        flash_duration_ms: int = 500,
+    ) -> bool:
+        """
+        Flash colors on/off multiple times.
+
+        Args:
+            colors: [[R,G,B], [R,G,B]] team colors to flash
+            count: Number of flashes
+            flash_duration_ms: Duration of each on/off cycle
+
+        Returns:
+            True if successful
+        """
+        # Single segment covering the whole strip
+        segment = {
+            "id": 0,
+            "start": self.config.roofline_start,
+            "stop": self.config.roofline_end,
+            "grp": 1,
+            "spc": 0,
+            "on": True,
+            "bri": 255,
+            "col": [colors[0], colors[1], [0, 0, 0]],
+            "fx": EFFECT_SOLID,
+        }
+
+        delay = flash_duration_ms / 1000.0
+
+        for _ in range(count):
+            # Flash on
+            await self.set_state({
+                "on": True,
+                "bri": 255,
+                "transition": 0,  # Instant
+                "seg": [segment],
+            })
+            await asyncio.sleep(delay)
+
+            # Flash off
+            await self.set_state({"on": False, "transition": 0})
+            await asyncio.sleep(delay)
+
+        return True
+
+    async def fade_off(self, duration_s: float = 3.0) -> bool:
+        """
+        Gracefully fade to black over duration.
+
+        Args:
+            duration_s: Fade duration in seconds
+
+        Returns:
+            True if successful
+        """
+        # WLED transition is in 100ms units
+        transition = int(duration_s * 10)
+
+        # Set brightness to 0 with long transition
+        await self.set_state({
+            "on": True,
+            "bri": 0,
+            "transition": transition,
+        })
+
+        # Wait for transition to complete, then turn off
+        await asyncio.sleep(duration_s + 0.5)
+        return await self.set_state({"on": False})

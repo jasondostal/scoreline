@@ -22,7 +22,12 @@ logger = logging.getLogger("uvicorn.error")
 from espn import ESPNClient, GameInfo
 from wled import WLEDController, WLEDConfig
 from teams import get_team_colors, get_team_display
-from config import get_settings, get_leagues, reload_config, add_wled_instance, CONFIG_DIR, get_instance_display_settings
+from config import (
+    get_settings, get_leagues, reload_config, add_wled_instance, CONFIG_DIR,
+    get_instance_display_settings, get_all_watched_teams, get_instance_watch_teams,
+    update_instance_watch_teams, get_instance_post_game_settings,
+    update_instance_post_game_settings,
+)
 from discovery import discover_wled_devices
 
 
@@ -51,13 +56,15 @@ class InstanceState:
         self.start = start
         self.end = end
         self.controller: Optional[WLEDController] = None
-        self.game: Optional[dict] = None  # {league, game_id, last_info}
+        self.game: Optional[dict] = None  # {league, game_id, last_info, last_status}
+        self.previous_preset: Optional[int] = None  # Preset to restore after game
 
 
 class AppState:
     espn: Optional[ESPNClient] = None
     instances: dict[str, InstanceState] = {}  # host -> InstanceState
     poll_task: Optional[asyncio.Task] = None
+    auto_watch_task: Optional[asyncio.Task] = None
 
 
 state = AppState()
@@ -120,6 +127,8 @@ async def lifespan(app: FastAPI):
     init_instances()
     # Start the unified poll task
     state.poll_task = asyncio.create_task(poll_all_games())
+    # Start auto-watch task (scans for watched teams' games)
+    state.auto_watch_task = asyncio.create_task(auto_watch_all())
     # Start config file watcher (polling for Docker compatibility)
     config_observer = PollingObserver(timeout=5)
     config_observer.schedule(ConfigWatcher(), CONFIG_DIR, recursive=True)
@@ -132,6 +141,8 @@ async def lifespan(app: FastAPI):
         config_observer.join()
     if state.poll_task:
         state.poll_task.cancel()
+    if state.auto_watch_task:
+        state.auto_watch_task.cancel()
     if state.espn:
         await state.espn.close()
     for inst in state.instances.values():
@@ -188,22 +199,186 @@ async def poll_all_games():
                         away_colors = get_team_colors(league, game.away_team)
 
                         for inst in instances:
-                            inst.game["last_info"] = game
-                            await inst.controller.set_game_mode(
-                                home_win_pct=game.home_win_pct,
-                                home_colors=home_colors,
-                                away_colors=away_colors,
-                            )
+                            # Check for game end (status transition to "post")
+                            last_status = inst.game.get("last_status")
+                            if game.status == "post" and last_status != "post":
+                                # Game just ended - trigger post-game action
+                                asyncio.create_task(handle_game_ended(inst, game))
+                                continue  # Don't update lights, handler will manage it
 
-                        logger.info(f"[{league.upper()}] {game.away_team} @ {game.home_team} | "
-                                    f"{game.away_score}-{game.home_score} | "
-                                    f"Home: {game.home_win_pct:.1%} | "
-                                    f"{len(instances)} instance(s)")
+                            # Update status tracking
+                            inst.game["last_status"] = game.status
+                            inst.game["last_info"] = game
+
+                            # Only update lights for in-progress games
+                            if game.status == "in":
+                                await inst.controller.set_game_mode(
+                                    home_win_pct=game.home_win_pct,
+                                    home_colors=home_colors,
+                                    away_colors=away_colors,
+                                )
+
+                        # Log for in-progress games
+                        active_instances = [i for i in instances if i.game and i.game.get("last_status") == "in"]
+                        if active_instances:
+                            logger.info(f"[{league.upper()}] {game.away_team} @ {game.home_team} | "
+                                        f"{game.away_score}-{game.home_score} | "
+                                        f"Home: {game.home_win_pct:.1%} | "
+                                        f"{len(active_instances)} instance(s)")
 
         except Exception as e:
             logger.error(f"Poll error: {e}")
 
         await asyncio.sleep(30)  # Poll every 30 seconds
+
+
+async def auto_watch_all():
+    """
+    Background task to auto-start games for watched teams.
+    Scans scoreboards for leagues with watched teams, auto-starts in-progress games.
+    """
+    settings = get_settings()
+    interval = settings.get("auto_watch_interval", 300)
+
+    while True:
+        try:
+            watched = get_all_watched_teams()  # {league: [(team, host), ...]}
+
+            if not watched:
+                await asyncio.sleep(interval)
+                continue
+
+            for league, team_hosts in watched.items():
+                if league not in get_leagues():
+                    continue
+
+                sport = get_leagues()[league]["sport"]
+                games = await state.espn.get_scoreboard(sport, league)
+
+                for game in games:
+                    # Only auto-watch in-progress games
+                    if game["status"] != "in":
+                        continue
+
+                    home_team = game["home_team"].upper()
+                    away_team = game["away_team"].upper()
+
+                    # Find instances watching either team
+                    for team, host in team_hosts:
+                        if team != home_team and team != away_team:
+                            continue
+
+                        inst = state.instances.get(host)
+                        if not inst:
+                            continue
+
+                        # Skip if already watching something
+                        if inst.game is not None:
+                            continue
+
+                        # Auto-start!
+                        logger.info(f"[AUTO-WATCH] {host}: Starting {away_team}@{home_team} ({league.upper()})")
+
+                        if not inst.controller:
+                            config = build_wled_config(inst.host, inst.start, inst.end)
+                            inst.controller = WLEDController(config)
+
+                        # Save current preset before we take over (for restore action)
+                        inst.previous_preset = await inst.controller.get_current_preset()
+                        logger.info(f"[AUTO-WATCH] {host}: Saved previous preset {inst.previous_preset}")
+
+                        inst.game = {
+                            "league": league,
+                            "game_id": game["id"],
+                            "last_info": None,
+                            "last_status": "in",  # Auto-watch only starts in-progress games
+                        }
+
+        except Exception as e:
+            logger.error(f"Auto-watch error: {e}")
+
+        await asyncio.sleep(interval)
+
+
+async def handle_game_ended(inst: InstanceState, game_info: GameInfo):
+    """
+    Handle post-game actions when a game ends.
+
+    Args:
+        inst: The WLED instance that was watching
+        game_info: Final game state
+    """
+    if not inst.controller:
+        return
+
+    league = inst.game["league"]
+    post_game = get_instance_post_game_settings(inst.host)
+    action = post_game.get("action", "flash_then_off")
+
+    # Determine winner colors
+    if game_info.home_score > game_info.away_score:
+        winner = game_info.home_team
+        winner_colors = get_team_colors(league, game_info.home_team)
+    elif game_info.away_score > game_info.home_score:
+        winner = game_info.away_team
+        winner_colors = get_team_colors(league, game_info.away_team)
+    else:
+        # Tie - use home team colors (rare in most sports)
+        winner = "TIE"
+        winner_colors = get_team_colors(league, game_info.home_team)
+
+    logger.info(f"[POST-GAME] {inst.host}: {game_info.away_team} @ {game_info.home_team} "
+                f"Final: {game_info.away_score}-{game_info.home_score} | "
+                f"Winner: {winner} | Action: {action}")
+
+    try:
+        if action == "off":
+            await inst.controller.turn_off()
+
+        elif action == "fade_off":
+            fade_s = post_game.get("fade_duration_s", 3)
+            await inst.controller.fade_off(duration_s=fade_s)
+
+        elif action == "flash_then_off":
+            flash_count = post_game.get("flash_count", 3)
+            flash_ms = post_game.get("flash_duration_ms", 500)
+            fade_s = post_game.get("fade_duration_s", 3)
+
+            await inst.controller.flash_colors(
+                colors=winner_colors,
+                count=flash_count,
+                flash_duration_ms=flash_ms,
+            )
+            # Brief pause then fade
+            await asyncio.sleep(0.5)
+            await inst.controller.fade_off(duration_s=fade_s)
+
+        elif action == "restore":
+            # Restore the preset that was active before the game started
+            if inst.previous_preset is not None:
+                logger.info(f"[POST-GAME] {inst.host}: Restoring preset {inst.previous_preset}")
+                await inst.controller.restore_preset(inst.previous_preset)
+            else:
+                # No previous preset, just turn off
+                logger.info(f"[POST-GAME] {inst.host}: No previous preset, turning off")
+                await inst.controller.turn_off()
+
+        elif action == "preset":
+            # Switch to a specific configured preset
+            preset_id = post_game.get("preset_id")
+            if preset_id is not None:
+                logger.info(f"[POST-GAME] {inst.host}: Switching to preset {preset_id}")
+                await inst.controller.restore_preset(preset_id)
+            else:
+                logger.warning(f"[POST-GAME] {inst.host}: Action is 'preset' but no preset_id configured, turning off")
+                await inst.controller.turn_off()
+
+    except Exception as e:
+        logger.error(f"[POST-GAME] Error on {inst.host}: {e}")
+
+    # Clear the game state and previous preset
+    inst.game = None
+    inst.previous_preset = None
 
 
 # API Routes
@@ -340,17 +515,24 @@ async def list_instances():
         inst_cfg = instance_configs.get(host, {})
         inst_display = inst_cfg.get("display", {})
 
+        # Get post-game settings for this instance
+        post_game = get_instance_post_game_settings(host)
+
         item = {
             "host": host,
             "start": inst.start,
             "end": inst.end,
             "watching": inst.game is not None,
+            "watch_teams": get_instance_watch_teams(host),
             # Display settings (per-instance override > global > default)
             "min_team_pct": inst_display.get("min_team_pct", global_display.get("min_team_pct", 0.05)),
             "contested_zone_pixels": inst_display.get("contested_zone_pixels", global_display.get("contested_zone_pixels", 6)),
             "dark_buffer_pixels": inst_display.get("dark_buffer_pixels", global_display.get("dark_buffer_pixels", 4)),
             "chase_speed": inst_display.get("chase_speed", global_display.get("chase_speed", 185)),
             "chase_intensity": inst_display.get("chase_intensity", global_display.get("chase_intensity", 190)),
+            # Post-game settings
+            "post_game_action": post_game.get("action", "flash_then_off"),
+            "post_game_preset_id": post_game.get("preset_id"),
         }
         if inst.game:
             item["league"] = inst.game["league"]
@@ -381,11 +563,16 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
         config = build_wled_config(inst.host, inst.start, inst.end)
         inst.controller = WLEDController(config)
 
+    # Save current preset before we take over (for restore action)
+    inst.previous_preset = await inst.controller.get_current_preset()
+    logger.info(f"[WATCH] {host}: Saved previous preset {inst.previous_preset}")
+
     # Set the game
     inst.game = {
         "league": req.league,
         "game_id": req.game_id,
         "last_info": None,
+        "last_status": "in",  # Assume in-progress when manually started
     }
 
     return {"status": "watching", "host": host, "game_id": req.game_id}
@@ -448,6 +635,49 @@ async def update_instance_settings(host: str, req: InstanceSettingsRequest):
         inst.controller = WLEDController(config)
 
     return {"status": "updated", "host": host, **result}
+
+
+@app.get("/api/instance/{host}/watch_teams")
+async def get_watch_teams(host: str):
+    """Get watched teams for a specific WLED instance."""
+    if host not in state.instances:
+        raise HTTPException(404, f"Unknown instance: {host}")
+
+    watch_teams = get_instance_watch_teams(host)
+    return {"host": host, "watch_teams": watch_teams}
+
+
+class WatchTeamsRequest(BaseModel):
+    watch_teams: list[str]  # e.g. ["nfl:GB", "nba:MIL"]
+
+
+@app.post("/api/instance/{host}/watch_teams")
+async def set_watch_teams(host: str, req: WatchTeamsRequest):
+    """Set watched teams for a specific WLED instance."""
+    if host not in state.instances:
+        raise HTTPException(404, f"Unknown instance: {host}")
+
+    result = update_instance_watch_teams(host, req.watch_teams)
+    return result
+
+
+class PostGameRequest(BaseModel):
+    action: str  # off | fade_off | flash_then_off | restore | preset
+    preset_id: Optional[int] = None
+
+
+@app.post("/api/instance/{host}/post_game")
+async def set_post_game(host: str, req: PostGameRequest):
+    """Set post-game action for a specific WLED instance."""
+    if host not in state.instances:
+        raise HTTPException(404, f"Unknown instance: {host}")
+
+    settings = {"action": req.action}
+    if req.preset_id is not None:
+        settings["preset_id"] = req.preset_id
+
+    result = update_instance_post_game_settings(host, settings)
+    return result
 
 
 @app.get("/api/status")
