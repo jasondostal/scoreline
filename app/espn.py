@@ -21,7 +21,6 @@ class GameInfo:
     home_score: int
     away_score: int
     home_win_pct: float  # 0.0 to 1.0
-    away_win_pct: float  # 0.0 to 1.0
     period: str
     clock: str
     last_play: Optional[str] = None
@@ -145,19 +144,7 @@ class ESPNClient:
             home_score=int(home.get("score", 0) or 0),
             away_score=int(away.get("score", 0) or 0),
             home_win_pct=home_win_pct,
-            away_win_pct=1.0 - home_win_pct,
             period=status_type.get("detail", ""),
             clock=status_data.get("displayClock", ""),
             last_play=last_play,
         )
-
-
-# Singleton for convenience
-_client: Optional[ESPNClient] = None
-
-
-async def get_client() -> ESPNClient:
-    global _client
-    if _client is None:
-        _client = ESPNClient()
-    return _client

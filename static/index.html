@@ -634,12 +634,6 @@
                 const isWatching = inst.watching;
                 const hasWatchTeams = (inst.watch_teams || []).length > 0;
                 const isOverride = isWatching && hasWatchTeams;  // Manually watching when auto-watch is configured
-                const gameInfo = inst.home_team ?
-                    `${inst.away_display || inst.away_team} @ ${inst.home_display || inst.home_team}` : '';
-                const scoreInfo = inst.home_score !== undefined ?
-                    `${inst.away_score}-${inst.home_score}` : '';
-                const pctInfo = inst.home_win_pct !== undefined ?
-                    `Home: ${(inst.home_win_pct * 100).toFixed(0)}%` : '';
 
                 const isExpanded = expandedSettings.has(inst.host);
                 const hostId = inst.host.replace(/\./g, '-');
@@ -1590,13 +1584,6 @@
                     updateSimulator();
                 }, 800);
             }
-        }
-
-        async function loadTeamColors(league, team) {
-            const resp = await fetch(`/api/teams/${league}`);
-            const teams = await resp.json();
-            const t = teams.find(x => x.id === team);
-            return t ? t.colors : [[128, 128, 128], [64, 64, 64]];
         }
 
         simLeague.addEventListener('change', async () => {

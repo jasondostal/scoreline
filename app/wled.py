@@ -330,32 +330,6 @@ class WLEDController:
 
         return await self.set_state(state)
 
-    async def set_solid_team_colors(
-        self,
-        colors: list[list[int]],
-        brightness: int = 255
-    ) -> bool:
-        """Set roofline to solid team colors (pre-game or post-game win)."""
-        state = {
-            "on": True,
-            "bri": brightness,
-            "seg": [{
-                "id": 0,
-                "start": self.config.roofline_start,
-                "stop": self.config.roofline_end,
-                "grp": 1,
-                "spc": 0,
-                "on": True,
-                "bri": 255,
-                "col": [colors[0], colors[1], [0, 0, 0]],
-                "fx": EFFECT_CHASE,
-                "sx": 128,
-                "ix": 128,
-                "rev": False,
-            }]
-        }
-        return await self.set_state(state)
-
     async def turn_off(self) -> bool:
         """Turn off WLED."""
         return await self.set_state({"on": False})
