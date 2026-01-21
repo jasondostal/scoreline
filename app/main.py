@@ -59,6 +59,8 @@ class InstanceState:
         self.controller: Optional[WLEDController] = None
         self.game: Optional[dict] = None  # {league, game_id, last_info, last_status}
         self.previous_preset: Optional[int] = None  # Preset to restore after game
+        self.simulating: bool = False  # True when driven by simulator
+        self.sim_saved_preset: Optional[int] = None  # Preset to restore when sim stops
 
 
 class AppState:
@@ -528,6 +530,7 @@ async def list_instances():
             "start": inst.start,
             "end": inst.end,
             "watching": inst.game is not None,
+            "simulating": inst.simulating,
             "watch_teams": get_instance_watch_teams(host),
             # Display settings (per-instance override > global > default)
             "min_team_pct": inst_display.get("min_team_pct", global_display.get("min_team_pct", 0.05)),
@@ -563,6 +566,12 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
         raise HTTPException(404, f"Unknown instance: {host}")
 
     inst = state.instances[host]
+
+    # If simulating, stop sim first (real games take priority)
+    if inst.simulating:
+        logger.info(f"[WATCH] {host}: Stopping sim mode to watch real game")
+        inst.simulating = False
+        inst.sim_saved_preset = None  # Don't restore - game will save its own preset
 
     # Create controller if needed
     if not inst.controller:
@@ -703,6 +712,80 @@ async def set_post_game(host: str, req: PostGameRequest):
     return result
 
 
+@app.post("/api/instance/{host}/sim/start")
+async def start_sim(host: str):
+    """
+    Start simulator mode on an instance.
+    Saves current WLED state for later restoration.
+    Turns on WLED with a neutral display.
+    Returns warning if instance is watching a live game.
+    """
+    if host not in state.instances:
+        raise HTTPException(404, f"Unknown instance: {host}")
+
+    inst = state.instances[host]
+
+    # Check if already simulating
+    if inst.simulating:
+        return {"status": "already_simulating", "host": host}
+
+    # Warn if watching a live game (but allow it)
+    warning = None
+    if inst.game is not None:
+        warning = "Instance is watching a live game - simulator will override"
+
+    # Create controller if needed
+    if not inst.controller:
+        config = build_wled_config(inst.host, inst.start, inst.end)
+        inst.controller = WLEDController(config)
+
+    # Save current preset before simulator takes over
+    inst.sim_saved_preset = await inst.controller.get_current_preset()
+    logger.info(f"[SIM] {host}: Started sim mode, saved preset {inst.sim_saved_preset}")
+
+    inst.simulating = True
+
+    # Turn on WLED with neutral 50/50 display (gray teams)
+    # This ensures the lights come on immediately
+    await inst.controller.set_game_mode(
+        home_win_pct=0.5,
+        home_colors=[[100, 100, 100], [60, 60, 60]],
+        away_colors=[[100, 100, 100], [60, 60, 60]],
+    )
+
+    result = {"status": "simulating", "host": host, "saved_preset": inst.sim_saved_preset}
+    if warning:
+        result["warning"] = warning
+    return result
+
+
+@app.post("/api/instance/{host}/sim/stop")
+async def stop_sim(host: str):
+    """
+    Stop simulator mode and restore previous WLED state.
+    """
+    if host not in state.instances:
+        raise HTTPException(404, f"Unknown instance: {host}")
+
+    inst = state.instances[host]
+
+    if not inst.simulating:
+        return {"status": "not_simulating", "host": host}
+
+    # Restore saved preset
+    if inst.controller and inst.sim_saved_preset is not None:
+        logger.info(f"[SIM] {host}: Stopping sim, restoring preset {inst.sim_saved_preset}")
+        await inst.controller.restore_preset(inst.sim_saved_preset)
+    elif inst.controller:
+        logger.info(f"[SIM] {host}: Stopping sim, no preset to restore - turning off")
+        await inst.controller.turn_off()
+
+    inst.simulating = False
+    inst.sim_saved_preset = None
+
+    return {"status": "stopped", "host": host}
+
+
 @app.get("/api/status")
 async def get_status():
     """Get current watching status (summary across all instances)."""
@@ -734,12 +817,22 @@ async def get_status():
     return result
 
 
+class SimSettings(BaseModel):
+    min_team_pct: Optional[float] = None
+    dark_buffer_pixels: Optional[int] = None
+    contested_zone_pixels: Optional[int] = None
+    divider_preset: Optional[str] = None
+    chase_speed: Optional[int] = None
+    chase_intensity: Optional[int] = None
+
+
 class TestRequest(BaseModel):
     pct: int
     league: str = "nfl"
     home: str = "GB"
     away: str = "CHI"
     host: Optional[str] = None  # Specific instance, or all if None
+    settings: Optional[SimSettings] = None  # Override display settings for simulation
 
 
 @app.post("/api/test")
@@ -755,7 +848,28 @@ async def test_percentage(req: TestRequest):
     targets = [state.instances[req.host]] if req.host else state.instances.values()
 
     for inst in targets:
-        if not inst.controller:
+        # Build config - use simulator settings if provided, else instance defaults
+        if req.settings:
+            # Use simulator settings override
+            config = WLEDConfig(
+                host=inst.host,
+                roofline_start=inst.start,
+                roofline_end=inst.end,
+                min_team_pct=req.settings.min_team_pct or 0.05,
+                contested_zone_pixels=req.settings.contested_zone_pixels or 6,
+                dark_buffer_pixels=req.settings.dark_buffer_pixels or 4,
+                transition_ms=500,
+                chase_speed=req.settings.chase_speed or 185,
+                chase_intensity=req.settings.chase_intensity or 190,
+                divider_color=[200, 80, 0],  # Will be overridden by preset
+                divider_preset=req.settings.divider_preset or "default",
+            )
+            # Recreate controller with new settings
+            if inst.controller:
+                await inst.controller.close()
+            inst.controller = WLEDController(config)
+        elif not inst.controller:
+            # Use instance defaults
             config = build_wled_config(inst.host, inst.start, inst.end)
             inst.controller = WLEDController(config)
 

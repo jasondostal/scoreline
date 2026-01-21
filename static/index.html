@@ -303,6 +303,178 @@
             border-color: #3b82f6;
             color: #1d4ed8;
         }
+
+        /* Simulator target toggles */
+        .sim-targets {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 8px 0;
+            padding: 8px;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        .sim-target-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .sim-target-label {
+            font-size: 12px;
+            font-family: monospace;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sim-target-label .live-badge {
+            font-size: 9px;
+            color: #22c55e;
+            font-weight: 600;
+        }
+
+        /* Toggle switch */
+        .toggle-switch {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: #d1d5db;
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 2px;
+            bottom: 2px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: #dc2626;
+        }
+
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(16px);
+        }
+
+        /* Simulator settings panel */
+        .sim-settings {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .sim-settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+        }
+
+        .sim-setting-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sim-setting-label {
+            font-size: 11px;
+            color: #666;
+            min-width: 70px;
+        }
+
+        .sim-setting-slider {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .sim-setting-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #dc2626;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .sim-setting-value {
+            font-family: monospace;
+            font-size: 11px;
+            color: #333;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Reusable settings grid for instance panels */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-label {
+            font-size: 11px;
+            color: #666;
+            min-width: 70px;
+        }
+
+        .setting-slider {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .setting-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #0066cc;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .setting-value {
+            font-family: monospace;
+            font-size: 11px;
+            color: #333;
+            min-width: 40px;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
@@ -340,12 +512,14 @@
 
         <!-- Simulator -->
         <div class="test-controls">
-            <div class="section-label" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>🎮 Simulator</span>
-                <select id="sim-target" style="padding: 2px 6px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px;">
-                    <option value="">All instances</option>
-                </select>
+            <div class="section-label">🎮 Simulator</div>
+
+            <!-- Target toggles -->
+            <div class="sim-targets" id="sim-targets">
+                <!-- Populated by JS -->
             </div>
+
+            <!-- Team selection -->
             <div class="section" style="display: flex; gap: 8px; margin-bottom: 8px;">
                 <select id="sim-league" style="flex: 1;">
                     <option value="">League...</option>
@@ -359,16 +533,13 @@
             </div>
 
             <!-- Strip Preview -->
-            <div id="sim-preview-container" class="hidden" style="margin-bottom: 8px;">
+            <div id="sim-preview-container" style="margin-bottom: 8px;">
                 <div class="strip-preview" id="sim-preview">
-                    <div class="strip-segment home" style="width: 45%"></div>
-                    <div class="strip-segment buffer" style="width: 1%"></div>
-                    <div class="strip-segment divider" style="width: 2%"></div>
-                    <div class="strip-segment buffer" style="width: 1%"></div>
-                    <div class="strip-segment away" style="width: 45%"></div>
+                    <!-- Populated by updateSimPreview -->
                 </div>
             </div>
 
+            <!-- Win percentage slider -->
             <div class="test-label">
                 <span id="sim-away-label">Away 100%</span>
                 <span id="test-pct">50%</span>
@@ -386,7 +557,49 @@
                 <button onclick="toggleAutoPlay()" id="auto-play-btn" class="sim-preset-btn" style="margin-left: auto;">▶ Auto-play</button>
             </div>
 
-            <div class="hint">Pick teams, drag slider, or use presets. Auto-play simulates momentum swings.</div>
+            <!-- Display Settings -->
+            <div class="sim-settings" id="sim-settings">
+                <div class="section-label" style="margin-bottom: 8px;">Display Settings</div>
+                <div class="sim-settings-grid">
+                    <div class="sim-setting-row">
+                        <span class="sim-setting-label">Min Dignity</span>
+                        <input type="range" class="sim-setting-slider" id="sim-dignity" min="1" max="20" value="5" oninput="updateSimSettings()">
+                        <span class="sim-setting-value" id="sim-dignity-value">5%</span>
+                    </div>
+                    <div class="sim-setting-row">
+                        <span class="sim-setting-label">Buffer</span>
+                        <input type="range" class="sim-setting-slider" id="sim-buffer" min="0" max="20" value="4" oninput="updateSimSettings()">
+                        <span class="sim-setting-value" id="sim-buffer-value">4px</span>
+                    </div>
+                    <div class="sim-setting-row">
+                        <span class="sim-setting-label">Divider</span>
+                        <input type="range" class="sim-setting-slider" id="sim-divider" min="2" max="30" value="6" oninput="updateSimSettings()">
+                        <span class="sim-setting-value" id="sim-divider-value">6px</span>
+                    </div>
+                    <div class="sim-setting-row">
+                        <span class="sim-setting-label">Style</span>
+                        <select id="sim-divider-preset" onchange="updateSimSettings()" style="flex: 1; padding: 2px 4px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="default">Default</option>
+                            <option value="intense">Intense</option>
+                            <option value="ice">Ice</option>
+                            <option value="pulse">Pulse</option>
+                            <option value="chaos">Chaos</option>
+                        </select>
+                    </div>
+                    <div class="sim-setting-row">
+                        <span class="sim-setting-label">Chase Speed</span>
+                        <input type="range" class="sim-setting-slider" id="sim-chase-speed" min="50" max="255" value="185" oninput="updateSimSettings()">
+                        <span class="sim-setting-value" id="sim-chase-speed-value">185</span>
+                    </div>
+                    <div class="sim-setting-row">
+                        <span class="sim-setting-label">Intensity</span>
+                        <input type="range" class="sim-setting-slider" id="sim-chase-intensity" min="50" max="255" value="190" oninput="updateSimSettings()">
+                        <span class="sim-setting-value" id="sim-chase-intensity-value">190</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hint" style="margin-top: 8px;">Toggle instances, pick teams, adjust settings. Changes apply instantly to targeted strips.</div>
         </div>
     </div>
 
@@ -399,6 +612,7 @@
             const resp = await fetch('/api/instances');
             instanceStates = await resp.json();
             renderInstanceCards();
+            renderSimTargetToggles();
         }
 
         // Track which instance settings panels are expanded
@@ -457,10 +671,7 @@
                 const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.default;
 
                 // Status badges
-                const isSimTarget = simTargetHost === null
-                    ? (simTeamColors.home && simTeamColors.away)  // All instances targeted
-                    : simTargetHost === inst.host;  // This specific instance targeted
-                const simBadge = isSimTarget
+                const simBadge = inst.simulating
                     ? `<span style="font-size: 10px; color: #dc2626; font-weight: 500;">SIM</span>`
                     : '';
                 const statusBadge = isWatching
@@ -551,71 +762,62 @@
                             <div id="dignity-marker-right-${hostId}" class="dignity-marker" style="right: ${minPct * 100}%;" title="Min dignity: ${Math.round(minPct * 100)}%"></div>
                         </div>
 
-                        <div class="settings-row">
-                            <span class="settings-label">Min Dignity</span>
-                            <input type="range" class="settings-slider"
-                                   id="dignity-${hostId}"
-                                   min="1" max="20" value="${Math.round(minPct * 100)}"
-                                   oninput="updateDignityPreview('${inst.host}', this.value); updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
-                            <span class="settings-value" id="dignity-value-${hostId}">${Math.round(minPct * 100)}% (${minDignityPixels}px)</span>
+                        <div class="section-label" style="margin-bottom: 8px;">Display Settings</div>
+                        <div class="settings-grid">
+                            <div class="setting-row">
+                                <span class="setting-label">Min Dignity</span>
+                                <input type="range" class="setting-slider"
+                                       id="dignity-${hostId}"
+                                       min="1" max="20" value="${Math.round(minPct * 100)}"
+                                       oninput="updateDignityPreview('${inst.host}', this.value); updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
+                                <span class="setting-value" id="dignity-value-${hostId}">${Math.round(minPct * 100)}%</span>
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Buffer</span>
+                                <input type="range" class="setting-slider"
+                                       id="buffer-${hostId}"
+                                       min="0" max="20" value="${darkBufferPx}"
+                                       oninput="updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
+                                <span class="setting-value" id="buffer-value-${hostId}">${darkBufferPx}px</span>
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Divider</span>
+                                <input type="range" class="setting-slider"
+                                       id="divider-${hostId}"
+                                       min="2" max="30" value="${contestedPx}"
+                                       oninput="updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
+                                <span class="setting-value" id="divider-value-${hostId}">${contestedPx}px</span>
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Style</span>
+                                <select id="divider-preset-${hostId}"
+                                        onchange="updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')"
+                                        style="flex: 1; padding: 2px 4px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px;">
+                                    <option value="default" ${(inst.divider_preset || 'default') === 'default' ? 'selected' : ''}>Default</option>
+                                    <option value="intense" ${inst.divider_preset === 'intense' ? 'selected' : ''}>Intense</option>
+                                    <option value="ice" ${inst.divider_preset === 'ice' ? 'selected' : ''}>Ice</option>
+                                    <option value="pulse" ${inst.divider_preset === 'pulse' ? 'selected' : ''}>Pulse</option>
+                                    <option value="chaos" ${inst.divider_preset === 'chaos' ? 'selected' : ''}>Chaos</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Chase Speed</span>
+                                <input type="range" class="setting-slider"
+                                       id="chase-speed-${hostId}"
+                                       min="50" max="255" value="${inst.chase_speed || 185}"
+                                       oninput="document.getElementById('chase-speed-value-${hostId}').textContent = this.value; autoSaveInstanceSettings('${inst.host}')">
+                                <span class="setting-value" id="chase-speed-value-${hostId}">${inst.chase_speed || 185}</span>
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Intensity</span>
+                                <input type="range" class="setting-slider"
+                                       id="chase-intensity-${hostId}"
+                                       min="50" max="255" value="${inst.chase_intensity || 190}"
+                                       oninput="document.getElementById('chase-intensity-value-${hostId}').textContent = this.value; autoSaveInstanceSettings('${inst.host}')">
+                                <span class="setting-value" id="chase-intensity-value-${hostId}">${inst.chase_intensity || 190}</span>
+                            </div>
                         </div>
-
-                        <div class="section-label" style="margin: 12px 0 8px 0;">Battle Zone</div>
-
-                        <div class="settings-row">
-                            <span class="settings-label">Buffer</span>
-                            <input type="range" class="settings-slider"
-                                   id="buffer-${hostId}"
-                                   min="0" max="20" value="${darkBufferPx}"
-                                   oninput="updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
-                            <span class="settings-value" id="buffer-value-${hostId}">${darkBufferPx}px</span>
-                        </div>
-
-                        <div class="settings-row">
-                            <span class="settings-label">Divider</span>
-                            <input type="range" class="settings-slider"
-                                   id="divider-${hostId}"
-                                   min="2" max="30" value="${contestedPx}"
-                                   oninput="updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')">
-                            <span class="settings-value" id="divider-value-${hostId}">${contestedPx}px</span>
-                        </div>
-
-                        <div class="settings-row">
-                            <span class="settings-label">Style</span>
-                            <select id="divider-preset-${hostId}"
-                                    onchange="updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')"
-                                    style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
-                                <option value="default" ${(inst.divider_preset || 'default') === 'default' ? 'selected' : ''}>Default (Orange Scanner)</option>
-                                <option value="intense" ${inst.divider_preset === 'intense' ? 'selected' : ''}>Intense (Red Fire)</option>
-                                <option value="ice" ${inst.divider_preset === 'ice' ? 'selected' : ''}>Ice (Blue Scanner)</option>
-                                <option value="pulse" ${inst.divider_preset === 'pulse' ? 'selected' : ''}>Pulse (White Breathe)</option>
-                                <option value="chaos" ${inst.divider_preset === 'chaos' ? 'selected' : ''}>Chaos (Orange Strobe)</option>
-                            </select>
-                        </div>
-
-                        <div class="hint" style="margin: 4px 0 12px 0;">Buffer = black bars, Divider = animated center. Total: <span id="battlezone-total-${hostId}">${battleZone}px</span></div>
-
-                        <div class="section-label" style="margin: 12px 0 8px 0;">Chase Effect</div>
-
-                        <div class="settings-row">
-                            <span class="settings-label">Speed</span>
-                            <input type="range" class="settings-slider"
-                                   id="chase-speed-${hostId}"
-                                   min="50" max="255" value="${inst.chase_speed || 185}"
-                                   oninput="document.getElementById('chase-speed-value-${hostId}').textContent = this.value; autoSaveInstanceSettings('${inst.host}')">
-                            <span class="settings-value" id="chase-speed-value-${hostId}">${inst.chase_speed || 185}</span>
-                        </div>
-
-                        <div class="settings-row">
-                            <span class="settings-label">Intensity</span>
-                            <input type="range" class="settings-slider"
-                                   id="chase-intensity-${hostId}"
-                                   min="50" max="255" value="${inst.chase_intensity || 190}"
-                                   oninput="document.getElementById('chase-intensity-value-${hostId}').textContent = this.value; autoSaveInstanceSettings('${inst.host}')">
-                            <span class="settings-value" id="chase-intensity-value-${hostId}">${inst.chase_intensity || 190}</span>
-                        </div>
-
-                        <div class="hint" style="margin: 4px 0;">Lower speed = slower chase. Longer strips need slower values.</div>
+                        <div class="hint" style="margin: 8px 0 0 0;">Battle zone total: <span id="battlezone-total-${hostId}">${battleZone}px</span></div>
 
                         <div class="section-label" style="margin: 12px 0 8px 0;">Post-Game Action</div>
 
@@ -1101,20 +1303,101 @@
         const simLeague = document.getElementById('sim-league');
         const simAway = document.getElementById('sim-away');
         const simHome = document.getElementById('sim-home');
-        const simTarget = document.getElementById('sim-target');
         const testSlider = document.getElementById('test-slider');
 
-        // Team colors cache for preview
-        let simTeamColors = { home: null, away: null };
-        let simTargetHost = null;  // Track which instance is being simulated
+        // Team colors cache for preview - gray defaults
+        const GRAY_TEAM = [[100, 100, 100], [60, 60, 60]];
+        let simTeamColors = { home: GRAY_TEAM, away: GRAY_TEAM };
         let autoPlayInterval = null;
         let autoPlayDirection = 1;
 
-        function updateSimTargetDropdown() {
-            const current = simTarget.value;
-            simTarget.innerHTML = '<option value="">All instances</option>' +
-                instanceStates.map(inst => `<option value="${inst.host}">${inst.host}</option>`).join('');
-            simTarget.value = current;
+        // Simulator settings state
+        let simSettings = {
+            min_team_pct: 0.05,
+            dark_buffer_pixels: 4,
+            contested_zone_pixels: 6,
+            divider_preset: 'default',
+            chase_speed: 185,
+            chase_intensity: 190,
+        };
+
+        function renderSimTargetToggles() {
+            const container = document.getElementById('sim-targets');
+            if (!container) return;
+
+            if (instanceStates.length === 0) {
+                container.innerHTML = '<span style="font-size: 11px; color: #888;">No instances configured</span>';
+                return;
+            }
+
+            container.innerHTML = instanceStates.map(inst => {
+                const liveBadge = inst.watching ? '<span class="live-badge">LIVE</span>' : '';
+                return `
+                    <div class="sim-target-row">
+                        <span class="sim-target-label">
+                            ${inst.host}
+                            ${liveBadge}
+                        </span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${inst.simulating ? 'checked' : ''} onchange="toggleSimTarget('${inst.host}')">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateSimSettings() {
+            // Update value displays
+            const dignity = document.getElementById('sim-dignity').value;
+            const buffer = document.getElementById('sim-buffer').value;
+            const divider = document.getElementById('sim-divider').value;
+            const preset = document.getElementById('sim-divider-preset').value;
+            const speed = document.getElementById('sim-chase-speed').value;
+            const intensity = document.getElementById('sim-chase-intensity').value;
+
+            document.getElementById('sim-dignity-value').textContent = dignity + '%';
+            document.getElementById('sim-buffer-value').textContent = buffer + 'px';
+            document.getElementById('sim-divider-value').textContent = divider + 'px';
+            document.getElementById('sim-chase-speed-value').textContent = speed;
+            document.getElementById('sim-chase-intensity-value').textContent = intensity;
+
+            // Update settings state
+            simSettings = {
+                min_team_pct: parseInt(dignity) / 100,
+                dark_buffer_pixels: parseInt(buffer),
+                contested_zone_pixels: parseInt(divider),
+                divider_preset: preset,
+                chase_speed: parseInt(speed),
+                chase_intensity: parseInt(intensity),
+            };
+
+            // Update preview and send to WLED
+            updateSimPreview(parseInt(document.getElementById('test-slider').value));
+            updateSimulator();
+        }
+
+        async function toggleSimTarget(host) {
+            const inst = instanceStates.find(i => i.host === host);
+            if (!inst) return;
+
+            if (inst.simulating) {
+                // Stop simulation
+                await fetch(`/api/instance/${host}/sim/stop`, { method: 'POST' });
+            } else {
+                // Start simulation - check for warning
+                const resp = await fetch(`/api/instance/${host}/sim/start`, { method: 'POST' });
+                const result = await resp.json();
+
+                if (result.warning) {
+                    // Show warning but proceed (already started)
+                    console.log(`[SIM] Warning: ${result.warning}`);
+                    // Optional: show a brief toast or indicator
+                }
+            }
+
+            // Refresh state
+            await loadInstances();
         }
 
         async function updateSimulator() {
@@ -1122,45 +1405,41 @@
             const away = simAway.value;
             const home = simHome.value;
             const pct = parseInt(testSlider.value);
-            const target = simTarget.value || null;
 
-            // Track target for badge display
-            const oldTarget = simTargetHost;
-            simTargetHost = (league && away && home) ? target : null;
-
-            // Re-render cards if target changed (to update SIM badge)
-            if (oldTarget !== simTargetHost) {
-                renderInstanceCards();
-            }
+            // Get simulating instances from backend state
+            const simInstances = instanceStates.filter(i => i.simulating);
 
             document.getElementById('test-pct').textContent = pct + '%';
             updateSimPreview(pct);
 
             // Update targeted instance preview(s) to match simulator
             if (league && away && home && simTeamColors.home && simTeamColors.away) {
-                updateInstanceSimPreview(pct, target);
+                updateInstanceSimPreview(pct);
             }
 
-            if (league && away && home) {
-                await fetch('/api/test', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        pct: pct,
-                        league: league,
-                        home: home,
-                        away: away,
-                        host: target
-                    })
-                });
+            // Only send to instances that are in sim mode
+            if (league && away && home && simInstances.length > 0) {
+                for (const inst of simInstances) {
+                    await fetch('/api/test', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pct: pct,
+                            league: league,
+                            home: home,
+                            away: away,
+                            host: inst.host,
+                            // Include simulator display settings
+                            settings: simSettings
+                        })
+                    });
+                }
             }
         }
 
-        function updateInstanceSimPreview(pct, targetHost) {
-            // Update the strip preview on targeted instance card(s)
-            const targets = targetHost
-                ? instanceStates.filter(i => i.host === targetHost)
-                : instanceStates;
+        function updateInstanceSimPreview(pct) {
+            // Update the strip preview on simulating instance card(s)
+            const targets = instanceStates.filter(i => i.simulating);
 
             for (const inst of targets) {
                 const hostId = inst.host.replace(/\./g, '-');
@@ -1212,20 +1491,17 @@
 
         function updateSimPreview(pct) {
             const preview = document.getElementById('sim-preview');
-            if (!preview || !simTeamColors.home || !simTeamColors.away) return;
+            if (!preview) return;
 
-            // Get settings from target instance or first instance
-            const targetHost = simTarget.value;
-            const inst = targetHost
-                ? instanceStates.find(i => i.host === targetHost)
-                : instanceStates[0];
+            // Use simulator settings for preview
+            const minPct = simSettings.min_team_pct;
+            const contestedPx = simSettings.contested_zone_pixels;
+            const darkBufferPx = simSettings.dark_buffer_pixels;
 
-            if (!inst) return;
+            // Use first instance's pixel count for preview, or default
+            const inst = instanceStates[0];
+            const totalPixels = inst ? (inst.end - inst.start) : 300;
 
-            const minPct = inst.min_team_pct || 0.05;
-            const contestedPx = inst.contested_zone_pixels || 6;
-            const darkBufferPx = inst.dark_buffer_pixels || 4;
-            const totalPixels = inst.end - inst.start;
             const battleZone = contestedPx + (darkBufferPx * 2);
             const availablePixels = totalPixels - battleZone;
 
@@ -1246,7 +1522,7 @@
                 pulse: 'linear-gradient(90deg, #aaa, #ddd, #aaa)',
                 chaos: 'linear-gradient(90deg, #ff4400, #ff8800, #ff4400)',
             };
-            const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.default;
+            const dividerGradient = presetGradients[simSettings.divider_preset] || presetGradients.default;
 
             const hc = simTeamColors.home;
             const ac = simTeamColors.away;
@@ -1307,7 +1583,9 @@
             if (!league) {
                 simAway.disabled = true;
                 simHome.disabled = true;
-                document.getElementById('sim-preview-container').classList.add('hidden');
+                // Reset to gray team colors
+                simTeamColors = { home: GRAY_TEAM, away: GRAY_TEAM };
+                updateSimPreview(parseInt(testSlider.value));
                 return;
             }
 
@@ -1332,11 +1610,9 @@
 
             if (simLeague._teams && simAway.value) {
                 const team = simLeague._teams.find(t => t.id === simAway.value);
-                simTeamColors.away = team?.colors || [[128, 128, 128], [64, 64, 64]];
-            }
-
-            if (simAway.value && simHome.value) {
-                document.getElementById('sim-preview-container').classList.remove('hidden');
+                simTeamColors.away = team?.colors || GRAY_TEAM;
+            } else {
+                simTeamColors.away = GRAY_TEAM;
             }
             updateSimulator();
         });
@@ -1347,23 +1623,23 @@
 
             if (simLeague._teams && simHome.value) {
                 const team = simLeague._teams.find(t => t.id === simHome.value);
-                simTeamColors.home = team?.colors || [[128, 128, 128], [64, 64, 64]];
-            }
-
-            if (simAway.value && simHome.value) {
-                document.getElementById('sim-preview-container').classList.remove('hidden');
+                simTeamColors.home = team?.colors || GRAY_TEAM;
+            } else {
+                simTeamColors.home = GRAY_TEAM;
             }
             updateSimulator();
         });
 
         testSlider.addEventListener('input', () => updateSimulator());
 
-        // Initialize simulator leagues dropdown immediately
+        // Initialize simulator leagues dropdown and preview
         (async function initSimulator() {
             const resp = await fetch('/api/leagues');
             const simLeagues = await resp.json();
             simLeague.innerHTML = '<option value="">League...</option>' +
                 simLeagues.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+            // Show gray preview immediately
+            updateSimPreview(50);
         })();
 
         // Initial load
@@ -1375,8 +1651,8 @@
             // Load instances
             await loadInstances();
 
-            // Populate simulator target dropdown
-            updateSimTargetDropdown();
+            // Populate simulator target toggles
+            renderSimTargetToggles();
 
             // Periodic refresh for live scores (skip if user is interacting with form)
             setInterval(() => {
