@@ -113,11 +113,11 @@
         }
 
         .strip-segment.home {
-            background: linear-gradient(90deg, var(--home-color-1, #22c55e) 0%, var(--home-color-2, #166534) 100%);
+            background: linear-gradient(to bottom, var(--home-color-1, #22c55e) 66%, var(--home-color-2, #166534) 66%);
         }
 
         .strip-segment.away {
-            background: linear-gradient(90deg, var(--away-color-1, #3b82f6) 0%, var(--away-color-2, #1d4ed8) 100%);
+            background: linear-gradient(to bottom, var(--away-color-1, #3b82f6) 66%, var(--away-color-2, #1d4ed8) 66%);
         }
 
         .strip-segment.buffer {
@@ -1491,13 +1491,13 @@
                 const ac = simTeamColors.away;
 
                 preview.innerHTML = `
-                    <div class="strip-segment" style="width: ${homePctWidth}%; background: linear-gradient(90deg, rgb(${hc[0].join(',')}) 0%, rgb(${hc[1].join(',')}) 100%);">
+                    <div class="strip-segment" style="width: ${homePctWidth}%; background: linear-gradient(to bottom, rgb(${hc[0].join(',')}) 66%, rgb(${hc[1].join(',')}) 66%);">
                         <span class="strip-label">${homePixels}px</span>
                     </div>
                     <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
                     <div class="strip-segment divider" style="width: ${dividerPctWidth}%; background: ${dividerGradient};"></div>
                     <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
-                    <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(90deg, rgb(${ac[0].join(',')}) 0%, rgb(${ac[1].join(',')}) 100%);">
+                    <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(to bottom, rgb(${ac[0].join(',')}) 66%, rgb(${ac[1].join(',')}) 66%);">
                         <span class="strip-label">${awayPixels}px</span>
                     </div>
                 `;
@@ -1543,11 +1543,11 @@
             const ac = simTeamColors.away;
 
             preview.innerHTML = `
-                <div class="strip-segment" style="width: ${homePctWidth}%; background: linear-gradient(90deg, rgb(${hc[0].join(',')}) 0%, rgb(${hc[1].join(',')}) 100%);"></div>
+                <div class="strip-segment" style="width: ${homePctWidth}%; background: linear-gradient(to bottom, rgb(${hc[0].join(',')}) 66%, rgb(${hc[1].join(',')}) 66%);"></div>
                 <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
                 <div class="strip-segment divider" style="width: ${dividerPctWidth}%; background: ${dividerGradient};"></div>
                 <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
-                <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(90deg, rgb(${ac[0].join(',')}) 0%, rgb(${ac[1].join(',')}) 100%);"></div>
+                <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(to bottom, rgb(${ac[0].join(',')}) 66%, rgb(${ac[1].join(',')}) 66%);"></div>
             `;
         }
 
