@@ -1,6 +1,6 @@
 """
-Team color definitions for game-lights.
-Now loaded from YAML config files.
+Team color definitions for Scoreline.
+Loaded from YAML config files.
 """
 
 from config import get_leagues

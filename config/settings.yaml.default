@@ -2,22 +2,24 @@
 # Edit this file to configure your setup
 
 # WLED instances to control
-# Each instance needs a host and LED segment range
-wled_instances:
-  - host: "192.168.1.100"  # Replace with your WLED IP
-    start: 0
-    end: 300              # Replace with your LED count
-
-  # Add more instances for multiple WLED controllers:
-  # - host: "192.168.1.101"
-  #   start: 0
-  #   end: 150
+# Uncomment and edit to add your WLED devices
+wled_instances: []
+  # - host: "192.168.1.100"    # Your WLED IP or hostname
+  #   start: 0                  # First LED index
+  #   end: 300                  # Last LED index
+  #   watch_teams:              # Auto-watch favorite teams (optional)
+  #     - nfl:GB
+  #     - nba:MIL
+  #   display:                  # Per-instance overrides (optional)
+  #     chase_speed: 185
+  #   post_game:                # Per-instance post-game action (optional)
+  #     action: restore
 
 # Polling interval in seconds (how often to check ESPN)
 poll_interval: 30
 
-# Default league to show first
-default_league: nfl
+# Auto-watch interval in seconds (how often to scan for favorite team games)
+auto_watch_interval: 300
 
 # Display settings (optional - sensible defaults if omitted)
 # display:
@@ -28,3 +30,11 @@ default_league: nfl
 #   transition_ms: 500             # Smooth transition time
 #   chase_speed: 185               # Chase animation speed (0-255)
 #   chase_intensity: 190           # Chase segment size (higher = smaller)
+
+# Post-game settings (optional - what happens when a game ends)
+# post_game:
+#   action: flash_then_off         # off | fade_off | flash_then_off | restore | preset
+#   flash_count: 3                 # Number of winner color flashes
+#   flash_duration_ms: 500         # Duration of each flash
+#   fade_duration_s: 3             # Fade out duration
+#   preset_id: 1                   # WLED preset ID (only for action: preset)
