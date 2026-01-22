@@ -35,7 +35,7 @@ class WLEDConfig:
     """Configuration for a WLED installation."""
     host: str
     roofline_start: int = 0
-    roofline_end: int = 629
+    roofline_end: int = 300
     min_team_pct: float = 0.05  # Minimum 5% dignity
     contested_zone_pixels: int = 6   # Jiggling divider bar
     dark_buffer_pixels: int = 4      # Dark space on each side of divider

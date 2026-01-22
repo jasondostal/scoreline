@@ -651,10 +651,12 @@
             </div>
 
             <!-- Strip Preview -->
-            <div id="sim-preview-container" style="margin-bottom: 8px;">
+            <div id="sim-preview-container" style="margin-bottom: 8px; position: relative; padding-bottom: 14px;">
                 <div class="strip-preview" id="sim-preview">
                     <!-- Populated by updateSimPreview -->
                 </div>
+                <div id="sim-dignity-left" class="dignity-marker" style="left: 5%;" title="Min dignity: 5%"></div>
+                <div id="sim-dignity-right" class="dignity-marker" style="right: 5%;" title="Min dignity: 5%"></div>
             </div>
 
             <!-- Win percentage slider -->
@@ -802,6 +804,14 @@
                 };
                 const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.classic;
 
+                // Team colors for preview (use actual colors if watching, else default)
+                const homeStyle = inst.home_colors
+                    ? `background: linear-gradient(90deg, rgb(${inst.home_colors[0].join(',')}) 0%, rgb(${inst.home_colors[1].join(',')}) 100%);`
+                    : '';
+                const awayStyle = inst.away_colors
+                    ? `background: linear-gradient(90deg, rgb(${inst.away_colors[0].join(',')}) 0%, rgb(${inst.away_colors[1].join(',')}) 100%);`
+                    : '';
+
                 // Status badges
                 const simBadge = inst.simulating
                     ? `<span style="font-size: 10px; color: #dc2626; font-weight: 500;">SIM</span>`
@@ -872,9 +882,9 @@
                     <div style="display: flex; gap: 6px; margin-bottom: 8px;">
                         <select id="league-${inst.host}" onchange="loadGamesForInstance('${inst.host}')" style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
                             <option value="">League...</option>
-                            ${leagues.map(l => `<option value="${l.id}">${l.name}</option>`).join('')}
+                            ${leagues.map(l => `<option value="${l.id}" ${inst.league === l.id ? 'selected' : ''}>${l.name}</option>`).join('')}
                         </select>
-                        <select id="game-${inst.host}" onchange="watchGameFromSelect('${inst.host}')" style="flex: 2; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;" disabled>
+                        <select id="game-${inst.host}" onchange="watchGameFromSelect('${inst.host}')" style="flex: 2; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;" ${inst.league ? '' : 'disabled'} data-current-game="${inst.game_id || ''}">
                             <option value="">${isWatching ? 'Switch game...' : 'Select league first...'}</option>
                         </select>
                     </div>
@@ -905,15 +915,15 @@
                         <div class="hint" style="margin: 4px 0 12px 0;">When a watched team is playing, their game auto-starts.</div>
 
                         <div class="section-label" style="margin-bottom: 8px;">Strip Preview</div>
-                        <div style="position: relative;">
+                        <div style="position: relative; padding-bottom: 14px;">
                             <div class="strip-preview" id="preview-${hostId}">
-                                <div class="strip-segment home" style="width: ${homePctWidth}%">
+                                <div class="strip-segment ${homeStyle ? '' : 'home'}" style="width: ${homePctWidth}%; ${homeStyle}">
                                     <span class="strip-label">${homePixels}px</span>
                                 </div>
                                 <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
                                 <div class="strip-segment divider" style="width: ${dividerPctWidth}%; background: ${dividerGradient};"></div>
                                 <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
-                                <div class="strip-segment away" style="width: ${awayPctWidth}%">
+                                <div class="strip-segment ${awayStyle ? '' : 'away'}" style="width: ${awayPctWidth}%; ${awayStyle}">
                                     <span class="strip-label">${awayPixels}px</span>
                                 </div>
                             </div>
@@ -1015,6 +1025,13 @@
                 </div>
                 `;
             }).join('');
+
+            // After rendering, load games for instances that are watching (so dropdown shows current game)
+            instanceStates.forEach(inst => {
+                if (inst.league) {
+                    loadGamesForInstance(inst.host, true);
+                }
+            });
         }
 
         function toggleSettings(host) {
@@ -1332,7 +1349,7 @@
             await loadInstances();
         }
 
-        async function loadGamesForInstance(host) {
+        async function loadGamesForInstance(host, preSelect = false) {
             const leagueSelect = document.getElementById(`league-${host}`);
             const gameSelect = document.getElementById(`game-${host}`);
             const league = leagueSelect.value;
@@ -1351,8 +1368,10 @@
                 gameSelect.innerHTML = '<option value="">No games available</option>';
                 gameSelect.disabled = true;
             } else {
+                // Check if we should pre-select a specific game
+                const currentGameId = gameSelect.dataset.currentGame;
                 gameSelect.innerHTML = games.map(g =>
-                    `<option value="${g.id}">${g.away_display} @ ${g.home_display} (${g.detail})</option>`
+                    `<option value="${g.id}" ${preSelect && currentGameId === g.id ? 'selected' : ''}>${g.away_display} @ ${g.home_display} (${g.detail})</option>`
                 ).join('');
                 gameSelect.disabled = false;
             }
@@ -1762,9 +1781,17 @@
                 <div class="strip-segment divider" style="width: ${dividerPctWidth}%; background: ${dividerGradient};"></div>
                 <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
                 <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(90deg, rgb(${ac[0].join(',')}) 0%, rgb(${ac[1].join(',')}) 100%);"></div>
-                <div class="dignity-marker" style="left: ${minPct * 100}%;" title="Min dignity: ${Math.round(minPct * 100)}%"></div>
-                <div class="dignity-marker" style="right: ${minPct * 100}%;" title="Min dignity: ${Math.round(minPct * 100)}%"></div>
             `;
+
+            // Update dignity markers (they're outside the strip-preview now)
+            const leftMarker = document.getElementById('sim-dignity-left');
+            const rightMarker = document.getElementById('sim-dignity-right');
+            if (leftMarker && rightMarker) {
+                leftMarker.style.left = `${minPct * 100}%`;
+                leftMarker.title = `Min dignity: ${Math.round(minPct * 100)}%`;
+                rightMarker.style.right = `${minPct * 100}%`;
+                rightMarker.title = `Min dignity: ${Math.round(minPct * 100)}%`;
+            }
         }
 
         // Auto-start sim on first available instance if none running

@@ -602,6 +602,8 @@ async def list_instances():
                 item["away_team"] = info.away_team
                 item["home_display"] = get_team_display(inst.game["league"], info.home_team)
                 item["away_display"] = get_team_display(inst.game["league"], info.away_team)
+                item["home_colors"] = get_team_colors(inst.game["league"], info.home_team)
+                item["away_colors"] = get_team_colors(inst.game["league"], info.away_team)
                 item["home_score"] = info.home_score
                 item["away_score"] = info.away_score
                 item["home_win_pct"] = info.home_win_pct
@@ -642,6 +644,24 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
         "last_info": None,
         "last_status": "in",  # Assume in-progress when manually started
     }
+
+    # Fetch game data immediately so UI has scores right away
+    try:
+        sport = get_leagues().get(req.league, {}).get("sport", "football")
+        game_info = await state.espn.get_game_detail(sport, req.league, req.game_id)
+        if game_info:
+            inst.game["last_info"] = game_info
+            inst.game["last_status"] = game_info.status
+            # Push initial state to WLED
+            home_colors = get_team_colors(req.league, game_info.home_team)
+            away_colors = get_team_colors(req.league, game_info.away_team)
+            await inst.controller.set_game_mode(
+                home_win_pct=game_info.home_win_pct,
+                home_colors=home_colors,
+                away_colors=away_colors,
+            )
+    except Exception as e:
+        logger.warning(f"[WATCH] {host}: Failed to fetch initial game data: {e}")
 
     return {"status": "watching", "host": host, "game_id": req.game_id}
 
