@@ -46,7 +46,7 @@ def build_wled_config(host: str, start: int, end: int) -> WLEDConfig:
         chase_speed=display.get("chase_speed", 185),
         chase_intensity=display.get("chase_intensity", 190),
         divider_color=display.get("divider_color", [200, 80, 0]),
-        divider_preset=display.get("divider_preset", "default"),
+        divider_preset=display.get("divider_preset", "classic"),
     )
 
 
@@ -588,7 +588,7 @@ async def list_instances():
             "dark_buffer_pixels": inst_display.get("dark_buffer_pixels", global_display.get("dark_buffer_pixels", 4)),
             "chase_speed": inst_display.get("chase_speed", global_display.get("chase_speed", 185)),
             "chase_intensity": inst_display.get("chase_intensity", global_display.get("chase_intensity", 190)),
-            "divider_preset": inst_display.get("divider_preset", global_display.get("divider_preset", "default")),
+            "divider_preset": inst_display.get("divider_preset", global_display.get("divider_preset", "classic")),
             # Post-game settings
             "post_game_action": post_game.get("action", "flash_then_off"),
             "post_game_preset_id": post_game.get("preset_id"),
@@ -958,7 +958,9 @@ async def test_percentage(req: TestRequest):
             inst.controller.config.dark_buffer_pixels = req.settings.dark_buffer_pixels or 4
             inst.controller.config.chase_speed = req.settings.chase_speed or 185
             inst.controller.config.chase_intensity = req.settings.chase_intensity or 190
-            inst.controller.config.divider_preset = req.settings.divider_preset or "default"
+            inst.controller.config.divider_preset = req.settings.divider_preset or "classic"
+            # Clear divider_color so preset color is used
+            inst.controller.config.divider_color = None
 
         await inst.controller.set_game_mode(
             home_win_pct=req.pct / 100,

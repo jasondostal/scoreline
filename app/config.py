@@ -31,7 +31,7 @@ def load_settings() -> dict:
     display = settings.get("display", {})
     display_settings = {
         "divider_color": display.get("divider_color", [200, 80, 0]),
-        "divider_preset": display.get("divider_preset", "default"),
+        "divider_preset": display.get("divider_preset", "classic"),
         "min_team_pct": display.get("min_team_pct", 0.05),
         "contested_zone_pixels": display.get("contested_zone_pixels", 6),
         "dark_buffer_pixels": display.get("dark_buffer_pixels", 4),

@@ -22,7 +22,7 @@ EFFECT_BLEND = 115     # "Blends" - not great for contested zone (makes mud)
 
 # Divider presets: name -> (color, effect_id, speed, intensity)
 DIVIDER_PRESETS = {
-    "default": ([200, 80, 0], EFFECT_SCANNER, 180, 200),      # Orange scanner
+    "classic": ([200, 80, 0], EFFECT_SCANNER, 180, 200),      # Orange scanner
     "intense": ([255, 50, 0], EFFECT_FIRE, 128, 200),         # Red fire
     "ice": ([100, 150, 255], EFFECT_SCANNER, 180, 200),       # Blue scanner
     "pulse": ([200, 200, 200], EFFECT_BREATHE, 100, 128),     # White breathe
@@ -42,12 +42,12 @@ class WLEDConfig:
     transition_ms: int = 500  # Smooth transitions
     chase_intensity: int = 190  # Controls chase segment size (higher = smaller segments)
     chase_speed: int = 185  # Base chase speed
-    divider_preset: str = "default"  # Preset name from DIVIDER_PRESETS
+    divider_preset: str = "classic"  # Preset name from DIVIDER_PRESETS
     divider_color: list[int] = None  # Override color (optional)
 
     def get_divider_settings(self) -> tuple:
         """Get divider (color, effect, speed, intensity) from preset or override."""
-        preset = DIVIDER_PRESETS.get(self.divider_preset, DIVIDER_PRESETS["default"])
+        preset = DIVIDER_PRESETS.get(self.divider_preset, DIVIDER_PRESETS["classic"])
         color = self.divider_color if self.divider_color else preset[0]
         return (color, preset[1], preset[2], preset[3])
 

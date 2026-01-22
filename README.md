@@ -106,7 +106,7 @@ auto_watch_interval: 300         # Seconds between auto-watch scans
 
 # Global defaults (all optional - sensible defaults built in)
 display:
-  divider_preset: default          # default | intense | ice | pulse | chaos
+  divider_preset: classic          # classic | intense | ice | pulse | chaos
   min_team_pct: 0.05
   contested_zone_pixels: 6
   dark_buffer_pixels: 4

@@ -23,7 +23,7 @@ auto_watch_interval: 300
 
 # Display settings (optional - sensible defaults if omitted)
 # display:
-#   divider_preset: default        # Divider style: default | intense | ice | pulse | chaos
+#   divider_preset: classic        # Divider style: classic | intense | ice | pulse | chaos
 #   divider_color: [200, 80, 0]    # Battle line color [R, G, B] (overrides preset color)
 #   min_team_pct: 0.05             # Minimum team percentage (dignity rule)
 #   contested_zone_pixels: 6       # Animated divider width

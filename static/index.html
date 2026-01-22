@@ -667,7 +667,7 @@
                    min="0" max="100" value="50">
 
             <!-- Scenario Presets -->
-            <div style="display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0;">
                 <button onclick="playScenario(50)" class="sim-preset-btn">Nail-biter</button>
                 <button onclick="playScenario(80)" class="sim-preset-btn">Dominant</button>
                 <button onclick="playScenario(95)" class="sim-preset-btn">Blowout</button>
@@ -675,8 +675,10 @@
                 <button onclick="playCollapse()" class="sim-preset-btn anim-btn" data-anim="collapse">Collapse</button>
                 <button onclick="playOvertime()" class="sim-preset-btn anim-btn" data-anim="overtime">Overtime</button>
                 <button onclick="playMomentum()" class="sim-preset-btn anim-btn" data-anim="momentum">Momentum</button>
-                <button onclick="playBuzzerBeater()" class="sim-preset-btn anim-btn" data-anim="buzzer">Buzzer Beater</button>
-                <button onclick="stopSim()" id="stop-btn" class="sim-preset-btn stop-btn" style="margin-left: auto;">⏹ Stop</button>
+                <button onclick="playBuzzerBeater()" class="sim-preset-btn anim-btn" data-anim="buzzer">Buzzer</button>
+            </div>
+            <div style="display: flex; gap: 6px; margin-bottom: 8px; justify-content: flex-end;">
+                <button onclick="stopSim()" id="stop-btn" class="sim-preset-btn stop-btn">⏹ Stop</button>
                 <button onclick="saveSimDefaults()" id="save-sim-btn" class="sim-preset-btn" title="Save current league/teams/pct as default">💾</button>
             </div>
 
@@ -702,7 +704,7 @@
                     <div class="sim-setting-row">
                         <span class="sim-setting-label">Style</span>
                         <select id="sim-divider-preset" onchange="updateSimSettings()" style="flex: 1; padding: 2px 4px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px;">
-                            <option value="default">Default</option>
+                            <option value="classic">Classic</option>
                             <option value="intense">Intense</option>
                             <option value="ice">Ice</option>
                             <option value="pulse">Pulse</option>
@@ -792,13 +794,13 @@
 
                 // Divider gradient based on preset
                 const presetGradients = {
-                    default: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)',
+                    classic: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)',
                     intense: 'linear-gradient(90deg, #cc0000, #ff3300, #cc0000)',
                     ice: 'linear-gradient(90deg, #4080ff, #80b0ff, #4080ff)',
                     pulse: 'linear-gradient(90deg, #aaa, #ddd, #aaa)',
                     chaos: 'linear-gradient(90deg, #ff4400, #ff8800, #ff4400)',
                 };
-                const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.default;
+                const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.classic;
 
                 // Status badges
                 const simBadge = inst.simulating
@@ -951,7 +953,7 @@
                                 <select id="divider-preset-${hostId}"
                                         onchange="updateStripPreview('${inst.host}'); autoSaveInstanceSettings('${inst.host}')"
                                         style="flex: 1; padding: 2px 4px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px;">
-                                    <option value="default" ${(inst.divider_preset || 'default') === 'default' ? 'selected' : ''}>Default</option>
+                                    <option value="classic" ${(inst.divider_preset || 'classic') === 'classic' ? 'selected' : ''}>Classic</option>
                                     <option value="intense" ${inst.divider_preset === 'intense' ? 'selected' : ''}>Intense</option>
                                     <option value="ice" ${inst.divider_preset === 'ice' ? 'selected' : ''}>Ice</option>
                                     <option value="pulse" ${inst.divider_preset === 'pulse' ? 'selected' : ''}>Pulse</option>
@@ -1112,7 +1114,7 @@
 
         // Divider preset colors for preview
         const DIVIDER_PRESETS = {
-            default: { color: 'rgb(200, 80, 0)', gradient: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)' },
+            classic: { color: 'rgb(200, 80, 0)', gradient: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)' },
             intense: { color: 'rgb(255, 50, 0)', gradient: 'linear-gradient(90deg, #cc0000, #ff3300, #cc0000)' },
             ice: { color: 'rgb(100, 150, 255)', gradient: 'linear-gradient(90deg, #4080ff, #80b0ff, #4080ff)' },
             pulse: { color: 'rgb(200, 200, 200)', gradient: 'linear-gradient(90deg, #aaa, #ddd, #aaa)' },
@@ -1132,7 +1134,7 @@
             const bufferPx = parseInt(bufferSlider.value);
             const dividerPx = parseInt(dividerSlider.value);
             const minPct = parseInt(dignitySlider.value) / 100;
-            const preset = presetSelect?.value || 'default';
+            const preset = presetSelect?.value || 'classic';
             const totalPx = (bufferPx * 2) + dividerPx;
 
             // Update text displays
@@ -1156,7 +1158,7 @@
             const awayPctWidth = (awayPixels / totalPixels * 100).toFixed(1);
 
             // Get divider style from preset
-            const dividerStyle = DIVIDER_PRESETS[preset] || DIVIDER_PRESETS.default;
+            const dividerStyle = DIVIDER_PRESETS[preset] || DIVIDER_PRESETS.classic;
 
             // Update preview
             const preview = document.getElementById(`preview-${hostId}`);
@@ -1531,7 +1533,7 @@
             min_team_pct: 0.05,
             dark_buffer_pixels: 4,
             contested_zone_pixels: 6,
-            divider_preset: 'default',
+            divider_preset: 'classic',
             chase_speed: 185,
             chase_intensity: 190,
         };
@@ -1690,13 +1692,13 @@
                 const awayPctWidth = (awayPixels / totalPixels * 100).toFixed(1);
 
                 const presetGradients = {
-                    default: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)',
+                    classic: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)',
                     intense: 'linear-gradient(90deg, #cc0000, #ff3300, #cc0000)',
                     ice: 'linear-gradient(90deg, #4080ff, #80b0ff, #4080ff)',
                     pulse: 'linear-gradient(90deg, #aaa, #ddd, #aaa)',
                     chaos: 'linear-gradient(90deg, #ff4400, #ff8800, #ff4400)',
                 };
-                const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.default;
+                const dividerGradient = presetGradients[inst.divider_preset] || presetGradients.classic;
 
                 const hc = simTeamColors.home;
                 const ac = simTeamColors.away;
@@ -1742,13 +1744,13 @@
             const awayPctWidth = (awayPixels / totalPixels * 100).toFixed(1);
 
             const presetGradients = {
-                default: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)',
+                classic: 'linear-gradient(90deg, #c85000, #ff8c00, #c85000)',
                 intense: 'linear-gradient(90deg, #cc0000, #ff3300, #cc0000)',
                 ice: 'linear-gradient(90deg, #4080ff, #80b0ff, #4080ff)',
                 pulse: 'linear-gradient(90deg, #aaa, #ddd, #aaa)',
                 chaos: 'linear-gradient(90deg, #ff4400, #ff8800, #ff4400)',
             };
-            const dividerGradient = presetGradients[simSettings.divider_preset] || presetGradients.default;
+            const dividerGradient = presetGradients[simSettings.divider_preset] || presetGradients.classic;
 
             const hc = simTeamColors.home;
             const ac = simTeamColors.away;
