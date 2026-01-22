@@ -302,10 +302,36 @@
             border-color: #ccc;
         }
 
+        .sim-preset-btn:active {
+            transform: scale(0.95);
+            background: #d1d5db;
+        }
+
         .sim-preset-btn.active {
             background: #dbeafe;
             border-color: #3b82f6;
             color: #1d4ed8;
+        }
+
+        .sim-preset-btn.stop-btn {
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        .sim-preset-btn.stop-btn:not(.enabled) {
+            background: #f5f5f5;
+            border-color: #e5e5e5;
+            color: #aaa;
+            cursor: default;
+        }
+
+        .sim-preset-btn.stop-btn:not(.enabled):active {
+            transform: none;
+        }
+
+        .sim-preset-btn.stop-btn.enabled:hover {
+            background: #fecaca;
+            border-color: #f87171;
         }
 
         /* Simulator target toggles */
@@ -479,6 +505,94 @@
             min-width: 40px;
             text-align: right;
         }
+
+        /* Edit button */
+        .edit-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 12px;
+            color: #666;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+
+        .edit-btn:hover {
+            background: rgba(0,0,0,0.05);
+            color: #0066cc;
+        }
+
+        /* Edit form inline */
+        .edit-form {
+            background: #fefce8;
+            border: 1px solid #fde047;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+
+        .edit-form-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .edit-form-row input {
+            padding: 6px 8px;
+            font-size: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .edit-form-row input[type="text"] {
+            flex: 2;
+            min-width: 120px;
+        }
+
+        .edit-form-row input[type="number"] {
+            flex: 1;
+            min-width: 70px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 500px) {
+            /* Stack add/edit form inputs */
+            .add-wled-inputs,
+            .edit-form-row {
+                flex-direction: column;
+            }
+
+            .add-wled-inputs input,
+            .edit-form-row input {
+                min-width: 100%;
+            }
+
+            /* Stack settings grids to single column */
+            .settings-grid,
+            .sim-settings-grid {
+                grid-template-columns: 1fr;
+                gap: 12px 16px;
+            }
+
+            /* Bigger touch targets for sliders */
+            .setting-row,
+            .sim-setting-row {
+                padding: 4px 0;
+            }
+
+            .setting-slider,
+            .sim-setting-slider {
+                height: 8px;
+            }
+
+            .setting-slider::-webkit-slider-thumb,
+            .sim-setting-slider::-webkit-slider-thumb {
+                width: 24px;
+                height: 24px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -497,10 +611,10 @@
             <div id="wled-list"></div>
             <div id="add-wled-form" class="hidden" style="margin-top: 8px; padding: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px;">
                 <div style="font-size: 11px; font-weight: 600; color: #166534; margin-bottom: 8px;">Add WLED Device</div>
-                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input type="text" id="add-wled-host" placeholder="IP Address" style="flex: 2; padding: 6px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
-                    <input type="number" id="add-wled-start" placeholder="Start" value="0" style="flex: 1; padding: 6px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
-                    <input type="number" id="add-wled-end" placeholder="End" style="flex: 1; padding: 6px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                <div class="add-wled-inputs" style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                    <input type="text" id="add-wled-host" placeholder="IP / Hostname" style="flex: 2; min-width: 120px; padding: 6px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                    <input type="number" id="add-wled-start" placeholder="Start" value="0" style="flex: 1; min-width: 60px; padding: 6px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                    <input type="number" id="add-wled-end" placeholder="End" style="flex: 1; min-width: 60px; padding: 6px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <button id="add-wled-submit" class="btn" style="padding: 4px 12px; font-size: 12px; background: #22c55e; color: white; border: none;">Add</button>
@@ -545,21 +659,25 @@
 
             <!-- Win percentage slider -->
             <div class="test-label">
-                <span id="sim-away-label">Away 100%</span>
+                <span id="sim-away-label">Away</span>
                 <span id="test-pct">50%</span>
-                <span id="sim-home-label">Home 100%</span>
+                <span id="sim-home-label">Home</span>
             </div>
             <input type="range" id="test-slider" class="test-slider"
                    min="0" max="100" value="50">
 
             <!-- Scenario Presets -->
             <div style="display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap;">
-                <button onclick="setSimPct(50)" class="sim-preset-btn">Nail-biter</button>
-                <button onclick="setSimPct(85)" class="sim-preset-btn">Home dominant</button>
-                <button onclick="setSimPct(15)" class="sim-preset-btn">Away upset</button>
-                <button onclick="setSimPct(95)" class="sim-preset-btn">Blowout</button>
-                <button onclick="toggleAutoPlay()" id="auto-play-btn" class="sim-preset-btn" style="margin-left: auto;">▶ Auto-play</button>
-                <button onclick="saveSimDefaults()" id="save-sim-btn" class="sim-preset-btn" title="Save current league/teams/pct as default">💾 Save</button>
+                <button onclick="playScenario(50)" class="sim-preset-btn">Nail-biter</button>
+                <button onclick="playScenario(80)" class="sim-preset-btn">Dominant</button>
+                <button onclick="playScenario(95)" class="sim-preset-btn">Blowout</button>
+                <button onclick="playComeback()" class="sim-preset-btn anim-btn" data-anim="comeback">Comeback</button>
+                <button onclick="playCollapse()" class="sim-preset-btn anim-btn" data-anim="collapse">Collapse</button>
+                <button onclick="playOvertime()" class="sim-preset-btn anim-btn" data-anim="overtime">Overtime</button>
+                <button onclick="playMomentum()" class="sim-preset-btn anim-btn" data-anim="momentum">Momentum</button>
+                <button onclick="playBuzzerBeater()" class="sim-preset-btn anim-btn" data-anim="buzzer">Buzzer Beater</button>
+                <button onclick="stopSim()" id="stop-btn" class="sim-preset-btn stop-btn" style="margin-left: auto;">⏹ Stop</button>
+                <button onclick="saveSimDefaults()" id="save-sim-btn" class="sim-preset-btn" title="Save current league/teams/pct as default">💾</button>
             </div>
 
             <!-- Display Settings -->
@@ -618,10 +736,23 @@
             instanceStates = await resp.json();
             renderInstanceCards();
             renderSimTargetToggles();
+            updateStopButton();
+        }
+
+        function updateStopButton() {
+            const btn = document.getElementById('stop-btn');
+            const hasSimulating = instanceStates.some(i => i.simulating) || autoPlayInterval;
+            if (hasSimulating) {
+                btn.classList.add('enabled');
+            } else {
+                btn.classList.remove('enabled');
+            }
         }
 
         // Track which instance settings panels are expanded
         let expandedSettings = new Set();
+        // Track which instances are being edited
+        let editingInstances = new Set();
 
         function renderInstanceCards() {
             const list = document.getElementById('wled-list');
@@ -686,6 +817,8 @@
                         : `<button onclick="stopInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #dc2626; color: white; border: none;">Stop</button>`)
                     : '';
 
+                const isEditing = editingInstances.has(inst.host);
+
                 return `
                 <div class="instance-card" style="background: ${isWatching ? (isOverride ? '#fffbeb' : '#f0fdf4') : '#f5f5f5'}; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid ${isWatching ? (isOverride ? '#fcd34d' : '#bbf7d0') : '#e0e0e0'};">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -696,9 +829,25 @@
                         <span style="display: flex; align-items: center; gap: 6px;">
                             ${simBadge}
                             ${statusBadge}
+                            <button class="edit-btn" onclick="startEdit('${inst.host}', ${inst.start}, ${inst.end})" title="Edit">✎</button>
                             <button class="settings-toggle" onclick="toggleSettings('${inst.host}')" title="Settings">${isExpanded ? '▴' : '▾'}</button>
                         </span>
                     </div>
+
+                    ${isEditing ? `
+                    <div class="edit-form" id="edit-form-${hostId}">
+                        <div style="font-size: 11px; font-weight: 600; color: #854d0e; margin-bottom: 8px;">Edit Instance</div>
+                        <div class="edit-form-row">
+                            <input type="text" id="edit-host-${hostId}" value="${inst.host}" placeholder="IP / Hostname">
+                            <input type="number" id="edit-start-${hostId}" value="${inst.start}" placeholder="Start">
+                            <input type="number" id="edit-end-${hostId}" value="${inst.end}" placeholder="End">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="saveEdit('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #eab308; color: white; border: none;">Save</button>
+                            <button onclick="cancelEdit('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #f5f5f5; border: 1px solid #ccc;">Cancel</button>
+                        </div>
+                    </div>
+                    ` : ''}
 
                     ${isWatching ? `
                         <div style="font-size: 12px; margin-bottom: 8px; padding: 6px 8px; background: #f8fafc; border-radius: 4px; border: 1px solid #e2e8f0;">
@@ -873,6 +1022,63 @@
                 expandedSettings.add(host);
             }
             renderInstanceCards();
+        }
+
+        function startEdit(host, start, end) {
+            editingInstances.add(host);
+            renderInstanceCards();
+        }
+
+        function cancelEdit(host) {
+            editingInstances.delete(host);
+            renderInstanceCards();
+        }
+
+        async function saveEdit(originalHost) {
+            const hostId = originalHost.replace(/\./g, '-');
+            const newHost = document.getElementById(`edit-host-${hostId}`).value.trim();
+            const newStart = parseInt(document.getElementById(`edit-start-${hostId}`).value) || 0;
+            const newEnd = parseInt(document.getElementById(`edit-end-${hostId}`).value);
+
+            if (!newHost) {
+                alert('Please enter a valid IP address or hostname');
+                return;
+            }
+
+            if (isNaN(newEnd) || newEnd <= newStart) {
+                alert('End pixel must be greater than start pixel');
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/api/instance/${originalHost}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        host: newHost !== originalHost ? newHost : null,
+                        start: newStart,
+                        end: newEnd
+                    })
+                });
+
+                const result = await resp.json();
+
+                if (!resp.ok) {
+                    alert(result.detail || 'Failed to update instance');
+                    return;
+                }
+
+                // Update expandedSettings if host changed
+                if (newHost !== originalHost && expandedSettings.has(originalHost)) {
+                    expandedSettings.delete(originalHost);
+                    expandedSettings.add(newHost);
+                }
+
+                editingInstances.delete(originalHost);
+                await loadInstances();
+            } catch (err) {
+                alert('Error saving: ' + err.message);
+            }
         }
 
         function updateDignityPreview(host, pctValue) {
@@ -1413,6 +1619,11 @@
 
             // Refresh state
             await loadInstances();
+
+            // If we just started sim and have teams selected, push the colors immediately
+            if (!inst.simulating && simLeague.value && simAway.value && simHome.value) {
+                await updateSimulator();
+            }
         }
 
         async function updateSimulator() {
@@ -1542,50 +1753,193 @@
             const hc = simTeamColors.home;
             const ac = simTeamColors.away;
 
+            // Render away on left, home on right to match UI layout
             preview.innerHTML = `
-                <div class="strip-segment" style="width: ${homePctWidth}%; background: linear-gradient(90deg, rgb(${hc[0].join(',')}) 0%, rgb(${hc[1].join(',')}) 100%);"></div>
+                <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(90deg, rgb(${ac[0].join(',')}) 0%, rgb(${ac[1].join(',')}) 100%);"></div>
                 <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
                 <div class="strip-segment divider" style="width: ${dividerPctWidth}%; background: ${dividerGradient};"></div>
                 <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
-                <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(90deg, rgb(${ac[0].join(',')}) 0%, rgb(${ac[1].join(',')}) 100%);"></div>
+                <div class="strip-segment" style="width: ${homePctWidth}%; background: linear-gradient(90deg, rgb(${hc[0].join(',')}) 0%, rgb(${hc[1].join(',')}) 100%);"></div>
                 <div class="dignity-marker" style="left: ${minPct * 100}%;" title="Min dignity: ${Math.round(minPct * 100)}%"></div>
                 <div class="dignity-marker" style="right: ${minPct * 100}%;" title="Min dignity: ${Math.round(minPct * 100)}%"></div>
             `;
         }
 
-        function setSimPct(pct) {
+        // Auto-start sim on first available instance if none running
+        async function ensureSimRunning() {
+            const simInstances = instanceStates.filter(i => i.simulating);
+            if (simInstances.length === 0 && instanceStates.length > 0) {
+                // Start sim on first instance
+                const host = instanceStates[0].host;
+                await fetch(`/api/instance/${host}/sim/start`, { method: 'POST' });
+                await loadInstances();
+                return true;
+            }
+            return simInstances.length > 0;
+        }
+
+        async function playScenario(pct) {
+            // Stop any running animation
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+            }
+
+            // Ensure sim is running
+            const hasTeams = simLeague.value && simAway.value && simHome.value;
+            if (!hasTeams) {
+                alert('Select a league and both teams first');
+                return;
+            }
+
+            await ensureSimRunning();
             testSlider.value = pct;
             updateSimulator();
         }
 
-        function toggleAutoPlay() {
-            const btn = document.getElementById('auto-play-btn');
+        // Helper to manage animated scenario buttons
+        function setActiveAnim(animName) {
+            document.querySelectorAll('.anim-btn').forEach(b => b.classList.remove('active'));
+            if (animName) {
+                document.querySelector(`.anim-btn[data-anim="${animName}"]`)?.classList.add('active');
+            }
+            updateStopButton();
+        }
+
+        function clearAnim() {
             if (autoPlayInterval) {
                 clearInterval(autoPlayInterval);
                 autoPlayInterval = null;
-                btn.textContent = '▶ Auto-play';
-                btn.classList.remove('active');
-            } else {
-                btn.textContent = '⏸ Stop';
-                btn.classList.add('active');
-                autoPlayInterval = setInterval(() => {
-                    let pct = parseInt(testSlider.value);
-                    // Random momentum: usually small moves, occasionally big swings
-                    const swing = Math.random() < 0.1 ? (Math.random() * 15 + 5) : (Math.random() * 5 + 1);
-                    pct += autoPlayDirection * swing;
-
-                    // Bounce off edges and occasionally reverse
-                    if (pct >= 90 || (pct > 60 && Math.random() < 0.15)) {
-                        autoPlayDirection = -1;
-                    } else if (pct <= 10 || (pct < 40 && Math.random() < 0.15)) {
-                        autoPlayDirection = 1;
-                    }
-
-                    pct = Math.max(5, Math.min(95, pct));
-                    testSlider.value = Math.round(pct);
-                    updateSimulator();
-                }, 800);
             }
+            setActiveAnim(null);
+        }
+
+        async function startAnim(animName) {
+            clearAnim();
+            const hasTeams = simLeague.value && simAway.value && simHome.value;
+            if (!hasTeams) {
+                alert('Select a league and both teams first');
+                return false;
+            }
+            await ensureSimRunning();
+            setActiveAnim(animName);
+            return true;
+        }
+
+        async function playComeback() {
+            if (!await startAnim('comeback')) return;
+
+            let pct = 15;
+            testSlider.value = pct;
+            updateSimulator();
+
+            autoPlayInterval = setInterval(() => {
+                pct += 2;
+                if (pct >= 85) {
+                    clearAnim();
+                    pct = 85;
+                }
+                testSlider.value = pct;
+                updateSimulator();
+            }, 300);
+        }
+
+        async function playCollapse() {
+            if (!await startAnim('collapse')) return;
+
+            let pct = 85;
+            testSlider.value = pct;
+            updateSimulator();
+
+            autoPlayInterval = setInterval(() => {
+                pct -= 2;
+                if (pct <= 15) {
+                    clearAnim();
+                    pct = 15;
+                }
+                testSlider.value = pct;
+                updateSimulator();
+            }, 300);
+        }
+
+        async function playOvertime() {
+            if (!await startAnim('overtime')) return;
+
+            let pct = 50;
+            testSlider.value = pct;
+            updateSimulator();
+
+            // Nervous jittering around 50%
+            autoPlayInterval = setInterval(() => {
+                const jitter = (Math.random() - 0.5) * 8;  // ±4%
+                pct = 50 + jitter;
+                pct = Math.max(42, Math.min(58, pct));
+                testSlider.value = Math.round(pct);
+                updateSimulator();
+            }, 150);
+        }
+
+        async function playMomentum() {
+            if (!await startAnim('momentum')) return;
+
+            let pct = 50;
+            let direction = 1;
+            testSlider.value = pct;
+            updateSimulator();
+
+            // Pendulum swings
+            autoPlayInterval = setInterval(() => {
+                pct += direction * 3;
+                if (pct >= 80) direction = -1;
+                if (pct <= 20) direction = 1;
+                testSlider.value = Math.round(pct);
+                updateSimulator();
+            }, 200);
+        }
+
+        async function playBuzzerBeater() {
+            if (!await startAnim('buzzer')) return;
+
+            // Start losing badly
+            let pct = 25;
+            let phase = 'creep';  // creep → dramatic pause → win
+            testSlider.value = pct;
+            updateSimulator();
+
+            autoPlayInterval = setInterval(() => {
+                if (phase === 'creep') {
+                    // Slow creep toward even
+                    pct += 0.8;
+                    if (pct >= 48) {
+                        phase = 'pause';
+                        setTimeout(() => { phase = 'win'; }, 800);
+                    }
+                } else if (phase === 'win') {
+                    // Sudden jump to victory!
+                    pct += 8;
+                    if (pct >= 88) {
+                        clearAnim();
+                        pct = 88;
+                    }
+                }
+                testSlider.value = Math.round(pct);
+                updateSimulator();
+            }, 250);
+        }
+
+        async function stopSim() {
+            const btn = document.getElementById('stop-btn');
+            if (!btn.classList.contains('enabled')) return;
+
+            // Stop any animation
+            clearAnim();
+
+            // Stop all simulating instances
+            const simInstances = instanceStates.filter(i => i.simulating);
+            for (const inst of simInstances) {
+                await fetch(`/api/instance/${inst.host}/sim/stop`, { method: 'POST' });
+            }
+            await loadInstances();
         }
 
         simLeague.addEventListener('change', async () => {

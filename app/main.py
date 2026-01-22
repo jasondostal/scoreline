@@ -673,6 +673,51 @@ async def delete_instance(host: str):
     return result
 
 
+class UpdateInstanceRequest(BaseModel):
+    host: Optional[str] = None
+    start: Optional[int] = None
+    end: Optional[int] = None
+
+
+@app.patch("/api/instance/{host}")
+async def update_instance(host: str, req: UpdateInstanceRequest):
+    """Update core instance properties (host, start, end)."""
+    from config import update_wled_instance
+
+    if host not in state.instances:
+        raise HTTPException(404, f"Unknown instance: {host}")
+
+    # Update config
+    result = update_wled_instance(
+        host,
+        new_host=req.host,
+        start=req.start,
+        end=req.end
+    )
+
+    if result.get("status") == "error":
+        raise HTTPException(400, result.get("message"))
+
+    # If host changed, update state.instances key
+    if req.host and req.host != host:
+        old_state = state.instances.pop(host)
+        old_state.host = req.host
+        if req.start is not None:
+            old_state.start = req.start
+        if req.end is not None:
+            old_state.end = req.end
+        state.instances[req.host] = old_state
+    else:
+        # Just update start/end on existing instance
+        inst = state.instances[host]
+        if req.start is not None:
+            inst.start = req.start
+        if req.end is not None:
+            inst.end = req.end
+
+    return result
+
+
 class InstanceSettingsRequest(BaseModel):
     min_team_pct: Optional[float] = None
     contested_zone_pixels: Optional[int] = None

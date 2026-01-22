@@ -274,6 +274,62 @@ def remove_wled_instance(host: str) -> dict:
     return {"status": "removed", "message": f"{host} removed from config"}
 
 
+def update_wled_instance(host: str, new_host: str = None, start: int = None, end: int = None) -> dict:
+    """
+    Update core properties of a WLED instance (host, start, end).
+
+    If host changes, updates the key in settings.yaml.
+    Returns status of the operation.
+    """
+    global _settings
+
+    settings_path = CONFIG_DIR / "settings.yaml"
+    raw_settings = _load_yaml(settings_path)
+
+    if "wled_instances" not in raw_settings:
+        return {"status": "error", "message": "No instances configured"}
+
+    # Find the instance
+    found_idx = None
+    for idx, inst in enumerate(raw_settings["wled_instances"]):
+        if inst.get("host") == host:
+            found_idx = idx
+            break
+
+    if found_idx is None:
+        return {"status": "error", "message": f"Instance {host} not found"}
+
+    # Check if new_host already exists (if changing host)
+    if new_host and new_host != host:
+        for inst in raw_settings["wled_instances"]:
+            if inst.get("host") == new_host:
+                return {"status": "error", "message": f"{new_host} already configured"}
+
+    # Update the instance
+    inst = raw_settings["wled_instances"][found_idx]
+    if new_host:
+        inst["host"] = new_host
+    if start is not None:
+        inst["start"] = start
+    if end is not None:
+        inst["end"] = end
+
+    # Write back
+    with open(settings_path, "w") as f:
+        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+
+    # Reload cache
+    _settings = load_settings()
+
+    return {
+        "status": "updated",
+        "old_host": host,
+        "new_host": new_host or host,
+        "start": inst.get("start"),
+        "end": inst.get("end")
+    }
+
+
 def update_instance_settings(host: str, display_settings: dict) -> dict:
     """
     Update display settings for a specific WLED instance.
