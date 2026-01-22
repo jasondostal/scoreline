@@ -185,7 +185,7 @@ async def poll_all_games():
                 # Collect unique games to poll (avoid duplicate API calls)
                 games_to_poll: dict[str, list[InstanceState]] = {}  # game_key -> instances
                 for inst in state.instances.values():
-                    if inst.game and inst.controller:
+                    if inst.game and inst.controller and not inst.simulating:
                         key = f"{inst.game['league']}:{inst.game['game_id']}"
                         if key not in games_to_poll:
                             games_to_poll[key] = []
