@@ -519,6 +519,10 @@ async def check_wled_simulation_state(inst: InstanceState) -> bool:
     try:
         wled_state = await inst.controller.get_state()
 
+        # Empty response means connection failed - preserve state
+        if not wled_state:
+            return True
+
         # If WLED is off, simulation is stale
         if not wled_state.get("on", False):
             return False

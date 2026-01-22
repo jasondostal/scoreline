@@ -642,11 +642,11 @@
                 <select id="sim-league" style="flex: 1;">
                     <option value="">League...</option>
                 </select>
-                <select id="sim-away" style="flex: 1;" disabled>
-                    <option value="">Away...</option>
-                </select>
                 <select id="sim-home" style="flex: 1;" disabled>
                     <option value="">Home...</option>
+                </select>
+                <select id="sim-away" style="flex: 1;" disabled>
+                    <option value="">Away...</option>
                 </select>
             </div>
 
@@ -659,9 +659,9 @@
 
             <!-- Win percentage slider -->
             <div class="test-label">
-                <span id="sim-away-label">Away</span>
-                <span id="test-pct">50%</span>
                 <span id="sim-home-label">Home</span>
+                <span id="test-pct">50%</span>
+                <span id="sim-away-label">Away</span>
             </div>
             <input type="range" id="test-slider" class="test-slider"
                    min="0" max="100" value="50">
@@ -1753,13 +1753,13 @@
             const hc = simTeamColors.home;
             const ac = simTeamColors.away;
 
-            // Render away on left, home on right to match UI layout
+            // Render home on left, away on right to match WLED segment layout
             preview.innerHTML = `
-                <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(90deg, rgb(${ac[0].join(',')}) 0%, rgb(${ac[1].join(',')}) 100%);"></div>
+                <div class="strip-segment" style="width: ${homePctWidth}%; background: linear-gradient(90deg, rgb(${hc[0].join(',')}) 0%, rgb(${hc[1].join(',')}) 100%);"></div>
                 <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
                 <div class="strip-segment divider" style="width: ${dividerPctWidth}%; background: ${dividerGradient};"></div>
                 <div class="strip-segment buffer" style="width: ${bufferPctWidth}%"></div>
-                <div class="strip-segment" style="width: ${homePctWidth}%; background: linear-gradient(90deg, rgb(${hc[0].join(',')}) 0%, rgb(${hc[1].join(',')}) 100%);"></div>
+                <div class="strip-segment" style="width: ${awayPctWidth}%; background: linear-gradient(90deg, rgb(${ac[0].join(',')}) 0%, rgb(${ac[1].join(',')}) 100%);"></div>
                 <div class="dignity-marker" style="left: ${minPct * 100}%;" title="Min dignity: ${Math.round(minPct * 100)}%"></div>
                 <div class="dignity-marker" style="right: ${minPct * 100}%;" title="Min dignity: ${Math.round(minPct * 100)}%"></div>
             `;

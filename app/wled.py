@@ -131,24 +131,23 @@ class WLEDController:
         clamped_pct = max(min_pct, min(1.0 - min_pct, home_win_pct))
 
         # Calculate pixel boundaries
-        # Away team gets pixels from the left, home from the right
-        # (matches UI layout: away picker left, home picker right)
+        # Home team gets pixels from the left, away from the right
         home_pixels = int((total_pixels - battle_zone) * clamped_pct)
         away_pixels = total_pixels - battle_zone - home_pixels
 
-        # Segment boundaries: away | dark | jiggle | dark | home
-        away_end = start + away_pixels
-        dark_left_start = away_end
+        # Segment boundaries: home | dark | jiggle | dark | away
+        home_end = start + home_pixels
+        dark_left_start = home_end
         dark_left_end = dark_left_start + dark_buffer
         jiggle_start = dark_left_end
         jiggle_end = jiggle_start + contested
         dark_right_start = jiggle_end
         dark_right_end = dark_right_start + dark_buffer
-        home_start = dark_right_end
+        away_start = dark_right_end
 
         # Both teams chase INWARD toward the battle line
-        away_reversed = False  # Left-to-right (toward center)
-        home_reversed = True   # Right-to-left (toward center)
+        home_reversed = False  # Left-to-right (toward center)
+        away_reversed = True   # Right-to-left (toward center)
 
         # Calculate chase speed based on momentum
         # Closer to 50/50 = faster (tense), blowout = slower (dominant)
@@ -177,23 +176,23 @@ class WLEDController:
             })
             next_id += 1
 
-        # Away team segment (left side)
-        if away_pixels > 0:
+        # Home team segment
+        if home_pixels > 0:
             segments.append({
                 "id": next_id,
-                "n": "AWAY",
+                "n": "HOME",
                 "start": start,
-                "stop": away_end,
+                "stop": home_end,
                 "grp": 1,
                 "spc": 0,
                 "on": True,
                 "bri": 255,
-                "col": [away_colors[0], away_colors[1], [0, 0, 0]],
+                "col": [home_colors[0], home_colors[1], [0, 0, 0]],
                 "pal": 0,  # Default palette - crisp bars, no gradient
                 "fx": EFFECT_CHASE_2,
                 "sx": speed,
                 "ix": self.config.chase_intensity,
-                "rev": away_reversed,
+                "rev": home_reversed,
                 "sel": False,
             })
             next_id += 1
@@ -253,23 +252,23 @@ class WLEDController:
             })
             next_id += 1
 
-        # Home team segment (right side)
-        if home_pixels > 0:
+        # Away team segment
+        if away_pixels > 0:
             segments.append({
                 "id": next_id,
-                "n": "HOME",
-                "start": home_start,
+                "n": "AWAY",
+                "start": away_start,
                 "stop": end,
                 "grp": 1,
                 "spc": 0,
                 "on": True,
                 "bri": 255,
-                "col": [home_colors[0], home_colors[1], [0, 0, 0]],
+                "col": [away_colors[0], away_colors[1], [0, 0, 0]],
                 "pal": 0,  # Default palette - crisp bars, no gradient
                 "fx": EFFECT_CHASE_2,
                 "sx": speed,
                 "ix": self.config.chase_intensity,
-                "rev": home_reversed,
+                "rev": away_reversed,
                 "sel": False,
             })
             next_id += 1
