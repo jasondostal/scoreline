@@ -1,0 +1,14 @@
+# Test override for auto-watch testing with mock ESPN API
+# Usage: docker compose -f docker-compose.yml -f docker-compose.test.yml up -d
+#
+# This points Scoreline at the mock ESPN server running on the host.
+# Start the mock first: python3 mock_espn.py
+
+services:
+  scoreline:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - ESPN_BASE_URL=http://host.docker.internal:5555
+      # Reduce auto-watch interval for faster testing (default 300s = 5min)
+      - AUTO_WATCH_INTERVAL=30

@@ -3,12 +3,13 @@ ESPN API client for fetching live game data and win probabilities.
 """
 
 import httpx
+import os
 from typing import Optional
 from dataclasses import dataclass
 from datetime import datetime
 
 
-ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports"
+ESPN_BASE = os.environ.get("ESPN_BASE_URL", "https://site.api.espn.com/apis/site/v2/sports")
 
 
 @dataclass

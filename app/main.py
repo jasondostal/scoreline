@@ -242,7 +242,8 @@ async def auto_watch_all():
     Scans scoreboards for leagues with watched teams, auto-starts in-progress games.
     """
     settings = get_settings()
-    interval = settings.get("auto_watch_interval", 300)
+    # Allow env var override for testing (e.g., AUTO_WATCH_INTERVAL=30)
+    interval = int(os.environ.get("AUTO_WATCH_INTERVAL", settings.get("auto_watch_interval", 300)))
 
     while True:
         try:
