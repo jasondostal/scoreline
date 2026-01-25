@@ -1,6 +1,6 @@
 services:
   scoreline:
-    image: ghcr.io/jasondostal/scoreline:local
+    image: ghcr.io/jasondostal/scoreline:latest
     build: .
     container_name: scoreline
     restart: unless-stopped
