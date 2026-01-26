@@ -8,7 +8,9 @@ import asyncio
 import logging
 import os
 import threading
+import time
 from contextlib import asynccontextmanager
+from enum import Enum
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -18,6 +20,25 @@ from watchdog.observers.polling import PollingObserver
 from watchdog.events import FileSystemEventHandler
 
 logger = logging.getLogger("uvicorn.error")
+
+
+# Explicit UI state machine
+class UIState(str, Enum):
+    """Explicit states for instance UI behavior."""
+    IDLE = "idle"                        # No game, no auto-watch
+    IDLE_AUTOWATCH = "idle_autowatch"    # No game, auto-watch armed
+    WATCHING_AUTO = "watching_auto"      # Game started from auto-watch
+    WATCHING_MANUAL = "watching_manual"  # Manually selected, no auto-watch teams
+    WATCHING_OVERRIDE = "watching_override"  # Manually selected, overriding auto-watch
+    FINAL = "final"                      # Game ended, showing final score
+    SIMULATING = "simulating"            # Simulator active
+
+
+class HealthStatus(str, Enum):
+    """WLED connection health tiers."""
+    HEALTHY = "healthy"
+    STALE = "stale"
+    UNREACHABLE = "unreachable"
 
 from espn import ESPNClient, GameInfo
 from wled import WLEDController, WLEDConfig
@@ -63,6 +84,38 @@ class InstanceState:
         self.simulating: bool = False  # True when driven by simulator
         self.sim_saved_preset: Optional[int] = None  # Preset to restore when sim stops
 
+        # Explicit state machine
+        self.ui_state: UIState = UIState.IDLE
+        self.watch_trigger: Optional[str] = None  # "auto" or "manual" - how watching started
+
+        # Health tracking
+        self.health_last_success: float = time.time()
+        self.health_consecutive_failures: int = 0
+        self.health_last_error: Optional[str] = None
+
+        # FINAL state linger
+        self.final_linger_until: Optional[float] = None
+        self.final_game_info: Optional[dict] = None  # Preserved game info for FINAL display
+
+    def get_health_status(self) -> HealthStatus:
+        """Derive health tier from tracking data."""
+        if self.health_consecutive_failures >= 3:
+            return HealthStatus.UNREACHABLE
+        if time.time() - self.health_last_success > 120:  # 2 minutes
+            return HealthStatus.STALE
+        return HealthStatus.HEALTHY
+
+    def record_success(self):
+        """Record a successful WLED operation."""
+        self.health_last_success = time.time()
+        self.health_consecutive_failures = 0
+        self.health_last_error = None
+
+    def record_failure(self, error: str):
+        """Record a failed WLED operation."""
+        self.health_consecutive_failures += 1
+        self.health_last_error = error
+
 
 class AppState:
     espn: Optional[ESPNClient] = None
@@ -74,17 +127,186 @@ class AppState:
 state = AppState()
 
 
+def compute_ui_state(inst: InstanceState) -> UIState:
+    """Compute the correct UI state based on instance data."""
+    watch_teams = get_instance_watch_teams(inst.host)
+    has_watch_teams = len(watch_teams) > 0
+
+    # Simulating takes priority
+    if inst.simulating:
+        return UIState.SIMULATING
+
+    # FINAL state persists until linger expires
+    if inst.ui_state == UIState.FINAL and inst.final_linger_until:
+        if time.time() < inst.final_linger_until:
+            return UIState.FINAL
+
+    # Not watching anything
+    if inst.game is None:
+        return UIState.IDLE_AUTOWATCH if has_watch_teams else UIState.IDLE
+
+    # Watching a game - determine which type
+    if inst.watch_trigger == "auto":
+        return UIState.WATCHING_AUTO
+
+    # Manual trigger - check if it's override or just manual
+    if has_watch_teams:
+        # Check if the game is for one of our watched teams
+        game_info = inst.game.get("last_info")
+        if game_info:
+            league = inst.game.get("league", "")
+            home_team = game_info.home_team.upper() if hasattr(game_info, 'home_team') else ""
+            away_team = game_info.away_team.upper() if hasattr(game_info, 'away_team') else ""
+
+            # Check if either team is in watch list
+            for wt in watch_teams:
+                parts = wt.split(":")
+                if len(parts) == 2:
+                    wt_league, wt_team = parts
+                    if wt_league == league and wt_team.upper() in (home_team, away_team):
+                        # It's our team - treat as manual (eager start), not override
+                        return UIState.WATCHING_MANUAL
+
+        # Different team - this is an override
+        return UIState.WATCHING_OVERRIDE
+
+    return UIState.WATCHING_MANUAL
+
+
+def transition_to_watching(inst: InstanceState, game: dict, trigger: str):
+    """
+    Transition instance to a watching state.
+
+    Args:
+        inst: The instance to transition
+        game: Game dict with league, game_id, etc.
+        trigger: "auto" or "manual"
+    """
+    inst.game = game
+    inst.watch_trigger = trigger
+    inst.final_linger_until = None
+    inst.final_game_info = None
+
+    # Compute the appropriate watching state
+    inst.ui_state = compute_ui_state(inst)
+    logger.info(f"[STATE] {inst.host}: → {inst.ui_state.value} (trigger={trigger})")
+
+
+def transition_to_final(inst: InstanceState, linger_seconds: int = 30):
+    """
+    Transition instance to FINAL state after game ends.
+
+    Args:
+        inst: The instance to transition
+        linger_seconds: How long to show final score before transitioning
+    """
+    # Preserve game info for display
+    inst.final_game_info = inst.game.copy() if inst.game else None
+    inst.final_linger_until = time.time() + linger_seconds
+    inst.ui_state = UIState.FINAL
+    logger.info(f"[STATE] {inst.host}: → FINAL (linger={linger_seconds}s)")
+
+
+async def transition_from_final(inst: InstanceState):
+    """
+    Transition from FINAL state - either cascade to next game or go idle.
+    """
+    watch_teams = get_instance_watch_teams(inst.host)
+
+    # Check for cascade - another watched team's game in progress
+    if watch_teams and state.espn:
+        next_game = await find_next_priority_game(inst.host, watch_teams)
+        if next_game:
+            logger.info(f"[CASCADE] {inst.host}: Found next game, transitioning to WATCHING_AUTO")
+            transition_to_watching(inst, next_game, "auto")
+            return
+
+    # No cascade - go to idle
+    inst.game = None
+    inst.watch_trigger = None
+    inst.final_linger_until = None
+    inst.final_game_info = None
+    inst.ui_state = UIState.IDLE_AUTOWATCH if watch_teams else UIState.IDLE
+    logger.info(f"[STATE] {inst.host}: → {inst.ui_state.value}")
+
+
+async def find_next_priority_game(host: str, watch_teams: list[str]) -> Optional[dict]:
+    """
+    Find the next in-progress game from watch list in priority order.
+
+    Args:
+        host: Instance host (for logging)
+        watch_teams: Ordered list of watched teams (first = highest priority)
+
+    Returns:
+        Game dict if found, None otherwise
+    """
+    for team_spec in watch_teams:
+        parts = team_spec.split(":")
+        if len(parts) != 2:
+            continue
+        league, team = parts
+
+        if league not in get_leagues():
+            continue
+
+        sport = get_leagues()[league]["sport"]
+        try:
+            games = await state.espn.get_scoreboard(sport, league)
+            for game in games:
+                if game["status"] != "in":
+                    continue
+                home_team = game["home_team"].upper()
+                away_team = game["away_team"].upper()
+                if team.upper() in (home_team, away_team):
+                    logger.info(f"[CASCADE] {host}: Found {away_team}@{home_team} for {team_spec}")
+                    return {
+                        "league": league,
+                        "game_id": game["id"],
+                        "last_info": None,
+                        "last_status": "in",
+                    }
+        except Exception as e:
+            logger.error(f"[CASCADE] Error checking {league} for {host}: {e}")
+
+    return None
+
+
 def init_instances():
-    """Initialize WLED instances from config."""
+    """Initialize WLED instances from config, preserving existing state."""
     settings = get_settings()
-    state.instances = {}
-    for inst in settings.get("wled_instances", []):
-        host = inst["host"]
-        state.instances[host] = InstanceState(
-            host=host,
-            start=inst.get("start", 0),
-            end=inst.get("end", 629),
-        )
+    new_instances = {}
+
+    for inst_cfg in settings.get("wled_instances", []):
+        host = inst_cfg["host"]
+
+        # Check if instance already exists - preserve its state
+        if host in state.instances:
+            existing = state.instances[host]
+            # Update config values that might have changed
+            existing.start = inst_cfg.get("start", 0)
+            existing.end = inst_cfg.get("end", 629)
+            # Recompute UI state (watch_teams may have changed)
+            existing.ui_state = compute_ui_state(existing)
+            new_instances[host] = existing
+            logger.debug(f"[INIT] {host}: Preserved existing state ({existing.ui_state.value})")
+        else:
+            # New instance
+            inst = InstanceState(
+                host=host,
+                start=inst_cfg.get("start", 0),
+                end=inst_cfg.get("end", 629),
+            )
+            inst.ui_state = compute_ui_state(inst)
+            new_instances[host] = inst
+            logger.debug(f"[INIT] {host}: Created new instance ({inst.ui_state.value})")
+
+    # Remove instances that are no longer in config
+    for host in state.instances:
+        if host not in new_instances:
+            logger.info(f"[INIT] {host}: Removed from config")
+
+    state.instances = new_instances
 
 
 # Config file watcher for auto-reload
@@ -240,6 +462,7 @@ async def auto_watch_all():
     """
     Background task to auto-start games for watched teams.
     Scans scoreboards for leagues with watched teams, auto-starts in-progress games.
+    Now uses priority ordering - first team in watch list = highest priority.
     """
     settings = get_settings()
     # Allow env var override for testing (e.g., AUTO_WATCH_INTERVAL=30)
@@ -247,57 +470,43 @@ async def auto_watch_all():
 
     while True:
         try:
-            watched = get_all_watched_teams()  # {league: [(team, host), ...]}
-
-            if not watched:
-                await asyncio.sleep(interval)
-                continue
-
-            for league, team_hosts in watched.items():
-                if league not in get_leagues():
+            # Process each instance individually to respect per-instance priority
+            for host, inst in state.instances.items():
+                # Skip if already watching or simulating
+                if inst.game is not None or inst.simulating:
                     continue
 
-                sport = get_leagues()[league]["sport"]
-                games = await state.espn.get_scoreboard(sport, league)
+                # Skip if in FINAL state (waiting for linger to expire)
+                if inst.ui_state == UIState.FINAL:
+                    continue
 
-                for game in games:
-                    # Only auto-watch in-progress games
-                    if game["status"] != "in":
-                        continue
+                watch_teams = get_instance_watch_teams(host)
+                if not watch_teams:
+                    continue
 
-                    home_team = game["home_team"].upper()
-                    away_team = game["away_team"].upper()
+                # Find best game based on priority (array order)
+                best_game = await find_next_priority_game(host, watch_teams)
+                if not best_game:
+                    continue
 
-                    # Find instances watching either team
-                    for team, host in team_hosts:
-                        if team != home_team and team != away_team:
-                            continue
+                # Auto-start the highest priority game!
+                logger.info(f"[AUTO-WATCH] {host}: Starting game (priority-based)")
 
-                        inst = state.instances.get(host)
-                        if not inst:
-                            continue
+                if not inst.controller:
+                    config = build_wled_config(inst.host, inst.start, inst.end)
+                    inst.controller = WLEDController(config)
 
-                        # Skip if already watching something
-                        if inst.game is not None:
-                            continue
+                # Save current preset before we take over (for restore action)
+                try:
+                    inst.previous_preset = await inst.controller.get_current_preset()
+                    inst.record_success()
+                    logger.info(f"[AUTO-WATCH] {host}: Saved previous preset {inst.previous_preset}")
+                except Exception as e:
+                    inst.record_failure(str(e))
+                    logger.warning(f"[AUTO-WATCH] {host}: Could not save preset: {e}")
 
-                        # Auto-start!
-                        logger.info(f"[AUTO-WATCH] {host}: Starting {away_team}@{home_team} ({league.upper()})")
-
-                        if not inst.controller:
-                            config = build_wled_config(inst.host, inst.start, inst.end)
-                            inst.controller = WLEDController(config)
-
-                        # Save current preset before we take over (for restore action)
-                        inst.previous_preset = await inst.controller.get_current_preset()
-                        logger.info(f"[AUTO-WATCH] {host}: Saved previous preset {inst.previous_preset}")
-
-                        inst.game = {
-                            "league": league,
-                            "game_id": game["id"],
-                            "last_info": None,
-                            "last_status": "in",  # Auto-watch only starts in-progress games
-                        }
+                # Use state transition
+                transition_to_watching(inst, best_game, "auto")
 
         except Exception as e:
             logger.error(f"Auto-watch error: {e}")
@@ -378,12 +587,34 @@ async def handle_game_ended(inst: InstanceState, game_info: GameInfo):
                 logger.warning(f"[POST-GAME] {inst.host}: Action is 'preset' but no preset_id configured, turning off")
                 await inst.controller.turn_off()
 
+        inst.record_success()
     except Exception as e:
         logger.error(f"[POST-GAME] Error on {inst.host}: {e}")
+        inst.record_failure(str(e))
 
-    # Clear the game state and previous preset
-    inst.game = None
+    # Transition to FINAL state (will linger, then cascade or go idle)
+    transition_to_final(inst, linger_seconds=30)
     inst.previous_preset = None
+
+    # Schedule the transition from FINAL after linger period
+    asyncio.create_task(check_final_linger(inst))
+
+
+async def check_final_linger(inst: InstanceState):
+    """
+    Wait for FINAL state linger to expire, then transition to next state.
+    """
+    if not inst.final_linger_until:
+        return
+
+    # Wait for linger period
+    wait_time = inst.final_linger_until - time.time()
+    if wait_time > 0:
+        await asyncio.sleep(wait_time)
+
+    # Only transition if still in FINAL state (user might have manually changed)
+    if inst.ui_state == UIState.FINAL:
+        await transition_from_final(inst)
 
 
 # API Routes
@@ -574,7 +805,16 @@ async def list_instances():
                 logger.info(f"[SYNC] {host}: Simulation stale (WLED changed externally), clearing flag")
                 inst.simulating = False
                 simulating = False
-                # Don't restore preset here - just reflect reality
+                # Recompute UI state
+                inst.ui_state = compute_ui_state(inst)
+
+        # Recompute UI state (ensures it's always current)
+        current_state = compute_ui_state(inst)
+        if current_state != inst.ui_state:
+            inst.ui_state = current_state
+
+        # Get health status
+        health_status = inst.get_health_status()
 
         item = {
             "host": host,
@@ -583,6 +823,18 @@ async def list_instances():
             "watching": inst.game is not None,
             "simulating": simulating,
             "watch_teams": get_instance_watch_teams(host),
+            # Explicit state machine
+            "state": inst.ui_state.value,
+            "game_phase": inst.game.get("last_status") if inst.game else None,
+            # Health tracking
+            "health": {
+                "status": health_status.value,
+                "last_success": inst.health_last_success,
+                "consecutive_failures": inst.health_consecutive_failures,
+                "last_error": inst.health_last_error,
+            },
+            # FINAL state info
+            "final_linger_remaining": max(0, inst.final_linger_until - time.time()) if inst.final_linger_until else None,
             # Display settings (per-instance override > global > default)
             "min_team_pct": inst_display.get("min_team_pct", global_display.get("min_team_pct", 0.05)),
             "contested_zone_pixels": inst_display.get("contested_zone_pixels", global_display.get("contested_zone_pixels", 6)),
@@ -594,17 +846,23 @@ async def list_instances():
             "post_game_action": post_game.get("action", "flash_then_off"),
             "post_game_preset_id": post_game.get("preset_id"),
         }
-        if inst.game:
-            item["league"] = inst.game["league"]
-            item["game_id"] = inst.game["game_id"]
-            info = inst.game.get("last_info")
+
+        # Get game info - either from active game or final_game_info for FINAL state
+        game_data = inst.game
+        if inst.ui_state == UIState.FINAL and inst.final_game_info:
+            game_data = inst.final_game_info
+
+        if game_data:
+            item["league"] = game_data["league"]
+            item["game_id"] = game_data["game_id"]
+            info = game_data.get("last_info")
             if info:
                 item["home_team"] = info.home_team
                 item["away_team"] = info.away_team
-                item["home_display"] = get_team_display(inst.game["league"], info.home_team)
-                item["away_display"] = get_team_display(inst.game["league"], info.away_team)
-                item["home_colors"] = get_team_colors(inst.game["league"], info.home_team)
-                item["away_colors"] = get_team_colors(inst.game["league"], info.away_team)
+                item["home_display"] = get_team_display(game_data["league"], info.home_team)
+                item["away_display"] = get_team_display(game_data["league"], info.away_team)
+                item["home_colors"] = get_team_colors(game_data["league"], info.home_team)
+                item["away_colors"] = get_team_colors(game_data["league"], info.away_team)
                 item["home_score"] = info.home_score
                 item["away_score"] = info.away_score
                 item["home_win_pct"] = info.home_win_pct
@@ -635,11 +893,16 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
         inst.controller = WLEDController(config)
 
     # Save current preset before we take over (for restore action)
-    inst.previous_preset = await inst.controller.get_current_preset()
-    logger.info(f"[WATCH] {host}: Saved previous preset {inst.previous_preset}")
+    try:
+        inst.previous_preset = await inst.controller.get_current_preset()
+        inst.record_success()
+        logger.info(f"[WATCH] {host}: Saved previous preset {inst.previous_preset}")
+    except Exception as e:
+        inst.record_failure(str(e))
+        logger.warning(f"[WATCH] {host}: Could not save preset: {e}")
 
-    # Set the game
-    inst.game = {
+    # Build game dict
+    game = {
         "league": req.league,
         "game_id": req.game_id,
         "last_info": None,
@@ -651,8 +914,8 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
         sport = get_leagues().get(req.league, {}).get("sport", "football")
         game_info = await state.espn.get_game_detail(sport, req.league, req.game_id)
         if game_info:
-            inst.game["last_info"] = game_info
-            inst.game["last_status"] = game_info.status
+            game["last_info"] = game_info
+            game["last_status"] = game_info.status
             # Push initial state to WLED
             home_colors = get_team_colors(req.league, game_info.home_team)
             away_colors = get_team_colors(req.league, game_info.away_team)
@@ -661,10 +924,15 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
                 home_colors=home_colors,
                 away_colors=away_colors,
             )
+            inst.record_success()
     except Exception as e:
+        inst.record_failure(str(e))
         logger.warning(f"[WATCH] {host}: Failed to fetch initial game data: {e}")
 
-    return {"status": "watching", "host": host, "game_id": req.game_id}
+    # Use state transition (manual trigger)
+    transition_to_watching(inst, game, "manual")
+
+    return {"status": "watching", "host": host, "game_id": req.game_id, "state": inst.ui_state.value}
 
 
 @app.post("/api/instance/{host}/stop")
@@ -674,12 +942,26 @@ async def stop_instance(host: str):
         raise HTTPException(404, f"Unknown instance: {host}")
 
     inst = state.instances[host]
+    watch_teams = get_instance_watch_teams(host)
+
+    # Clear game state
     inst.game = None
+    inst.watch_trigger = None
+    inst.final_linger_until = None
+    inst.final_game_info = None
+
+    # Transition to appropriate idle state
+    inst.ui_state = UIState.IDLE_AUTOWATCH if watch_teams else UIState.IDLE
+    logger.info(f"[STATE] {host}: → {inst.ui_state.value} (manual stop)")
 
     if inst.controller:
-        await inst.controller.turn_off()
+        try:
+            await inst.controller.turn_off()
+            inst.record_success()
+        except Exception as e:
+            inst.record_failure(str(e))
 
-    return {"status": "stopped", "host": host}
+    return {"status": "stopped", "host": host, "state": inst.ui_state.value}
 
 
 @app.delete("/api/instance/{host}")
@@ -846,10 +1128,11 @@ async def start_sim(host: str):
 
     # Check if already simulating
     if inst.simulating:
-        return {"status": "already_simulating", "host": host}
+        return {"status": "already_simulating", "host": host, "state": inst.ui_state.value}
 
     # Warn if watching a live game (but allow it)
     warning = None
+    previous_state = inst.ui_state
     if inst.game is not None:
         warning = "Instance is watching a live game - simulator will override"
 
@@ -859,20 +1142,31 @@ async def start_sim(host: str):
         inst.controller = WLEDController(config)
 
     # Save current preset before simulator takes over
-    inst.sim_saved_preset = await inst.controller.get_current_preset()
-    logger.info(f"[SIM] {host}: Started sim mode, saved preset {inst.sim_saved_preset}")
+    try:
+        inst.sim_saved_preset = await inst.controller.get_current_preset()
+        inst.record_success()
+        logger.info(f"[SIM] {host}: Started sim mode, saved preset {inst.sim_saved_preset}")
+    except Exception as e:
+        inst.record_failure(str(e))
+        logger.warning(f"[SIM] {host}: Could not save preset: {e}")
 
     inst.simulating = True
+    inst.ui_state = UIState.SIMULATING
+    logger.info(f"[STATE] {host}: → SIMULATING (was {previous_state.value})")
 
     # Turn on WLED with neutral 50/50 display (gray teams)
     # This ensures the lights come on immediately
-    await inst.controller.set_game_mode(
-        home_win_pct=0.5,
-        home_colors=[[100, 100, 100], [60, 60, 60]],
-        away_colors=[[100, 100, 100], [60, 60, 60]],
-    )
+    try:
+        await inst.controller.set_game_mode(
+            home_win_pct=0.5,
+            home_colors=[[100, 100, 100], [60, 60, 60]],
+            away_colors=[[100, 100, 100], [60, 60, 60]],
+        )
+        inst.record_success()
+    except Exception as e:
+        inst.record_failure(str(e))
 
-    result = {"status": "simulating", "host": host, "saved_preset": inst.sim_saved_preset}
+    result = {"status": "simulating", "host": host, "saved_preset": inst.sim_saved_preset, "state": inst.ui_state.value}
     if warning:
         result["warning"] = warning
     return result
@@ -889,20 +1183,29 @@ async def stop_sim(host: str):
     inst = state.instances[host]
 
     if not inst.simulating:
-        return {"status": "not_simulating", "host": host}
+        return {"status": "not_simulating", "host": host, "state": inst.ui_state.value}
 
     # Restore saved preset
-    if inst.controller and inst.sim_saved_preset is not None:
-        logger.info(f"[SIM] {host}: Stopping sim, restoring preset {inst.sim_saved_preset}")
-        await inst.controller.restore_preset(inst.sim_saved_preset)
-    elif inst.controller:
-        logger.info(f"[SIM] {host}: Stopping sim, no preset to restore - turning off")
-        await inst.controller.turn_off()
+    try:
+        if inst.controller and inst.sim_saved_preset is not None:
+            logger.info(f"[SIM] {host}: Stopping sim, restoring preset {inst.sim_saved_preset}")
+            await inst.controller.restore_preset(inst.sim_saved_preset)
+        elif inst.controller:
+            logger.info(f"[SIM] {host}: Stopping sim, no preset to restore - turning off")
+            await inst.controller.turn_off()
+        inst.record_success()
+    except Exception as e:
+        inst.record_failure(str(e))
+        logger.error(f"[SIM] {host}: Error restoring preset: {e}")
 
     inst.simulating = False
     inst.sim_saved_preset = None
 
-    return {"status": "stopped", "host": host}
+    # Recompute state (returns to previous watching state or idle)
+    inst.ui_state = compute_ui_state(inst)
+    logger.info(f"[STATE] {host}: → {inst.ui_state.value} (sim stopped)")
+
+    return {"status": "stopped", "host": host, "state": inst.ui_state.value}
 
 
 @app.get("/api/status")

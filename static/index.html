@@ -136,15 +136,16 @@
 
         .dignity-marker {
             position: absolute;
-            bottom: -12px;
-            font-size: 10px;
+            top: 100%;
+            margin-top: 1px;
+            font-size: 8px;
             color: #dc2626;
             line-height: 1;
             transform: translateX(-50%);
         }
 
         .dignity-marker::after {
-            content: '⌃';
+            content: '▲';
         }
 
         .dignity-marker[style*="right"] {
@@ -766,12 +767,24 @@
             }
 
             list.innerHTML = instanceStates.map(inst => {
-                const isWatching = inst.watching;
+                // Use explicit state from backend
+                const uiState = inst.state || 'idle';
                 const hasWatchTeams = (inst.watch_teams || []).length > 0;
-                const isOverride = isWatching && hasWatchTeams;  // Manually watching when auto-watch is configured
+                const isWatching = ['watching_auto', 'watching_manual', 'watching_override', 'final'].includes(uiState);
+                const isOverride = uiState === 'watching_override';
+                const isFinal = uiState === 'final';
+                const isAutoWatch = uiState === 'idle_autowatch';
 
                 const isExpanded = expandedSettings.has(inst.host);
                 const hostId = inst.host.replace(/\./g, '-');
+
+                // Health status
+                const health = inst.health || { status: 'healthy' };
+                const healthBadge = health.status === 'unreachable'
+                    ? `<span style="font-size: 10px; color: #dc2626; font-weight: 500; background: #fee2e2; padding: 2px 6px; border-radius: 3px;" title="Last error: ${health.last_error || 'Unknown'}">⚠ WLED</span>`
+                    : health.status === 'stale'
+                        ? `<span style="font-size: 10px; color: #d97706;" title="No update in 2+ minutes">⚠</span>`
+                        : '';
 
                 // Calculate strip preview segments
                 const totalPixels = inst.end - inst.start;
@@ -812,33 +825,62 @@
                     ? `background: linear-gradient(90deg, rgb(${inst.away_colors[0].join(',')}) 0%, rgb(${inst.away_colors[1].join(',')}) 100%);`
                     : '';
 
-                // Status badges
+                // Status badges based on explicit state
                 const simBadge = inst.simulating
-                    ? `<span style="font-size: 10px; color: #dc2626; font-weight: 500;">SIM</span>`
-                    : '';
-                const statusBadge = isWatching
-                    ? (isOverride
-                        ? `<span style="font-size: 10px; color: #d97706; font-weight: 600; background: #fef3c7; padding: 2px 6px; border-radius: 3px;">⚡ OVERRIDE</span>`
-                        : `<span style="font-size: 11px; color: #22c55e; font-weight: 600;">● LIVE</span>`)
+                    ? `<span style="font-size: 10px; color: #7c3aed; font-weight: 600; background: #f3e8ff; padding: 2px 6px; border-radius: 3px;">SIM</span>`
                     : '';
 
-                // Stop/Resume button
-                const stopButton = isWatching
-                    ? (hasWatchTeams
-                        ? `<button onclick="stopInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #6366f1; color: white; border: none;">↩ Resume Auto-Watch</button>`
-                        : `<button onclick="stopInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #dc2626; color: white; border: none;">Stop</button>`)
-                    : '';
+                let statusBadge = '';
+                if (uiState === 'watching_auto') {
+                    statusBadge = `<span style="font-size: 10px; color: #059669; font-weight: 600; background: #d1fae5; padding: 2px 6px; border-radius: 3px;">AUTO</span>`;
+                } else if (uiState === 'watching_manual') {
+                    statusBadge = `<span style="font-size: 11px; color: #22c55e; font-weight: 600;">● LIVE</span>`;
+                } else if (uiState === 'watching_override') {
+                    statusBadge = `<span style="font-size: 10px; color: #d97706; font-weight: 600; background: #fef3c7; padding: 2px 6px; border-radius: 3px;">⚡ OVERRIDE</span>`;
+                } else if (uiState === 'final') {
+                    const lingerSecs = inst.final_linger_remaining ? Math.ceil(inst.final_linger_remaining) : 0;
+                    statusBadge = `<span style="font-size: 10px; color: #6b7280; font-weight: 600; background: #f3f4f6; padding: 2px 6px; border-radius: 3px;">FINAL ${lingerSecs > 0 ? `(${lingerSecs}s)` : ''}</span>`;
+                } else if (uiState === 'idle_autowatch') {
+                    statusBadge = `<span style="font-size: 10px; color: #6366f1; font-weight: 500;" title="Watching for: ${(inst.watch_teams || []).join(', ')}">◉ Armed</span>`;
+                }
+
+                // Stop/Resume button based on explicit state
+                let stopButton = '';
+                if (uiState === 'watching_override') {
+                    // Overriding auto-watch - offer to resume
+                    stopButton = `<button onclick="stopInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #6366f1; color: white; border: none;">↩ Resume Auto-Watch</button>`;
+                } else if (uiState === 'watching_auto' || uiState === 'watching_manual') {
+                    // Regular stop button
+                    stopButton = `<button onclick="stopInstance('${inst.host}')" class="btn" style="padding: 4px 12px; font-size: 12px; background: #dc2626; color: white; border: none;">Stop</button>`;
+                }
+                // FINAL and other states: no button (auto-transitions or not watching)
 
                 const isEditing = editingInstances.has(inst.host);
 
+                // Card background/border based on state
+                let cardBg = '#f5f5f5';
+                let cardBorder = '#e0e0e0';
+                if (uiState === 'watching_auto' || uiState === 'watching_manual') {
+                    cardBg = '#f0fdf4'; cardBorder = '#bbf7d0';
+                } else if (uiState === 'watching_override') {
+                    cardBg = '#fffbeb'; cardBorder = '#fcd34d';
+                } else if (uiState === 'final') {
+                    cardBg = '#f8fafc'; cardBorder = '#94a3b8';
+                } else if (uiState === 'idle_autowatch') {
+                    cardBg = '#f5f5ff'; cardBorder = '#c7d2fe';
+                } else if (uiState === 'simulating') {
+                    cardBg = '#faf5ff'; cardBorder = '#d8b4fe';
+                }
+
                 return `
-                <div class="instance-card" style="background: ${isWatching ? (isOverride ? '#fffbeb' : '#f0fdf4') : '#f5f5f5'}; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid ${isWatching ? (isOverride ? '#fcd34d' : '#bbf7d0') : '#e0e0e0'};">
+                <div class="instance-card" style="background: ${cardBg}; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid ${cardBorder};">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span>
                             <strong style="font-family: monospace;">${inst.host}</strong>
                             <span style="color: #666; font-size: 12px; margin-left: 8px;">[${inst.start}-${inst.end}] ${totalPixels}px</span>
                         </span>
                         <span style="display: flex; align-items: center; gap: 6px;">
+                            ${healthBadge}
                             ${simBadge}
                             ${statusBadge}
                             <button class="edit-btn" onclick="startEdit('${inst.host}', ${inst.start}, ${inst.end})" title="Edit">✎</button>
@@ -861,8 +903,14 @@
                     </div>
                     ` : ''}
 
-                    ${isWatching ? `
-                        <div style="font-size: 12px; margin-bottom: 8px; padding: 6px 8px; background: #f8fafc; border-radius: 4px; border: 1px solid #e2e8f0;">
+                    ${isAutoWatch && !isWatching ? `
+                        <div style="font-size: 11px; margin-bottom: 8px; padding: 6px 8px; background: #eef2ff; border-radius: 4px; border: 1px solid #c7d2fe; color: #4338ca;">
+                            <strong>◉ Watching for:</strong> ${(inst.watch_teams || []).map(t => t.split(':')[1] || t).join(', ')}
+                        </div>
+                    ` : ''}
+
+                    ${isWatching || isFinal ? `
+                        <div style="font-size: 12px; margin-bottom: 8px; padding: 6px 8px; background: ${isFinal ? '#f1f5f9' : '#f8fafc'}; border-radius: 4px; border: 1px solid ${isFinal ? '#94a3b8' : '#e2e8f0'};">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-weight: 500;">${inst.away_display || inst.away_team}</span>
                                 <span style="font-family: monospace; font-weight: 600; font-size: 14px;">${inst.away_score ?? '-'}</span>
@@ -871,14 +919,15 @@
                                 <span style="font-weight: 500;">${inst.home_display || inst.home_team}</span>
                                 <span style="font-family: monospace; font-weight: 600; font-size: 14px;">${inst.home_score ?? '-'}</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 4px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b;">
-                                <span>${inst.period || ''}</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 4px; border-top: 1px solid ${isFinal ? '#94a3b8' : '#e2e8f0'}; font-size: 11px; color: #64748b;">
+                                <span>${isFinal ? 'FINAL' : (inst.period || '')}</span>
                                 <span>${inst.home_win_pct !== undefined ? `${(inst.home_win_pct * 100).toFixed(0)}% ${inst.home_display || inst.home_team}` : ''}</span>
                             </div>
                         </div>
                     ` : ''}
 
-                    <!-- Game selector - always visible -->
+                    <!-- Game selector - always visible unless FINAL -->
+                    ${!isFinal ? `
                     <div style="display: flex; gap: 6px; margin-bottom: 8px;">
                         <select id="league-${inst.host}" onchange="loadGamesForInstance('${inst.host}')" style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
                             <option value="">League...</option>
@@ -888,16 +937,18 @@
                             <option value="">${isWatching ? 'Switch game...' : 'Select league first...'}</option>
                         </select>
                     </div>
+                    ` : ''}
 
                     ${stopButton}
 
                     <!-- Settings Panel -->
                     <div id="settings-${hostId}" class="instance-settings ${isExpanded ? '' : 'hidden'}">
-                        <div class="section-label" style="margin-bottom: 6px;">Auto-Watch Teams</div>
-                        <div class="watch-teams" id="watch-teams-${hostId}">
-                            ${(inst.watch_teams || []).map(wt => `
-                                <span class="watch-team-tag">
-                                    ${wt}
+                        <div class="section-label" style="margin-bottom: 6px;">Auto-Watch Teams <span style="font-weight: normal; color: #666;">(drag to reorder priority)</span></div>
+                        <div class="watch-teams" id="watch-teams-${hostId}" data-host="${inst.host}">
+                            ${(inst.watch_teams || []).map((wt, idx) => `
+                                <span class="watch-team-tag" draggable="true" data-team="${wt}" data-index="${idx}" style="cursor: grab;">
+                                    <span style="color: #6366f1; font-weight: 600; margin-right: 4px;">#${idx + 1}</span>
+                                    ${wt.split(':')[1] || wt}
                                     <button onclick="removeWatchTeam('${inst.host}', '${wt}')" title="Remove">×</button>
                                 </span>
                             `).join('') || '<span style="font-size: 11px; color: #888;">No teams - games won\'t auto-start</span>'}
@@ -912,7 +963,7 @@
                             </select>
                             <button onclick="addWatchTeam('${inst.host}')" id="watch-add-btn-${hostId}" disabled>Add</button>
                         </div>
-                        <div class="hint" style="margin: 4px 0 12px 0;">When a watched team is playing, their game auto-starts.</div>
+                        <div class="hint" style="margin: 4px 0 12px 0;">When a watched team is playing, their game auto-starts. Priority #1 wins if multiple games start.</div>
 
                         <div class="section-label" style="margin-bottom: 8px;">Strip Preview</div>
                         <div style="position: relative; padding-bottom: 14px;">
@@ -1348,6 +1399,68 @@
 
             await loadInstances();
         }
+
+        // Drag and drop for watch team priority reordering
+        let draggedTeam = null;
+        let draggedHost = null;
+
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('watch-team-tag')) {
+                draggedTeam = e.target.dataset.team;
+                draggedHost = e.target.closest('.watch-teams').dataset.host;
+                e.target.style.opacity = '0.5';
+            }
+        });
+
+        document.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('watch-team-tag')) {
+                e.target.style.opacity = '1';
+                draggedTeam = null;
+                draggedHost = null;
+            }
+        });
+
+        document.addEventListener('dragover', (e) => {
+            if (e.target.classList.contains('watch-team-tag') || e.target.closest('.watch-team-tag')) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('drop', async (e) => {
+            const target = e.target.classList.contains('watch-team-tag') ? e.target : e.target.closest('.watch-team-tag');
+            if (!target || !draggedTeam || !draggedHost) return;
+
+            const targetHost = target.closest('.watch-teams').dataset.host;
+            if (targetHost !== draggedHost) return;  // Don't allow cross-instance drag
+
+            const targetTeam = target.dataset.team;
+            if (targetTeam === draggedTeam) return;  // Dropped on itself
+
+            e.preventDefault();
+
+            // Get current order
+            const inst = instanceStates.find(i => i.host === draggedHost);
+            if (!inst) return;
+
+            const teams = [...(inst.watch_teams || [])];
+            const fromIdx = teams.indexOf(draggedTeam);
+            const toIdx = teams.indexOf(targetTeam);
+
+            if (fromIdx === -1 || toIdx === -1) return;
+
+            // Reorder
+            teams.splice(fromIdx, 1);
+            teams.splice(toIdx, 0, draggedTeam);
+
+            // Save new order
+            await fetch(`/api/instance/${draggedHost}/watch_teams`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ watch_teams: teams })
+            });
+
+            await loadInstances();
+        });
 
         async function loadGamesForInstance(host, preSelect = false) {
             const leagueSelect = document.getElementById(`league-${host}`);
