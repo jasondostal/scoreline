@@ -97,6 +97,11 @@ class InstanceState:
         self.final_linger_until: Optional[float] = None
         self.final_game_info: Optional[dict] = None  # Preserved game info for FINAL display
 
+        # Celebration state tracking (two-phase post-game)
+        self.celebration_end_time: Optional[float] = None  # When celebration phase ends
+        self.celebration_after_action: Optional[str] = None  # What to do after celebration
+        self.celebration_preset_id: Optional[int] = None  # For preset after_action
+
     def get_health_status(self) -> HealthStatus:
         """Derive health tier from tracking data."""
         if self.health_consecutive_failures >= 3:
@@ -379,25 +384,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Game Lights", lifespan=lifespan)
 
 
-# Request/Response models
-class WLEDInstance(BaseModel):
-    host: str
-    start: int = 0
-    end: int = 629
-
-
-class GameStatus(BaseModel):
-    watching: bool
-    game_id: Optional[str] = None
-    home_team: Optional[str] = None
-    away_team: Optional[str] = None
-    home_score: Optional[int] = None
-    away_score: Optional[int] = None
-    home_win_pct: Optional[float] = None
-    period: Optional[str] = None
-    last_update: Optional[str] = None
-
-
 # Background polling
 async def poll_all_games():
     """Background task to poll ESPN and update each WLED instance with its game."""
@@ -516,7 +502,9 @@ async def auto_watch_all():
 
 async def handle_game_ended(inst: InstanceState, game_info: GameInfo):
     """
-    Handle post-game actions when a game ends.
+    Handle post-game celebration when a game ends.
+    Phase 1: Start celebration effect in winner colors
+    Phase 2: Scheduled via check_celebration_end() to execute after_action
 
     Args:
         inst: The WLED instance that was watching
@@ -527,7 +515,11 @@ async def handle_game_ended(inst: InstanceState, game_info: GameInfo):
 
     league = inst.game["league"]
     post_game = get_instance_post_game_settings(inst.host)
-    action = post_game.get("action", "flash_then_off")
+
+    celebration = post_game.get("celebration", "chase")
+    duration = post_game.get("celebration_duration_s", 60)
+    after_action = post_game.get("after_action", "fade_off")
+    preset_id = post_game.get("preset_id")
 
     # Determine winner colors
     if game_info.home_score > game_info.away_score:
@@ -543,78 +535,107 @@ async def handle_game_ended(inst: InstanceState, game_info: GameInfo):
 
     logger.info(f"[POST-GAME] {inst.host}: {game_info.away_team} @ {game_info.home_team} "
                 f"Final: {game_info.away_score}-{game_info.home_score} | "
-                f"Winner: {winner} | Action: {action}")
+                f"Winner: {winner} | Celebration: {celebration} ({duration}s) → {after_action}")
+
+    # Store celebration state for later
+    inst.celebration_end_time = time.time() + duration
+    inst.celebration_after_action = after_action
+    inst.celebration_preset_id = preset_id
+
+    # Phase 1: Start celebration effect
+    try:
+        if celebration == "freeze":
+            # Keep current display (do nothing to WLED)
+            logger.info(f"[CELEBRATION] {inst.host}: Freeze - keeping current display")
+
+        elif celebration == "chase":
+            await inst.controller.set_celebration_chase(winner_colors)
+
+        elif celebration == "twinkle":
+            await inst.controller.set_celebration_twinkle(winner_colors)
+
+        elif celebration == "flash":
+            await inst.controller.set_celebration_flash_loop(winner_colors)
+
+        elif celebration == "solid":
+            await inst.controller.set_celebration_solid(winner_colors)
+
+        else:
+            # Unknown celebration type - default to chase
+            logger.warning(f"[CELEBRATION] {inst.host}: Unknown type '{celebration}', using chase")
+            await inst.controller.set_celebration_chase(winner_colors)
+
+        inst.record_success()
+    except Exception as e:
+        logger.error(f"[CELEBRATION] Error on {inst.host}: {e}")
+        inst.record_failure(str(e))
+
+    # Transition to FINAL state (celebration duration is the linger time)
+    transition_to_final(inst, linger_seconds=duration)
+
+    # Schedule the end of celebration
+    asyncio.create_task(check_celebration_end(inst))
+
+
+async def check_celebration_end(inst: InstanceState):
+    """
+    Wait for celebration to end, then execute after_action.
+    """
+    if not inst.celebration_end_time:
+        return
+
+    # Wait for celebration period
+    wait_time = inst.celebration_end_time - time.time()
+    if wait_time > 0:
+        await asyncio.sleep(wait_time)
+
+    # Only proceed if still in FINAL state (user might have manually changed)
+    if inst.ui_state != UIState.FINAL:
+        logger.info(f"[CELEBRATION] {inst.host}: State changed, skipping after_action")
+        return
+
+    # Phase 2: Execute after_action
+    after_action = inst.celebration_after_action or "fade_off"
+    logger.info(f"[CELEBRATION] {inst.host}: Celebration ended, executing {after_action}")
 
     try:
-        if action == "off":
+        if after_action == "off":
             await inst.controller.turn_off()
 
-        elif action == "fade_off":
-            fade_s = post_game.get("fade_duration_s", 3)
+        elif after_action == "fade_off":
+            fade_s = get_instance_post_game_settings(inst.host).get("fade_duration_s", 3)
             await inst.controller.fade_off(duration_s=fade_s)
 
-        elif action == "flash_then_off":
-            flash_count = post_game.get("flash_count", 3)
-            flash_ms = post_game.get("flash_duration_ms", 500)
-            fade_s = post_game.get("fade_duration_s", 3)
-
-            await inst.controller.flash_colors(
-                colors=winner_colors,
-                count=flash_count,
-                flash_duration_ms=flash_ms,
-            )
-            # Brief pause then fade
-            await asyncio.sleep(0.5)
-            await inst.controller.fade_off(duration_s=fade_s)
-
-        elif action == "restore":
-            # Restore the preset that was active before the game started
+        elif after_action == "restore":
             if inst.previous_preset is not None:
-                logger.info(f"[POST-GAME] {inst.host}: Restoring preset {inst.previous_preset}")
+                logger.info(f"[CELEBRATION] {inst.host}: Restoring preset {inst.previous_preset}")
                 await inst.controller.restore_preset(inst.previous_preset)
             else:
-                # No previous preset, just turn off
-                logger.info(f"[POST-GAME] {inst.host}: No previous preset, turning off")
+                logger.info(f"[CELEBRATION] {inst.host}: No previous preset, turning off")
                 await inst.controller.turn_off()
 
-        elif action == "preset":
-            # Switch to a specific configured preset
-            preset_id = post_game.get("preset_id")
+        elif after_action == "preset":
+            preset_id = inst.celebration_preset_id
             if preset_id is not None:
-                logger.info(f"[POST-GAME] {inst.host}: Switching to preset {preset_id}")
+                logger.info(f"[CELEBRATION] {inst.host}: Switching to preset {preset_id}")
                 await inst.controller.restore_preset(preset_id)
             else:
-                logger.warning(f"[POST-GAME] {inst.host}: Action is 'preset' but no preset_id configured, turning off")
+                logger.warning(f"[CELEBRATION] {inst.host}: No preset_id configured, turning off")
                 await inst.controller.turn_off()
 
         inst.record_success()
     except Exception as e:
-        logger.error(f"[POST-GAME] Error on {inst.host}: {e}")
+        logger.error(f"[CELEBRATION] After-action error on {inst.host}: {e}")
         inst.record_failure(str(e))
 
-    # Transition to FINAL state (will linger, then cascade or go idle)
-    transition_to_final(inst, linger_seconds=30)
+    # Clear celebration state
+    inst.celebration_end_time = None
+    inst.celebration_after_action = None
+    inst.celebration_preset_id = None
     inst.previous_preset = None
 
-    # Schedule the transition from FINAL after linger period
-    asyncio.create_task(check_final_linger(inst))
-
-
-async def check_final_linger(inst: InstanceState):
-    """
-    Wait for FINAL state linger to expire, then transition to next state.
-    """
-    if not inst.final_linger_until:
-        return
-
-    # Wait for linger period
-    wait_time = inst.final_linger_until - time.time()
-    if wait_time > 0:
-        await asyncio.sleep(wait_time)
-
-    # Only transition if still in FINAL state (user might have manually changed)
-    if inst.ui_state == UIState.FINAL:
-        await transition_from_final(inst)
+    # Transition from FINAL state
+    await transition_from_final(inst)
 
 
 # API Routes
@@ -820,7 +841,6 @@ async def list_instances():
             "host": host,
             "start": inst.start,
             "end": inst.end,
-            "watching": inst.game is not None,
             "simulating": simulating,
             "watch_teams": get_instance_watch_teams(host),
             # Explicit state machine
@@ -842,9 +862,13 @@ async def list_instances():
             "chase_speed": inst_display.get("chase_speed", global_display.get("chase_speed", 185)),
             "chase_intensity": inst_display.get("chase_intensity", global_display.get("chase_intensity", 190)),
             "divider_preset": inst_display.get("divider_preset", global_display.get("divider_preset", "classic")),
-            # Post-game settings
-            "post_game_action": post_game.get("action", "flash_then_off"),
+            # Post-game celebration settings (two-phase system)
+            "post_game_celebration": post_game.get("celebration", "chase"),
+            "post_game_duration": post_game.get("celebration_duration_s", 60),
+            "post_game_after_action": post_game.get("after_action", "fade_off"),
             "post_game_preset_id": post_game.get("preset_id"),
+            # Celebration state (if in FINAL state)
+            "celebration_remaining": max(0, inst.celebration_end_time - time.time()) if inst.celebration_end_time else None,
         }
 
         # Get game info - either from active game or final_game_info for FINAL state
@@ -1050,6 +1074,8 @@ async def update_instance_settings(host: str, req: InstanceSettingsRequest):
         settings["contested_zone_pixels"] = req.contested_zone_pixels
     if req.dark_buffer_pixels is not None:
         settings["dark_buffer_pixels"] = req.dark_buffer_pixels
+    if req.divider_preset is not None:
+        settings["divider_preset"] = req.divider_preset
     if req.chase_speed is not None:
         settings["chase_speed"] = req.chase_speed
     if req.chase_intensity is not None:
@@ -1066,6 +1092,21 @@ async def update_instance_settings(host: str, req: InstanceSettingsRequest):
         await inst.controller.close()
         config = build_wled_config(inst.host, inst.start, inst.end)
         inst.controller = WLEDController(config)
+
+        # Push current game state immediately with new settings
+        if inst.game and inst.game.get("last_info"):
+            info = inst.game["last_info"]
+            league = inst.game["league"]
+            try:
+                await inst.controller.set_game_mode(
+                    home_win_pct=info.home_win_pct,
+                    home_colors=get_team_colors(league, info.home_team),
+                    away_colors=get_team_colors(league, info.away_team),
+                )
+                inst.record_success()
+            except Exception as e:
+                inst.record_failure(str(e))
+                logger.warning(f"[SETTINGS] {host}: Failed to push update: {e}")
 
     return {"status": "updated", "host": host, **result}
 
@@ -1095,17 +1136,23 @@ async def set_watch_teams(host: str, req: WatchTeamsRequest):
 
 
 class PostGameRequest(BaseModel):
-    action: str  # off | fade_off | flash_then_off | restore | preset
+    celebration: str  # freeze | chase | twinkle | flash | solid
+    celebration_duration_s: int = 60
+    after_action: str  # off | fade_off | restore | preset
     preset_id: Optional[int] = None
 
 
 @app.post("/api/instance/{host}/post_game")
 async def set_post_game(host: str, req: PostGameRequest):
-    """Set post-game action for a specific WLED instance."""
+    """Set post-game celebration settings for a specific WLED instance."""
     if host not in state.instances:
         raise HTTPException(404, f"Unknown instance: {host}")
 
-    settings = {"action": req.action}
+    settings = {
+        "celebration": req.celebration,
+        "celebration_duration_s": req.celebration_duration_s,
+        "after_action": req.after_action,
+    }
     if req.preset_id is not None:
         settings["preset_id"] = req.preset_id
 
@@ -1210,31 +1257,30 @@ async def stop_sim(host: str):
 
 @app.get("/api/status")
 async def get_status():
-    """Get current watching status (summary across all instances)."""
-    watching_instances = [i for i in state.instances.values() if i.game]
-    if not watching_instances:
-        return {"watching": False, "instances": len(state.instances)}
-
-    # Return info from first watching instance for backwards compatibility
-    inst = watching_instances[0]
-    info = inst.game.get("last_info") if inst.game else None
+    """Get current status summary across all instances."""
+    active_instances = [i for i in state.instances.values() if i.game]
 
     result = {
-        "watching": True,
-        "instances_watching": len(watching_instances),
+        "instances_active": len(active_instances),
         "instances_total": len(state.instances),
-        "game_id": inst.game["game_id"] if inst.game else None,
     }
 
-    if info:
-        result.update({
-            "home_team": info.home_team,
-            "away_team": info.away_team,
-            "home_score": info.home_score,
-            "away_score": info.away_score,
-            "home_win_pct": info.home_win_pct,
-            "period": info.period,
-        })
+    # Include first active instance's game info for convenience
+    if active_instances:
+        inst = active_instances[0]
+        info = inst.game.get("last_info") if inst.game else None
+        result["game_id"] = inst.game["game_id"] if inst.game else None
+        result["state"] = inst.ui_state.value
+
+        if info:
+            result.update({
+                "home_team": info.home_team,
+                "away_team": info.away_team,
+                "home_score": info.home_score,
+                "away_score": info.away_score,
+                "home_win_pct": info.home_win_pct,
+                "period": info.period,
+            })
 
     return result
 

@@ -769,7 +769,6 @@
             list.innerHTML = instanceStates.map(inst => {
                 // Use explicit state from backend
                 const uiState = inst.state || 'idle';
-                const hasWatchTeams = (inst.watch_teams || []).length > 0;
                 const isWatching = ['watching_auto', 'watching_manual', 'watching_override', 'final'].includes(uiState);
                 const isOverride = uiState === 'watching_override';
                 const isFinal = uiState === 'final';
@@ -1040,31 +1039,64 @@
                         </div>
                         <div class="hint" style="margin: 8px 0 0 0;">Battle zone total: <span id="battlezone-total-${hostId}">${battleZone}px</span></div>
 
-                        <div class="section-label" style="margin: 12px 0 8px 0;">Post-Game Action</div>
+                        <div class="section-label" style="margin: 12px 0 8px 0;">Post-Game Celebration</div>
 
                         <div class="settings-row">
-                            <span class="settings-label">Action</span>
-                            <select id="post-action-${hostId}"
-                                    onchange="updatePostGameUI('${inst.host}'); autoSavePostGame('${inst.host}')"
+                            <span class="settings-label">Celebration</span>
+                            <select id="celebration-${hostId}"
+                                    onchange="autoSavePostGame('${inst.host}')"
                                     style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
-                                <option value="flash_then_off" ${(inst.post_game_action || 'flash_then_off') === 'flash_then_off' ? 'selected' : ''}>Flash winner, fade off</option>
-                                <option value="fade_off" ${inst.post_game_action === 'fade_off' ? 'selected' : ''}>Fade off</option>
-                                <option value="off" ${inst.post_game_action === 'off' ? 'selected' : ''}>Off (immediate)</option>
-                                <option value="restore" ${inst.post_game_action === 'restore' ? 'selected' : ''}>Restore previous preset</option>
-                                <option value="preset" ${inst.post_game_action === 'preset' ? 'selected' : ''}>Switch to preset...</option>
+                                <option value="freeze" ${inst.post_game_celebration === 'freeze' ? 'selected' : ''}>Freeze (keep final display)</option>
+                                <option value="chase" ${(inst.post_game_celebration || 'chase') === 'chase' ? 'selected' : ''}>Chase (winner colors)</option>
+                                <option value="twinkle" ${inst.post_game_celebration === 'twinkle' ? 'selected' : ''}>Twinkle (sparkle)</option>
+                                <option value="flash" ${inst.post_game_celebration === 'flash' ? 'selected' : ''}>Flash (strobe)</option>
+                                <option value="solid" ${inst.post_game_celebration === 'solid' ? 'selected' : ''}>Solid (winner colors)</option>
                             </select>
                         </div>
 
-                        <div class="settings-row" id="preset-row-${hostId}" style="${inst.post_game_action === 'preset' ? '' : 'display: none;'}">
+                        <div class="settings-row">
+                            <span class="settings-label">Duration</span>
+                            <select id="celebration-duration-${hostId}"
+                                    onchange="updateDurationUI('${inst.host}'); autoSavePostGame('${inst.host}')"
+                                    style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                                <option value="30" ${(inst.post_game_duration || 60) === 30 ? 'selected' : ''}>30 seconds</option>
+                                <option value="60" ${(inst.post_game_duration || 60) === 60 ? 'selected' : ''}>1 minute</option>
+                                <option value="300" ${(inst.post_game_duration || 60) === 300 ? 'selected' : ''}>5 minutes</option>
+                                <option value="600" ${(inst.post_game_duration || 60) === 600 ? 'selected' : ''}>10 minutes</option>
+                                <option value="custom" ${![30, 60, 300, 600].includes(inst.post_game_duration || 60) ? 'selected' : ''}>Custom...</option>
+                            </select>
+                            <input type="number" id="celebration-duration-custom-${hostId}"
+                                   value="${inst.post_game_duration || 60}"
+                                   min="5" max="3600"
+                                   onchange="autoSavePostGame('${inst.host}')"
+                                   style="width: 60px; padding: 4px 6px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; margin-left: 6px; display: ${![30, 60, 300, 600].includes(inst.post_game_duration || 60) ? '' : 'none'};">
+                            <span id="celebration-duration-unit-${hostId}" style="font-size: 11px; color: #666; margin-left: 4px; display: ${![30, 60, 300, 600].includes(inst.post_game_duration || 60) ? '' : 'none'};">sec</span>
+                        </div>
+
+                        <div class="section-label" style="margin: 12px 0 8px 0;">After Celebration</div>
+
+                        <div class="settings-row">
+                            <span class="settings-label">Action</span>
+                            <select id="after-action-${hostId}"
+                                    onchange="updateAfterActionUI('${inst.host}'); autoSavePostGame('${inst.host}')"
+                                    style="flex: 1; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
+                                <option value="fade_off" ${(inst.post_game_after_action || 'fade_off') === 'fade_off' ? 'selected' : ''}>Fade off</option>
+                                <option value="off" ${inst.post_game_after_action === 'off' ? 'selected' : ''}>Off (immediate)</option>
+                                <option value="restore" ${inst.post_game_after_action === 'restore' ? 'selected' : ''}>Restore previous preset</option>
+                                <option value="preset" ${inst.post_game_after_action === 'preset' ? 'selected' : ''}>Switch to preset...</option>
+                            </select>
+                        </div>
+
+                        <div class="settings-row" id="after-preset-row-${hostId}" style="${inst.post_game_after_action === 'preset' ? '' : 'display: none;'}">
                             <span class="settings-label">Preset ID</span>
-                            <input type="number" id="post-preset-${hostId}"
+                            <input type="number" id="after-preset-${hostId}"
                                    value="${inst.post_game_preset_id || ''}"
                                    placeholder="e.g. 1"
                                    onchange="autoSavePostGame('${inst.host}')"
                                    style="width: 80px; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
                         </div>
 
-                        <div class="hint" style="margin: 4px 0;">What happens when the game ends. "Restore" returns to whatever was playing before.</div>
+                        <div class="hint" style="margin: 4px 0;">Celebration plays in winner colors when game ends. After it finishes, the "After Celebration" action runs.</div>
 
                         <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
                             <button onclick="confirmDeleteInstance('${inst.host}')"
@@ -1214,7 +1246,8 @@
             const totalPixels = inst.end - inst.start;
             const battleZone = totalPx;
             const availablePixels = totalPixels - battleZone;
-            const previewPct = inst.watching && inst.home_win_pct !== undefined ? inst.home_win_pct : 0.5;
+            const isWatchingState = ['watching_auto', 'watching_manual', 'watching_override', 'final'].includes(inst.state);
+            const previewPct = isWatchingState && inst.home_win_pct !== undefined ? inst.home_win_pct : 0.5;
             const clampedPct = Math.max(minPct, Math.min(1 - minPct, previewPct));
             const homePixels = Math.round(availablePixels * clampedPct);
             const awayPixels = availablePixels - homePixels;
@@ -1284,11 +1317,27 @@
             // Don't reload - let the periodic refresh handle it to avoid UI flicker
         }
 
-        // Post-game settings
-        function updatePostGameUI(host) {
+        // Post-game celebration settings (two-phase system)
+        function updateDurationUI(host) {
             const hostId = host.replace(/\./g, '-');
-            const action = document.getElementById(`post-action-${hostId}`).value;
-            const presetRow = document.getElementById(`preset-row-${hostId}`);
+            const durationSelect = document.getElementById(`celebration-duration-${hostId}`);
+            const customInput = document.getElementById(`celebration-duration-custom-${hostId}`);
+            const unitSpan = document.getElementById(`celebration-duration-unit-${hostId}`);
+
+            if (durationSelect.value === 'custom') {
+                customInput.style.display = '';
+                unitSpan.style.display = '';
+            } else {
+                customInput.style.display = 'none';
+                unitSpan.style.display = 'none';
+                customInput.value = durationSelect.value;
+            }
+        }
+
+        function updateAfterActionUI(host) {
+            const hostId = host.replace(/\./g, '-');
+            const action = document.getElementById(`after-action-${hostId}`).value;
+            const presetRow = document.getElementById(`after-preset-row-${hostId}`);
             presetRow.style.display = action === 'preset' ? '' : 'none';
         }
 
@@ -1300,12 +1349,19 @@
 
         async function savePostGame(host) {
             const hostId = host.replace(/\./g, '-');
-            const action = document.getElementById(`post-action-${hostId}`).value;
-            const presetInput = document.getElementById(`post-preset-${hostId}`);
+
+            const celebration = document.getElementById(`celebration-${hostId}`).value;
+            const durationSelect = document.getElementById(`celebration-duration-${hostId}`).value;
+            const customDuration = document.getElementById(`celebration-duration-custom-${hostId}`).value;
+            const duration = durationSelect === 'custom' ? parseInt(customDuration) : parseInt(durationSelect);
+            const afterAction = document.getElementById(`after-action-${hostId}`).value;
+            const presetInput = document.getElementById(`after-preset-${hostId}`);
             const presetId = presetInput.value ? parseInt(presetInput.value) : null;
 
             const settings = {
-                action: action,
+                celebration: celebration,
+                celebration_duration_s: duration,
+                after_action: afterAction,
                 preset_id: presetId,
             };
 
@@ -1680,7 +1736,8 @@
             }
 
             container.innerHTML = instanceStates.map(inst => {
-                const liveBadge = inst.watching ? '<span class="live-badge">LIVE</span>' : '';
+                const isLive = ['watching_auto', 'watching_manual', 'watching_override'].includes(inst.state);
+                const liveBadge = isLive ? '<span class="live-badge">LIVE</span>' : '';
                 return `
                     <div class="sim-target-row">
                         <span class="sim-target-label">

@@ -17,15 +17,27 @@ Scoreline polls ESPN for real-time game data and translates win probability into
 ### Auto-Watch
 - **Favorite teams** - Configure teams to watch per WLED instance (e.g., `nfl:GB`, `nba:MIL`)
 - **Auto-start** - When your team's game goes live, lights turn on automatically
+- **Priority ordering** - Drag-and-drop to set priority; #1 wins when multiple games start
+- **Game cascade** - When a game ends, automatically starts next priority game if available
 - **Per-instance** - Each strip can watch different teams
 
-### Post-Game Actions
-When a game ends, Scoreline can:
-- **Flash winner colors** then fade off (default)
-- **Fade off** gracefully
-- **Turn off** immediately
-- **Restore previous preset** - Returns WLED to whatever was playing before the game
-- **Switch to preset** - Jump to a specific WLED preset (stay on)
+### Post-Game Celebration
+Two-phase system when a game ends:
+
+**Phase 1 - Celebration** (in winner colors):
+- **Chase** - Full strip chase effect (default)
+- **Twinkle** - Sparkle/twinkle effect
+- **Flash** - Strobe effect
+- **Solid** - Static winner colors
+- **Freeze** - Keep final win probability display
+
+**Configurable duration**: 30 seconds to 10+ minutes
+
+**Phase 2 - After Celebration**:
+- **Fade off** - Graceful fade to black (default)
+- **Off** - Immediate off
+- **Restore** - Return to whatever preset was playing before the game
+- **Preset** - Switch to a specific WLED preset
 
 ### Display Customization (Per-Instance)
 - **Minimum dignity** - Losing team always keeps at least X% of the strip
@@ -40,13 +52,29 @@ When a game ends, Scoreline can:
 - **Team picker** - Select any two teams from any league
 - **Auto-play mode** - Watch it cycle through scenarios automatically
 
+### State Machine
+Explicit UI states with visual feedback:
+- **Idle** - No game, no watch teams configured
+- **Armed** - Watch teams configured, waiting for game to start
+- **Watching (Auto)** - Game started automatically from watch list
+- **Watching (Manual)** - Game started manually
+- **Override** - Manually watching a different game than auto-watch would choose
+- **Final** - Game ended, celebration playing
+- **Simulating** - Simulator mode active
+
+### Health Tracking
+- **Connectivity status** - Healthy / Stale / Unreachable indicators per instance
+- **Automatic detection** - Tracks successful/failed WLED communications
+- **Non-blocking** - Warnings don't interrupt operation
+
 ### Quality of Life
 - **Preset preservation** - Saves your current WLED state before taking over, can restore after
 - **Sync-on-load** - Detects if WLED was changed externally and reflects reality
 - **Mini scoreboard** - Live game scores displayed in the web UI per instance
 - **Blackout mode** - Pixels outside your configured range go dark during games
 - **mDNS discovery** - Auto-find WLED devices on your network
-- **Hot-reload config** - YAML changes detected automatically
+- **Hot-reload config** - YAML changes detected automatically, state preserved
+- **Instant settings** - Display changes push to WLED immediately
 
 ## Quick Start
 
@@ -99,22 +127,24 @@ wled_instances:
     display:                     # Per-instance overrides (optional)
       chase_speed: 185
     post_game:                   # What happens when game ends (optional)
-      action: restore            # off | fade_off | flash_then_off | restore | preset
+      celebration: chase         # freeze | chase | twinkle | flash | solid
+      celebration_duration_s: 300  # 5 minutes
+      after_action: restore      # off | fade_off | restore | preset
 
 poll_interval: 30
 auto_watch_interval: 300         # Seconds between auto-watch scans
 
 # Global defaults (all optional - sensible defaults built in)
 display:
-  divider_preset: classic          # classic | intense | ice | pulse | chaos
+  divider_preset: classic        # classic | intense | ice | pulse | chaos
   min_team_pct: 0.05
   contested_zone_pixels: 6
   dark_buffer_pixels: 4
 
 post_game:
-  action: flash_then_off
-  flash_count: 3
-  fade_duration_s: 3
+  celebration: chase
+  celebration_duration_s: 60
+  after_action: fade_off
 ```
 
 ## Data Directory
@@ -168,7 +198,7 @@ League files are YAML - drop in your own to add a league.
 
 ## License
 
-MIT
+GPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 

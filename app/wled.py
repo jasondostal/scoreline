@@ -19,6 +19,7 @@ EFFECT_BREATHE = 2     # Breathe - pulsing glow
 EFFECT_STROBE = 18     # Strobe - flashing
 EFFECT_FIRE = 66       # Fire 2012 - flickering fire
 EFFECT_BLEND = 115     # "Blends" - not great for contested zone (makes mud)
+EFFECT_TWINKLEFOX = 80 # Twinklefox - elegant twinkling with slow fade
 
 # Divider presets: name -> (color, effect_id, speed, intensity)
 DIVIDER_PRESETS = {
@@ -409,3 +410,136 @@ class WLEDController:
         # Wait for transition to complete, then turn off
         await asyncio.sleep(duration_s + 0.5)
         return await self.set_state({"on": False})
+
+    # ========== Celebration Effects ==========
+
+    def _celebration_segments(self, colors: list[list[int]], effect: int, speed: int = 128, intensity: int = 128) -> list[dict]:
+        """
+        Build segment list for a full-strip celebration effect.
+
+        Args:
+            colors: [[R,G,B], [R,G,B]] winner team colors
+            effect: WLED effect ID
+            speed: Effect speed (0-255)
+            intensity: Effect intensity (0-255)
+
+        Returns:
+            List of segments (main + cleanup)
+        """
+        segment = {
+            "id": 0,
+            "start": self.config.roofline_start,
+            "stop": self.config.roofline_end,
+            "grp": 1,
+            "spc": 0,
+            "on": True,
+            "bri": 255,
+            "col": [colors[0], colors[1], [0, 0, 0]],
+            "fx": effect,
+            "sx": speed,
+            "ix": intensity,
+        }
+
+        # Clean up extra segments
+        segments = [segment]
+        for i in range(1, 16):
+            segments.append({"id": i, "stop": 0})
+
+        return segments
+
+    async def set_celebration_solid(self, colors: list[list[int]]) -> bool:
+        """
+        Display solid winner colors across the strip.
+
+        Args:
+            colors: [[R,G,B], [R,G,B]] winner team colors
+
+        Returns:
+            True if successful
+        """
+        segments = self._celebration_segments(colors, EFFECT_SOLID)
+        return await self.set_state({
+            "on": True,
+            "bri": 255,
+            "transition": 5,  # 500ms fade in
+            "seg": segments,
+        })
+
+    async def set_celebration_chase(self, colors: list[list[int]], speed: int = 200, intensity: int = 190) -> bool:
+        """
+        Display full-strip chase effect in winner colors.
+
+        Args:
+            colors: [[R,G,B], [R,G,B]] winner team colors
+            speed: Chase speed (0-255)
+            intensity: Segment size control (higher = smaller segments)
+
+        Returns:
+            True if successful
+        """
+        segments = self._celebration_segments(colors, EFFECT_CHASE_2, speed, intensity)
+        return await self.set_state({
+            "on": True,
+            "bri": 255,
+            "transition": 5,
+            "seg": segments,
+        })
+
+    async def set_celebration_twinkle(self, colors: list[list[int]], speed: int = 128, intensity: int = 200) -> bool:
+        """
+        Display twinkle/sparkle effect in winner colors.
+        Uses Twinklefox (effect 80) for elegant victory sparkle.
+
+        Args:
+            colors: [[R,G,B], [R,G,B]] winner team colors
+            speed: Twinkle speed (0-255)
+            intensity: Density (higher = more twinkles)
+
+        Returns:
+            True if successful
+        """
+        segments = self._celebration_segments(colors, EFFECT_TWINKLEFOX, speed, intensity)
+        return await self.set_state({
+            "on": True,
+            "bri": 255,
+            "transition": 5,
+            "seg": segments,
+        })
+
+    async def set_celebration_flash_loop(self, colors: list[list[int]], speed: int = 150) -> bool:
+        """
+        Display continuous strobe/flash effect in winner colors.
+        Uses WLED's built-in strobe effect for sustained flashing.
+
+        Args:
+            colors: [[R,G,B], [R,G,B]] winner team colors
+            speed: Flash rate (0-255, higher = faster)
+
+        Returns:
+            True if successful
+        """
+        # Use primary color only for cleaner strobe
+        segment = {
+            "id": 0,
+            "start": self.config.roofline_start,
+            "stop": self.config.roofline_end,
+            "grp": 1,
+            "spc": 0,
+            "on": True,
+            "bri": 255,
+            "col": [colors[0], colors[0], [0, 0, 0]],
+            "fx": EFFECT_STROBE,
+            "sx": speed,
+            "ix": 128,
+        }
+
+        segments = [segment]
+        for i in range(1, 16):
+            segments.append({"id": i, "stop": 0})
+
+        return await self.set_state({
+            "on": True,
+            "bri": 255,
+            "transition": 0,  # Instant for strobe
+            "seg": segments,
+        })

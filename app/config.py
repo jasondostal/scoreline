@@ -40,14 +40,18 @@ def load_settings() -> dict:
         "chase_intensity": display.get("chase_intensity", 190),
     }
 
-    # Post-game settings with defaults
+    # Post-game settings with defaults (new two-phase system)
     post_game = settings.get("post_game", {})
     post_game_settings = {
-        "action": post_game.get("action", "flash_then_off"),  # off | fade_off | flash_then_off | restore | preset
-        "flash_count": post_game.get("flash_count", 3),
-        "flash_duration_ms": post_game.get("flash_duration_ms", 500),
+        # Phase 1: Celebration
+        "celebration": post_game.get("celebration", "chase"),  # freeze | chase | twinkle | flash | solid
+        "celebration_duration_s": post_game.get("celebration_duration_s", 60),  # Duration in seconds
+        # Phase 2: After celebration
+        "after_action": post_game.get("after_action", "fade_off"),  # off | fade_off | restore | preset
+        "preset_id": post_game.get("preset_id"),  # For after_action: preset
         "fade_duration_s": post_game.get("fade_duration_s", 3),
-        "preset_id": post_game.get("preset_id"),  # For action: preset
+        # Legacy fields (for migration)
+        "action": post_game.get("action"),  # Old field - used for migration detection
     }
 
     # Simulator defaults
@@ -398,6 +402,7 @@ def get_instance_display_settings(host: str) -> dict:
 def update_instance_post_game_settings(host: str, post_game_settings: dict) -> dict:
     """
     Update post-game settings for a specific WLED instance.
+    Supports new two-phase system: celebration + after_action.
     """
     global _settings
 
@@ -412,6 +417,11 @@ def update_instance_post_game_settings(host: str, post_game_settings: dict) -> d
         if inst.get("host") == host:
             if "post_game" not in inst:
                 inst["post_game"] = {}
+
+            # Remove legacy 'action' field if present (migrating to new system)
+            if "action" in inst["post_game"]:
+                del inst["post_game"]["action"]
+
             inst["post_game"].update(post_game_settings)
             found = True
             break
@@ -432,6 +442,7 @@ def update_instance_post_game_settings(host: str, post_game_settings: dict) -> d
 def get_instance_post_game_settings(host: str) -> dict:
     """
     Get post-game settings for a specific instance, with fallback to global.
+    Handles migration from old 'action' field to new two-phase system.
     """
     settings = get_settings()
     global_post_game = settings.get("post_game", {})
@@ -441,20 +452,42 @@ def get_instance_post_game_settings(host: str) -> dict:
     raw_settings = _load_yaml(settings_path)
 
     # Find instance-specific settings
+    inst_post_game = {}
     for inst in raw_settings.get("wled_instances", []):
         if inst.get("host") == host:
             inst_post_game = inst.get("post_game", {})
-            # Merge: instance overrides global
-            return {
-                "action": inst_post_game.get("action", global_post_game.get("action", "flash_then_off")),
-                "flash_count": inst_post_game.get("flash_count", global_post_game.get("flash_count", 3)),
-                "flash_duration_ms": inst_post_game.get("flash_duration_ms", global_post_game.get("flash_duration_ms", 500)),
-                "fade_duration_s": inst_post_game.get("fade_duration_s", global_post_game.get("fade_duration_s", 3)),
-                "preset_id": inst_post_game.get("preset_id", global_post_game.get("preset_id")),
-            }
+            break
 
-    # Fallback to global
-    return global_post_game
+    # Merge: instance overrides global (new two-phase fields)
+    merged = {
+        "celebration": inst_post_game.get("celebration", global_post_game.get("celebration", "chase")),
+        "celebration_duration_s": inst_post_game.get("celebration_duration_s", global_post_game.get("celebration_duration_s", 60)),
+        "after_action": inst_post_game.get("after_action", global_post_game.get("after_action", "fade_off")),
+        "preset_id": inst_post_game.get("preset_id", global_post_game.get("preset_id")),
+        "fade_duration_s": inst_post_game.get("fade_duration_s", global_post_game.get("fade_duration_s", 3)),
+    }
+
+    # MIGRATION: Handle legacy 'action' field
+    # If instance or global has 'action' but NOT the new 'celebration' field, migrate
+    legacy_action = inst_post_game.get("action") or global_post_game.get("action")
+    has_new_fields = "celebration" in inst_post_game or "celebration" in global_post_game
+
+    if legacy_action and not has_new_fields:
+        # Map old actions to new two-phase system
+        migration_map = {
+            "off": ("solid", 5, "off"),           # Brief solid, then off
+            "fade_off": ("solid", 5, "fade_off"), # Brief solid, then fade
+            "flash_then_off": ("flash", 10, "fade_off"),  # Flash celebration, fade off
+            "restore": ("solid", 5, "restore"),   # Brief solid, then restore
+            "preset": ("solid", 5, "preset"),     # Brief solid, then preset
+        }
+        if legacy_action in migration_map:
+            celebration, duration, after = migration_map[legacy_action]
+            merged["celebration"] = celebration
+            merged["celebration_duration_s"] = duration
+            merged["after_action"] = after
+
+    return merged
 
 
 def get_simulator_defaults() -> dict:
