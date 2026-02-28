@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import type {
   Instance,
   League,
@@ -60,7 +61,7 @@ async function get<T>(path: string): Promise<T> {
   return promise;
 }
 
-async function post<T>(path: string, body: unknown): Promise<T> {
+async function post<T>(path: string, body: unknown, silent = false): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -68,7 +69,9 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || `${res.status} ${res.statusText}`);
+    const msg = err.detail || `${res.status} ${res.statusText}`;
+    if (!silent) toast.error(msg);
+    throw new Error(msg);
   }
   invalidateCache("/instances");
   return res.json();
@@ -82,7 +85,9 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || `${res.status} ${res.statusText}`);
+    const msg = err.detail || `${res.status} ${res.statusText}`;
+    toast.error(msg);
+    throw new Error(msg);
   }
   invalidateCache("/instances");
   return res.json();
@@ -92,7 +97,9 @@ async function del<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { method: "DELETE" });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || `${res.status} ${res.statusText}`);
+    const msg = err.detail || `${res.status} ${res.statusText}`;
+    toast.error(msg);
+    throw new Error(msg);
   }
   invalidateCache("/instances");
   return res.json();
@@ -133,7 +140,7 @@ export const api = {
   simStop: (host: string) =>
     post<unknown>(`/instance/${host}/sim/stop`, {}),
   simTest: (data: SimTestPayload) =>
-    post<unknown>("/test", data),
+    post<unknown>("/test", data, true),
   saveSimDefaults: (data: SimulatorDefaults) =>
     post<unknown>("/simulator", data),
 

@@ -3,7 +3,25 @@ import { InstanceList } from "@/components/instances/instance-list";
 import { SimulatorPanel } from "@/components/simulator/simulator-panel";
 import { AddDeviceForm } from "@/components/device/add-device-form";
 import { DiscoverPanel } from "@/components/device/discover-panel";
-import { Zap, Monitor, Play, Activity } from "lucide-react";
+import { Monitor, Play, Activity } from "lucide-react";
+
+function ScorelineMark({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className={className}>
+      <defs>
+        <clipPath id="sl-left">
+          <polygon points="0,0 18,0 14,10 20,10 12,22 18,22 10,32 0,32" />
+        </clipPath>
+        <clipPath id="sl-right">
+          <polygon points="32,0 18,0 14,10 20,10 12,22 18,22 10,32 32,32" />
+        </clipPath>
+      </defs>
+      <rect width="32" height="32" rx="7" fill="currentColor" opacity="0.15" />
+      <rect width="32" height="32" rx="7" className="fill-primary" clipPath="url(#sl-left)" />
+      <rect width="32" height="32" rx="7" fill="#e8eaed" clipPath="url(#sl-right)" />
+    </svg>
+  );
+}
 
 interface AppLayoutProps {
   instances: Instance[] | null;
@@ -12,6 +30,7 @@ interface AppLayoutProps {
   leagues: League[] | null;
   leaguesLoading: boolean;
   onMutate: () => void;
+  wsConnected?: boolean;
 }
 
 export function AppLayout({
@@ -21,13 +40,14 @@ export function AppLayout({
   leagues,
   leaguesLoading,
   onMutate,
+  wsConnected,
 }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border px-6 py-4">
         <div className="mx-auto max-w-4xl">
           <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-primary">
-            <Zap className="h-6 w-6" />
+            <ScorelineMark className="h-7 w-7" />
             Scoreline
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -80,6 +100,13 @@ export function AppLayout({
               : `${leagues?.length ?? 0} leagues`}
             {" · "}
             {instances?.length ?? 0} instance{(instances?.length ?? 0) !== 1 ? "s" : ""}
+            {wsConnected !== undefined && (
+              <>
+                {" · "}
+                <span className={`inline-block h-1.5 w-1.5 rounded-full ${wsConnected ? "bg-live" : "bg-muted-foreground/30"}`} />
+                {wsConnected ? "Live" : "Polling"}
+              </>
+            )}
           </p>
         </footer>
       </main>
