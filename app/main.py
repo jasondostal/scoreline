@@ -9,10 +9,11 @@ import logging
 import os
 import threading
 import time
+from collections import deque
 from contextlib import asynccontextmanager
 from enum import Enum
 from typing import Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
@@ -53,6 +54,11 @@ from config import (
 from discovery import discover_wled_devices
 
 
+def espn_slug(league: str) -> str:
+    """Resolve our league ID to ESPN's API slug. Falls back to league ID itself."""
+    return get_leagues().get(league, {}).get("espn_league") or league
+
+
 def build_wled_config(host: str, start: int, end: int) -> WLEDConfig:
     """Build WLEDConfig with display settings from config file (per-instance or global)."""
     display = get_instance_display_settings(host)
@@ -83,6 +89,10 @@ class InstanceState:
         self.previous_preset: Optional[int] = None  # Preset to restore after game
         self.simulating: bool = False  # True when driven by simulator
         self.sim_saved_preset: Optional[int] = None  # Preset to restore when sim stops
+        # Unified display payload — populated by ESPN, simulator, or any future source
+        # Keys: league, home_team, away_team, home_display, away_display,
+        #        home_colors, away_colors, home_score, away_score, home_win_pct, period, status
+        self.display: Optional[dict] = None
 
         # Explicit state machine
         self.ui_state: UIState = UIState.IDLE
@@ -102,6 +112,9 @@ class InstanceState:
         self.celebration_after_action: Optional[str] = None  # What to do after celebration
         self.celebration_preset_id: Optional[int] = None  # For preset after_action
 
+        # Win probability history for sparkline (circular buffer)
+        self.win_pct_history: deque = deque(maxlen=120)
+
     def get_health_status(self) -> HealthStatus:
         """Derive health tier from tracking data."""
         if self.health_consecutive_failures >= 3:
@@ -120,6 +133,41 @@ class InstanceState:
         """Record a failed WLED operation."""
         self.health_consecutive_failures += 1
         self.health_last_error = error
+
+
+class ConnectionManager:
+    """WebSocket connection manager for real-time updates."""
+    def __init__(self):
+        self.connections: set[WebSocket] = set()
+
+    async def connect(self, ws: WebSocket):
+        await ws.accept()
+        self.connections.add(ws)
+
+    def disconnect(self, ws: WebSocket):
+        self.connections.discard(ws)
+
+    async def broadcast(self, message: dict):
+        dead = set()
+        for ws in self.connections:
+            try:
+                await ws.send_json(message)
+            except Exception:
+                dead.add(ws)
+        self.connections -= dead
+
+
+ws_manager = ConnectionManager()
+
+
+async def broadcast_state():
+    """Broadcast current instance state to all WebSocket clients."""
+    if ws_manager.connections:
+        try:
+            data = await list_instances()
+            await ws_manager.broadcast({"type": "instances_update", "data": data})
+        except Exception:
+            pass  # Best effort
 
 
 class AppState:
@@ -191,6 +239,8 @@ def transition_to_watching(inst: InstanceState, game: dict, trigger: str):
     inst.watch_trigger = trigger
     inst.final_linger_until = None
     inst.final_game_info = None
+    inst.display = None
+    inst.win_pct_history.clear()
 
     # Compute the appropriate watching state
     inst.ui_state = compute_ui_state(inst)
@@ -231,6 +281,8 @@ async def transition_from_final(inst: InstanceState):
     inst.watch_trigger = None
     inst.final_linger_until = None
     inst.final_game_info = None
+    inst.display = None
+    inst.win_pct_history.clear()
     inst.ui_state = UIState.IDLE_AUTOWATCH if watch_teams else UIState.IDLE
     logger.info(f"[STATE] {inst.host}: → {inst.ui_state.value}")
 
@@ -257,7 +309,7 @@ async def find_next_priority_game(host: str, watch_teams: list[str]) -> Optional
 
         sport = get_leagues()[league]["sport"]
         try:
-            games = await state.espn.get_scoreboard(sport, league)
+            games = await state.espn.get_scoreboard(sport, espn_slug(league))
             for game in games:
                 if game["status"] != "in":
                     continue
@@ -404,7 +456,7 @@ async def poll_all_games():
                     league, game_id = game_key.split(":", 1)
                     sport = get_leagues().get(league, {}).get("sport", "football")
 
-                    game = await state.espn.get_game_detail(sport, league, game_id)
+                    game = await state.espn.get_game_detail(sport, espn_slug(league), game_id)
 
                     if game:
                         home_colors = get_team_colors(league, game.home_team)
@@ -424,6 +476,10 @@ async def poll_all_games():
 
                             # Only update lights for in-progress games
                             if game.status == "in":
+                                inst.win_pct_history.append({
+                                    "t": time.time(),
+                                    "pct": game.home_win_pct,
+                                })
                                 await inst.controller.set_game_mode(
                                     home_win_pct=game.home_win_pct,
                                     home_colors=home_colors,
@@ -437,6 +493,14 @@ async def poll_all_games():
                                         f"{game.away_score}-{game.home_score} | "
                                         f"Home: {game.home_win_pct:.1%} | "
                                         f"{len(active_instances)} instance(s)")
+
+            # Broadcast updated state to WebSocket clients
+            if games_to_poll and ws_manager.connections:
+                try:
+                    instances_data = await list_instances()
+                    await ws_manager.broadcast({"type": "instances_update", "data": instances_data})
+                except Exception as ws_err:
+                    logger.debug(f"WebSocket broadcast error: {ws_err}")
 
         except Exception as e:
             logger.error(f"Poll error: {e}")
@@ -493,6 +557,18 @@ async def auto_watch_all():
 
                 # Use state transition
                 transition_to_watching(inst, best_game, "auto")
+
+                # Broadcast game started for toast notifications
+                game_info = best_game.get("last_info")
+                if game_info:
+                    league_name = best_game.get("league", "")
+                    await ws_manager.broadcast({
+                        "type": "game_started",
+                        "host": host,
+                        "home_team": get_team_display(league_name, game_info.home_team),
+                        "away_team": get_team_display(league_name, game_info.away_team),
+                    })
+                await broadcast_state()
 
         except Exception as e:
             logger.error(f"Auto-watch error: {e}")
@@ -572,6 +648,17 @@ async def handle_game_ended(inst: InstanceState, game_info: GameInfo):
 
     # Transition to FINAL state (celebration duration is the linger time)
     transition_to_final(inst, linger_seconds=duration)
+
+    # Broadcast game ended event for toast notifications
+    await ws_manager.broadcast({
+        "type": "game_ended",
+        "host": inst.host,
+        "home_team": get_team_display(league, game_info.home_team),
+        "away_team": get_team_display(league, game_info.away_team),
+        "home_score": game_info.home_score,
+        "away_score": game_info.away_score,
+    })
+    await broadcast_state()
 
     # Schedule the end of celebration
     asyncio.create_task(check_celebration_end(inst))
@@ -737,7 +824,7 @@ async def get_games(league: str):
         raise HTTPException(404, f"Unknown league: {league}")
 
     sport = get_leagues()[league]["sport"]
-    games = await state.espn.get_scoreboard(sport, league)
+    games = await state.espn.get_scoreboard(sport, espn_slug(league))
 
     return [
         {
@@ -873,28 +960,35 @@ async def list_instances():
             "celebration_remaining": max(0, inst.celebration_end_time - time.time()) if inst.celebration_end_time else None,
         }
 
-        # Get game info - either from active game or final_game_info for FINAL state
+        # Unified display payload — built from whichever source is active
+        # The frontend just renders what's here; it never checks the source.
+        display = inst.display or {}
+
+        # ESPN game data populates display (authoritative when watching)
         game_data = inst.game
         if inst.ui_state == UIState.FINAL and inst.final_game_info:
             game_data = inst.final_game_info
-
         if game_data:
-            item["league"] = game_data["league"]
-            item["game_id"] = game_data["game_id"]
+            display["league"] = game_data["league"]
+            display["game_id"] = game_data["game_id"]
             info = game_data.get("last_info")
             if info:
-                item["home_team"] = info.home_team
-                item["away_team"] = info.away_team
-                item["home_display"] = get_team_display(game_data["league"], info.home_team)
-                item["away_display"] = get_team_display(game_data["league"], info.away_team)
-                item["home_colors"] = get_team_colors(game_data["league"], info.home_team)
-                item["away_colors"] = get_team_colors(game_data["league"], info.away_team)
-                item["home_score"] = info.home_score
-                item["away_score"] = info.away_score
-                item["home_win_pct"] = info.home_win_pct
-                # Mini scoreboard: period/clock info
-                item["period"] = info.period
-                item["status"] = info.status  # pre, in, post
+                league_key = game_data["league"]
+                display["home_team"] = info.home_team
+                display["away_team"] = info.away_team
+                display["home_display"] = get_team_display(league_key, info.home_team)
+                display["away_display"] = get_team_display(league_key, info.away_team)
+                display["home_colors"] = get_team_colors(league_key, info.home_team)
+                display["away_colors"] = get_team_colors(league_key, info.away_team)
+                display["home_score"] = info.home_score
+                display["away_score"] = info.away_score
+                display["home_win_pct"] = info.home_win_pct
+                display["period"] = info.period
+                display["status"] = info.status
+
+        # Merge display into item — flat, same keys regardless of source
+        item.update(display)
+        item["win_pct_history"] = list(inst.win_pct_history)
         result.append(item)
     return result
 
@@ -938,7 +1032,7 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
     # Fetch game data immediately so UI has scores right away
     try:
         sport = get_leagues().get(req.league, {}).get("sport", "football")
-        game_info = await state.espn.get_game_detail(sport, req.league, req.game_id)
+        game_info = await state.espn.get_game_detail(sport, espn_slug(req.league), req.game_id)
         if game_info:
             game["last_info"] = game_info
             game["last_status"] = game_info.status
@@ -958,6 +1052,7 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
     # Use state transition (manual trigger)
     transition_to_watching(inst, game, "manual")
 
+    await broadcast_state()
     return {"status": "watching", "host": host, "game_id": req.game_id, "state": inst.ui_state.value}
 
 
@@ -975,6 +1070,7 @@ async def stop_instance(host: str):
     inst.watch_trigger = None
     inst.final_linger_until = None
     inst.final_game_info = None
+    inst.display = None
 
     # Transition to appropriate idle state
     inst.ui_state = UIState.IDLE_AUTOWATCH if watch_teams else UIState.IDLE
@@ -987,6 +1083,8 @@ async def stop_instance(host: str):
         except Exception as e:
             inst.record_failure(str(e))
 
+    inst.win_pct_history.clear()
+    await broadcast_state()
     return {"status": "stopped", "host": host, "state": inst.ui_state.value}
 
 
@@ -1048,6 +1146,7 @@ async def update_instance(host: str, req: UpdateInstanceRequest):
         if req.end is not None:
             inst.end = req.end
 
+    await broadcast_state()
     return result
 
 
@@ -1110,6 +1209,7 @@ async def update_instance_settings(host: str, req: InstanceSettingsRequest):
                 inst.record_failure(str(e))
                 logger.warning(f"[SETTINGS] {host}: Failed to push update: {e}")
 
+    await broadcast_state()
     return {"status": "updated", "host": host, **result}
 
 
@@ -1134,6 +1234,9 @@ async def set_watch_teams(host: str, req: WatchTeamsRequest):
         raise HTTPException(404, f"Unknown instance: {host}")
 
     result = update_instance_watch_teams(host, req.watch_teams)
+    inst = state.instances[host]
+    inst.ui_state = compute_ui_state(inst)
+    await broadcast_state()
     return result
 
 
@@ -1159,6 +1262,7 @@ async def set_post_game(host: str, req: PostGameRequest):
         settings["preset_id"] = req.preset_id
 
     result = update_instance_post_game_settings(host, settings)
+    await broadcast_state()
     return result
 
 
@@ -1218,6 +1322,7 @@ async def start_sim(host: str):
     result = {"status": "simulating", "host": host, "saved_preset": inst.sim_saved_preset, "state": inst.ui_state.value}
     if warning:
         result["warning"] = warning
+    await broadcast_state()
     return result
 
 
@@ -1249,11 +1354,14 @@ async def stop_sim(host: str):
 
     inst.simulating = False
     inst.sim_saved_preset = None
+    inst.display = None
+    inst.win_pct_history.clear()
 
     # Recompute state (returns to previous watching state or idle)
     inst.ui_state = compute_ui_state(inst)
     logger.info(f"[STATE] {host}: → {inst.ui_state.value} (sim stopped)")
 
+    await broadcast_state()
     return {"status": "stopped", "host": host, "state": inst.ui_state.value}
 
 
@@ -1340,6 +1448,22 @@ async def test_percentage(req: TestRequest):
             away_colors=away_colors,
         )
 
+        # Populate unified display payload
+        if inst.simulating:
+            inst.display = {
+                "league": req.league,
+                "home_team": req.home,
+                "away_team": req.away,
+                "home_display": get_team_display(req.league, req.home),
+                "away_display": get_team_display(req.league, req.away),
+                "home_colors": home_colors,
+                "away_colors": away_colors,
+                "home_win_pct": req.pct / 100,
+                "period": "SIM",
+            }
+            inst.win_pct_history.append({"t": time.time(), "pct": req.pct / 100})
+
+    await broadcast_state()
     return {"status": "ok", "pct": req.pct, "home": req.home, "away": req.away}
 
 
@@ -1365,6 +1489,23 @@ async def save_simulator_settings(req: SimulatorDefaultsRequest):
         "away": req.away,
         "win_pct": req.win_pct,
     })
+
+
+# WebSocket endpoint for real-time updates
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await ws_manager.connect(websocket)
+    try:
+        # Send initial state immediately on connect
+        instances_data = await list_instances()
+        await websocket.send_json({"type": "instances_update", "data": instances_data})
+        # Keep connection alive — client can send pings
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception:
+        ws_manager.disconnect(websocket)
 
 
 # SPA fallback — must be AFTER all API routes
