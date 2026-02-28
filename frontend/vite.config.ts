@@ -12,10 +12,15 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    allowedHosts: ["cortex"],
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: "http://localhost:8081",
         changeOrigin: true,
+      },
+      "/ws": {
+        target: "ws://localhost:8081",
+        ws: true,
       },
     },
   },

@@ -1,7 +1,6 @@
-import { usePoll } from "@/lib/use-poll";
+import { useInstances } from "@/lib/use-instances";
 import { useFetch } from "@/lib/use-fetch";
 import { api } from "@/lib/api";
-import { POLL_INTERVAL_MS } from "@/lib/constants";
 import { AppLayout } from "@/components/layout/app-layout";
 
 export function App() {
@@ -10,7 +9,8 @@ export function App() {
     loading: instancesLoading,
     error: instancesError,
     refetch: refetchInstances,
-  } = usePoll(() => api.instances(), POLL_INTERVAL_MS);
+    connected: wsConnected,
+  } = useInstances();
 
   const {
     data: leagues,
@@ -25,6 +25,7 @@ export function App() {
       leagues={leagues}
       leaguesLoading={leaguesLoading}
       onMutate={refetchInstances}
+      wsConnected={wsConnected}
     />
   );
 }
