@@ -1,0 +1,98 @@
+# Liga MX Team Colors for Game Lights
+# Auto-generated from ESPN API — 18 teams
+# Colors are [R, G, B] — saturated for LED punch
+
+name: Liga MX
+sport: soccer
+espn_league: mex.1
+
+teams:
+  AME:
+    name: América
+    display: América
+    colors: [[255, 255, 128], [0, 70, 220]]
+
+  ASL:
+    name: Atlético de San Luis
+    display: Atl. San Luis
+    colors: [[239, 0, 6], [223, 159, 13]]
+
+  ATS:
+    name: Atlas
+    display: Atlas
+    colors: [[239, 0, 6], [225, 225, 225]]
+
+  CAZ:
+    name: Cruz Azul
+    display: Cruz Azul
+    colors: [[0, 0, 255], [255, 255, 255]]
+
+  GDL:
+    name: Guadalajara
+    display: Guadalajara
+    colors: [[239, 0, 6], [0, 77, 153]]
+
+  JUA:
+    name: FC Juarez
+    display: Juarez
+    colors: [[120, 244, 39], [255, 255, 255]]
+
+  LEO:
+    name: León
+    display: León
+    colors: [[0, 153, 0], [255, 244, 0]]
+
+  MAZ:
+    name: Mazatlán FC
+    display: Mazatlán
+    colors: [[147, 0, 211], [207, 101, 253]]
+
+  MTY:
+    name: Monterrey
+    display: Monterrey
+    colors: [[0, 70, 220], [255, 255, 255]]
+
+  NCX:
+    name: Necaxa
+    display: Necaxa
+    colors: [[239, 0, 6], [255, 102, 105]]
+
+  PAC:
+    name: Pachuca
+    display: Pachuca
+    colors: [[0, 70, 220], [0, 175, 208]]
+
+  PUE:
+    name: Puebla
+    display: Puebla
+    colors: [[255, 255, 255], [0, 49, 168]]
+
+  QRO:
+    name: Querétaro
+    display: Queretaro
+    colors: [[140, 140, 140], [0, 175, 208]]
+
+  SAN:
+    name: Santos
+    display: Santos
+    colors: [[2, 153, 108], [0, 165, 87]]
+
+  TIJ:
+    name: Tijuana
+    display: Tijuana
+    colors: [[239, 0, 6], [225, 225, 225]]
+
+  TOL:
+    name: Toluca
+    display: Toluca
+    colors: [[239, 0, 6], [255, 255, 255]]
+
+  UANL:
+    name: Tigres UANL
+    display: Tigres
+    colors: [[255, 204, 0], [0, 0, 255]]
+
+  UNAM:
+    name: Pumas UNAM
+    display: UNAM
+    colors: [[255, 255, 255], [15, 0, 165]]

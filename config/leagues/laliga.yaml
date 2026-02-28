@@ -1,0 +1,108 @@
+# La Liga Team Colors for Game Lights
+# Auto-generated from ESPN API — 20 teams
+# Colors are [R, G, B] — saturated for LED punch
+
+name: La Liga
+sport: soccer
+espn_league: esp.1
+
+teams:
+  ALA:
+    name: Alavés
+    display: Alavés
+    colors: [[0, 0, 255], [195, 195, 195]]
+
+  ATH:
+    name: Athletic Club
+    display: Athletic
+    colors: [[200, 0, 30], [0, 0, 255]]
+
+  ATM:
+    name: Atlético Madrid
+    display: Atlético
+    colors: [[202, 31, 11], [195, 195, 195]]
+
+  BAR:
+    name: Barcelona
+    display: Barcelona
+    colors: [[0, 82, 159], [140, 140, 140]]
+
+  BET:
+    name: Real Betis
+    display: Betis
+    colors: [[44, 153, 0], [203, 255, 0]]
+
+  CEL:
+    name: Celta Vigo
+    display: Celta Vigo
+    colors: [[90, 163, 228], [0, 74, 153]]
+
+  ELC:
+    name: Elche
+    display: Elche
+    colors: [[255, 255, 255], [44, 153, 0]]
+
+  ESP:
+    name: Espanyol
+    display: Espanyol
+    colors: [[28, 86, 204], [200, 0, 30]]
+
+  GET:
+    name: Getafe
+    display: Getafe
+    colors: [[0, 0, 255], [200, 0, 30]]
+
+  GIR:
+    name: Girona
+    display: Girona
+    colors: [[198, 0, 0], [0, 74, 153]]
+
+  LEV:
+    name: Levante
+    display: Levante
+    colors: [[200, 0, 30], [240, 96, 117]]
+
+  MLL:
+    name: Mallorca
+    display: Mallorca
+    colors: [[200, 0, 30], [203, 255, 0]]
+
+  OSA:
+    name: Osasuna
+    display: Osasuna
+    colors: [[205, 0, 0], [255, 255, 255]]
+
+  OVI:
+    name: Real Oviedo
+    display: Real Oviedo
+    colors: [[0, 0, 0], [0, 0, 0]]
+
+  RAY:
+    name: Rayo Vallecano
+    display: Rayo
+    colors: [[255, 255, 255], [205, 0, 0]]
+
+  RMA:
+    name: Real Madrid
+    display: Real Madrid
+    colors: [[255, 255, 255], [242, 136, 0]]
+
+  RSO:
+    name: Real Sociedad
+    display: Real Sociedad
+    colors: [[28, 86, 204], [255, 221, 0]]
+
+  SEV:
+    name: Sevilla
+    display: Sevilla
+    colors: [[255, 255, 255], [216, 0, 19]]
+
+  VAL:
+    name: Valencia
+    display: Valencia
+    colors: [[255, 255, 255], [0, 74, 153]]
+
+  VIL:
+    name: Villarreal
+    display: Villarreal
+    colors: [[255, 255, 0], [90, 163, 228]]

@@ -1,0 +1,82 @@
+# WNBA Team Colors for Game Lights
+# Auto-generated from ESPN API — 15 teams
+# Colors are [R, G, B] — saturated for LED punch
+
+name: WNBA
+sport: basketball
+
+teams:
+  ATL:
+    name: Atlanta Dream
+    display: Dream
+    colors: [[227, 0, 34], [61, 136, 204]]
+
+  CHI:
+    name: Chicago Sky
+    display: Sky
+    colors: [[61, 135, 205], [255, 206, 0]]
+
+  CON:
+    name: Connecticut Sun
+    display: Sun
+    colors: [[240, 56, 4], [0, 73, 165]]
+
+  DAL:
+    name: Dallas Wings
+    display: Wings
+    colors: [[0, 71, 153], [195, 214, 0]]
+
+  GS:
+    name: Golden State Valkyries
+    display: Valkyries
+    colors: [[174, 133, 207], [215, 173, 248]]
+
+  IND:
+    name: Indiana Fever
+    display: Fever
+    colors: [[0, 70, 153], [224, 33, 37]]
+
+  LA:
+    name: Los Angeles Sparks
+    display: Sparks
+    colors: [[91, 26, 153], [253, 174, 6]]
+
+  LV:
+    name: Las Vegas Aces
+    display: Aces
+    colors: [[167, 168, 170], [142, 163, 203]]
+
+  MIN:
+    name: Minnesota Lynx
+    display: Lynx
+    colors: [[22, 92, 153], [110, 188, 48]]
+
+  NY:
+    name: New York Liberty
+    display: Liberty
+    colors: [[123, 206, 185], [173, 247, 228]]
+
+  PHX:
+    name: Phoenix Mercury
+    display: Mercury
+    colors: [[73, 41, 153], [250, 67, 0]]
+
+  POR:
+    name: Portland Fire
+    display: Fire
+    colors: [[178, 12, 12], [165, 23, 23]]
+
+  SEA:
+    name: Seattle Storm
+    display: Storm
+    colors: [[71, 153, 90], [254, 221, 0]]
+
+  TOR:
+    name: Toronto Tempo
+    display: Tempo
+    colors: [[59, 91, 153], [153, 15, 57]]
+
+  WSH:
+    name: Washington Mystics
+    display: Mystics
+    colors: [[224, 33, 37], [0, 71, 153]]

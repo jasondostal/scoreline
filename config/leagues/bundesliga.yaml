@@ -1,0 +1,98 @@
+# Bundesliga Team Colors for Game Lights
+# Auto-generated from ESPN API — 18 teams
+# Colors are [R, G, B] — saturated for LED punch
+
+name: Bundesliga
+sport: soccer
+espn_league: ger.1
+
+teams:
+  B04:
+    name: Bayer Leverkusen
+    display: Leverkusen
+    colors: [[218, 0, 5], [249, 251, 252]]
+
+  BMG:
+    name: Borussia Mönchengladbach
+    display: Gladbach
+    colors: [[255, 255, 255], [0, 153, 95]]
+
+  DOR:
+    name: Borussia Dortmund
+    display: Dortmund
+    colors: [[255, 238, 0], [140, 140, 136]]
+
+  FCA:
+    name: FC Augsburg
+    display: Augsburg
+    colors: [[255, 255, 255], [0, 153, 95]]
+
+  FCU:
+    name: 1. FC Union Berlin
+    display: Union Berlin
+    colors: [[218, 0, 5], [212, 212, 212]]
+
+  HDH:
+    name: 1. FC Heidenheim 1846
+    display: Heidenheim
+    colors: [[218, 0, 5], [0, 50, 153]]
+
+  HSV:
+    name: Hamburg SV
+    display: Hamburg
+    colors: [[3, 17, 175], [140, 140, 140]]
+
+  KOE:
+    name: FC Cologne
+    display: Cologne
+    colors: [[255, 255, 255], [218, 0, 5]]
+
+  M05:
+    name: Mainz
+    display: Mainz
+    colors: [[218, 0, 5], [0, 0, 212]]
+
+  MUN:
+    name: Bayern Munich
+    display: Bayern
+    colors: [[220, 0, 40], [140, 140, 140]]
+
+  RBL:
+    name: RB Leipzig
+    display: RB Leipzig
+    colors: [[255, 255, 255], [153, 0, 11]]
+
+  SCF:
+    name: SC Freiburg
+    display: Freiburg
+    colors: [[218, 0, 5], [255, 255, 255]]
+
+  SGE:
+    name: Eintracht Frankfurt
+    display: Frankfurt
+    colors: [[255, 255, 255], [140, 140, 136]]
+
+  STP:
+    name: St. Pauli
+    display: St. Pauli
+    colors: [[153, 96, 67], [255, 255, 255]]
+
+  SVW:
+    name: Werder Bremen
+    display: Bremen
+    colors: [[0, 153, 95], [255, 255, 255]]
+
+  TSG:
+    name: TSG Hoffenheim
+    display: Hoffenheim
+    colors: [[0, 50, 153], [0, 0, 212]]
+
+  VFB:
+    name: VfB Stuttgart
+    display: Stuttgart
+    colors: [[255, 255, 255], [218, 0, 5]]
+
+  WOB:
+    name: VfL Wolfsburg
+    display: Wolfsburg
+    colors: [[111, 247, 21], [140, 140, 140]]

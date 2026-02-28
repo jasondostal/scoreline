@@ -1,0 +1,108 @@
+# Serie A Team Colors for Game Lights
+# Auto-generated from ESPN API — 20 teams
+# Colors are [R, G, B] — saturated for LED punch
+
+name: Serie A
+sport: soccer
+espn_league: ita.1
+
+teams:
+  ATA:
+    name: Atalanta
+    display: Atalanta
+    colors: [[0, 76, 191], [255, 255, 255]]
+
+  BOL:
+    name: Bologna
+    display: Bologna
+    colors: [[0, 0, 165], [255, 255, 255]]
+
+  CAG:
+    name: Cagliari
+    display: Cagliari
+    colors: [[77, 77, 153], [255, 255, 255]]
+
+  COMO:
+    name: Como
+    display: Como
+    colors: [[27, 20, 255], [255, 255, 255]]
+
+  CRE:
+    name: Cremonese
+    display: Cremonese
+    colors: [[255, 0, 0], [255, 255, 255]]
+
+  FIO:
+    name: Fiorentina
+    display: Fiorentina
+    colors: [[78, 15, 153], [255, 255, 255]]
+
+  GEN:
+    name: Genoa
+    display: Genoa
+    colors: [[0, 72, 153], [255, 255, 255]]
+
+  INT:
+    name: Internazionale
+    display: Inter Milan
+    colors: [[0, 35, 156], [255, 255, 255]]
+
+  JUV:
+    name: Juventus
+    display: Juventus
+    colors: [[0, 0, 0], [255, 236, 19]]
+
+  LAZ:
+    name: Lazio
+    display: Lazio
+    colors: [[98, 182, 231], [255, 236, 19]]
+
+  LEC:
+    name: Lecce
+    display: Lecce
+    colors: [[228, 0, 43], [0, 72, 153]]
+
+  MIL:
+    name: AC Milan
+    display: Milan
+    colors: [[228, 0, 43], [255, 255, 255]]
+
+  NAP:
+    name: Napoli
+    display: Napoli
+    colors: [[0, 116, 210], [255, 255, 255]]
+
+  PAR:
+    name: Parma
+    display: Parma
+    colors: [[128, 110, 153], [255, 215, 16]]
+
+  PIS:
+    name: Pisa
+    display: Pisa
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  ROMA:
+    name: AS Roma
+    display: AS Roma
+    colors: [[153, 0, 36], [234, 233, 231]]
+
+  SAS:
+    name: Sassuolo
+    display: Sassuolo
+    colors: [[0, 166, 74], [79, 199, 132]]
+
+  TOR:
+    name: Torino
+    display: Torino
+    colors: [[159, 0, 0], [255, 255, 255]]
+
+  UDI:
+    name: Udinese
+    display: Udinese
+    colors: [[128, 110, 153], [255, 236, 19]]
+
+  VER:
+    name: Hellas Verona
+    display: Verona
+    colors: [[0, 35, 156], [255, 255, 255]]

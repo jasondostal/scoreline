@@ -1,0 +1,2508 @@
+# College Football (FBS) Team Colors for Game Lights
+# Auto-generated from ESPN API — 500 teams
+# Colors are [R, G, B] — saturated for LED punch
+
+name: College Football (FBS)
+sport: football
+espn_league: college-football
+
+teams:
+  AAMU:
+    name: Alabama A&M Bulldogs
+    display: Alabama A&M
+    colors: [[153, 0, 0], [255, 255, 255]]
+
+  ACU:
+    name: Abilene Christian Wildcats
+    display: Abilene Chrstn
+    colors: [[97, 37, 153], [177, 179, 179]]
+
+  ADR:
+    name: Adrian Bulldogs
+    display: Adrian
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ADST:
+    name: Adams State Grizzlies
+    display: Adams St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  AF:
+    name: Air Force Falcons
+    display: Air Force
+    colors: [[0, 54, 153], [255, 255, 255]]
+
+  AIC:
+    name: American International Yellow Jackets
+    display: American Int'l
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  AKR:
+    name: Akron Zips
+    display: Akron
+    colors: [[0, 69, 165], [197, 180, 121]]
+
+  ALA:
+    name: Alabama Crimson Tide
+    display: Alabama
+    colors: [[158, 7, 33], [255, 255, 255]]
+
+  ALB:
+    name: Albright Lions
+    display: Albright
+    colors: [[200, 22, 52], [240, 111, 133]]
+
+  ALBS:
+    name: Albany State GA Golden Rams
+    display: Albany St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ALCN:
+    name: Alcorn State Braves
+    display: Alcorn St
+    colors: [[187, 0, 220], [93, 13, 153]]
+
+  ALF:
+    name: Alfred University Saxons
+    display: Alfred
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ALL:
+    name: Allegheny Gators
+    display: Allegheny
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ALL:
+    name: Allen Yellow Jackets
+    display: Allen
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  ALST:
+    name: Alabama State Hornets
+    display: Alabama St
+    colors: [[233, 169, 0], [255, 212, 102]]
+
+  AMH:
+    name: Amherst Mammoths
+    display: Amherst
+    colors: [[82, 28, 153], [255, 255, 255]]
+
+  AND:
+    name: Anderson (IN) Ravens
+    display: Anderson IN
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ANG:
+    name: Angelo State Rams
+    display: Angelo State
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ANN:
+    name: Anna Maria College Amcats
+    display: Anna Maria
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  APP:
+    name: App State Mountaineers
+    display: App State
+    colors: [[0, 0, 0], [255, 205, 0]]
+
+  APSU:
+    name: Austin Peay Governors
+    display: Austin Peay
+    colors: [[153, 0, 0], [140, 140, 140]]
+
+  ARIZ:
+    name: Arizona Wildcats
+    display: Arizona
+    colors: [[204, 0, 51], [0, 76, 153]]
+
+  ARK:
+    name: Arkansas Razorbacks
+    display: Arkansas
+    colors: [[163, 13, 37], [255, 255, 255]]
+
+  ARKMONT:
+    name: Arkansas-Monticello Boll Weevils
+    display: Ark-Monticello
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ARKTECH:
+    name: Arkansas Tech Wonder Boys
+    display: Arkansas Tech
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ARMY:
+    name: Army Black Knights
+    display: Army
+    colors: [[0, 0, 0], [211, 184, 130]]
+
+  ARST:
+    name: Arkansas State Red Wolves
+    display: Arkansas St
+    colors: [[204, 0, 39], [244, 97, 126]]
+
+  ASH:
+    name: Ashland Eagles
+    display: Ashland
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ASP:
+    name: Assumption Greyhounds
+    display: Assumption
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ASU:
+    name: Arizona State Sun Devils
+    display: Arizona St
+    colors: [[255, 189, 6], [153, 13, 57]]
+
+  AUB:
+    name: Auburn Tigers
+    display: Auburn
+    colors: [[0, 71, 153], [242, 79, 2]]
+
+  AUG:
+    name: Augsburg Auggies
+    display: Augsburg
+    colors: [[153, 30, 69], [169, 169, 170]]
+
+  AUGIL:
+    name: Augustana (IL) Vikings
+    display: Augustana IL
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  AUR:
+    name: Aurora Spartans
+    display: Aurora
+    colors: [[0, 83, 159], [76, 136, 190]]
+
+  AUS:
+    name: Austin 'Roos
+    display: Austin
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  AUSD:
+    name: Augustana University (SD) Vikings
+    display: Augustana (SD)
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  AVE:
+    name: Averett Cougars
+    display: Averett
+    colors: [[0, 98, 207], [253, 177, 17]]
+
+  AVILA:
+    name: Avila University Eagles
+    display: Avila
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BAK:
+    name: Baker University Baker
+    display: Baker
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BAL:
+    name: Baldwin Wallace Yellow Jackets
+    display: Bald Wallace
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BALL:
+    name: Ball State Cardinals
+    display: Ball State
+    colors: [[186, 0, 37], [255, 255, 255]]
+
+  BAT:
+    name: Bates Bobcats
+    display: Bates
+    colors: [[165, 9, 37], [178, 179, 178]]
+
+  BAY:
+    name: Baylor Bears
+    display: Baylor
+    colors: [[0, 177, 110], [255, 175, 0]]
+
+  BBM:
+    name: British Columbia British Col
+    display: Britsh Col
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BC:
+    name: Boston College Eagles
+    display: Boston College
+    colors: [[153, 19, 39], [219, 201, 158]]
+
+  BCU:
+    name: Bethune-Cookman Wildcats
+    display: Bethune
+    colors: [[153, 11, 47], [233, 164, 0]]
+
+  BEL:
+    name: Beloit Buccaneers
+    display: Beloit
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BELHA:
+    name: Belhaven Blazers
+    display: Belhaven
+    colors: [[0, 217, 68], [242, 169, 0]]
+
+  BEN:
+    name: Benedict College Tigers
+    display: Benedict
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  BENILL:
+    name: Benedictine University Eagles
+    display: Benedictine
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BENT:
+    name: Bentley Falcons
+    display: Bentley
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BETHA:
+    name: Bethany (Ks)
+    display: Bethany KS
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BETHTN:
+    name: Bethel University Tennessee Wildcats
+    display: Bethel TN
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BETHWV:
+    name: Bethany (WV) Bison
+    display: Bethany (WV)
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BGSU:
+    name: Bowling Green Falcons
+    display: Bowling Green
+    colors: [[253, 79, 0], [197, 59, 0]]
+
+  BHST:
+    name: Black Hills State Yellow Jackets
+    display: Black Hills St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BLMSB:
+    name: Bloomsburg Huskies
+    display: Bloomsburg
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BLU:
+    name: BLUEFIELD Ramblin' Rams
+    display: Bluefield
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  BLUFFTON:
+    name: Bluffton Beavers
+    display: Bluffton
+    colors: [[93, 13, 153], [255, 255, 255]]
+
+  BOIS:
+    name: Boise State Broncos
+    display: Boise St
+    colors: [[0, 50, 160], [214, 60, 0]]
+
+  BOW:
+    name: Bowdoin Polar Bears
+    display: Bowdoin
+    colors: [[255, 255, 255], [255, 178, 178]]
+
+  BRST:
+    name: Bridgewater State Bears
+    display: Bridgewater St
+    colors: [[191, 25, 35], [229, 109, 116]]
+
+  BRVA:
+    name: Bridgewater (VA) Eagles
+    display: Bridgewater VA
+    colors: [[153, 0, 33], [153, 119, 70]]
+
+  BRWN:
+    name: Brown Bears
+    display: Brown
+    colors: [[165, 62, 0], [153, 151, 0]]
+
+  BST:
+    name: Bemidji State Beavers
+    display: Bemidji St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BSU:
+    name: Bowie State Bulldogs
+    display: Bowie St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BUCK:
+    name: Bucknell Bison
+    display: Bucknell
+    colors: [[0, 0, 153], [0, 68, 153]]
+
+  BUENA:
+    name: Buena Vista Beavers
+    display: Buena Vista
+    colors: [[254, 180, 0], [0, 51, 165]]
+
+  BUF:
+    name: Buffalo Bulls
+    display: Buffalo
+    colors: [[0, 90, 187], [255, 255, 255]]
+
+  BUF:
+    name: Buffalo State Bengals
+    display: Buffalo State
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  BUT:
+    name: Butler Bulldogs
+    display: Butler
+    colors: [[0, 11, 153], [0, 162, 224]]
+
+  BYU:
+    name: BYU Cougars
+    display: BYU
+    colors: [[0, 71, 186], [0, 75, 153]]
+
+  CAL:
+    name: California Golden Bears
+    display: California
+    colors: [[0, 69, 165], [255, 190, 12]]
+
+  CAL:
+    name: California Lutheran University Kingsmen
+    display: Cal Luthrn
+    colors: [[84, 40, 153], [254, 185, 2]]
+
+  CAM:
+    name: Campbell Fighting Camels
+    display: Campbell
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CAPITAL:
+    name: Capital Comets
+    display: Capital
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CAR:
+    name: Carleton Knights
+    display: Carleton
+    colors: [[10, 61, 153], [237, 169, 0]]
+
+  CAR:
+    name: Carroll University (WI) Pioneers
+    display: Carroll WI
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CAR:
+    name: Carson-Newman College Eagles
+    display: Carson-Newman
+    colors: [[242, 83, 12], [0, 74, 165]]
+
+  CARCWI:
+    name: Carthage Firebirds
+    display: Carthage
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CARK:
+    name: Central Arkansas Bears
+    display: C Arkansas
+    colors: [[167, 169, 172], [142, 149, 154]]
+
+  CARM:
+    name: Carnegie Mellon Tartans
+    display: Carng Mell
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CAS:
+    name: Castleton Spartans
+    display: Castleton
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CAT:
+    name: Catawba Indians
+    display: Catawba
+    colors: [[0, 74, 165], [203, 0, 29]]
+
+  CATH:
+    name: Catholic Cardinals
+    display: Catholic
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CCSU:
+    name: Central Connecticut Blue Devils
+    display: C Connecticut
+    colors: [[6, 59, 162], [209, 213, 216]]
+
+  CCU:
+    name: Coastal Carolina Chanticleers
+    display: Coastal
+    colors: [[0, 150, 153], [162, 112, 70]]
+
+  CEN:
+    name: Central State (OH) Marauders
+    display: Central St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CENM:
+    name: Central Missouri Mules
+    display: C Missouri
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CENO:
+    name: Central Oklahoma Bronchos
+    display: C Okla
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CENTRE:
+    name: Centre College Kentucky Colonels
+    display: Centre
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CHA:
+    name: Chapman Panthers
+    display: Chapman
+    colors: [[171, 7, 38], [205, 87, 109]]
+
+  CHADRONST:
+    name: Chadron St Eagles
+    display: Chadron St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CHI:
+    name: Chicago Maroons
+    display: Chicago
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CHSO:
+    name: Charleston Southern Buccaneers
+    display: Charleston So
+    colors: [[32, 36, 153], [222, 205, 132]]
+
+  CHWV:
+    name: University Of Charleston (WV) Golden Eagles
+    display: Charl WV
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CIN:
+    name: Cincinnati Bearcats
+    display: Cincinnati
+    colors: [[0, 0, 0], [224, 0, 33]]
+
+  CLA:
+    name: Claremont-Mudd-Scripps College Stags/Athenas
+    display: Claremont-M-S
+    colors: [[153, 7, 33], [254, 179, 0]]
+
+  CLARION:
+    name: Clarion Golden Eagles
+    display: Clarion
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CLEM:
+    name: Clemson Tigers
+    display: Clemson
+    colors: [[245, 102, 0], [255, 255, 255]]
+
+  CLT:
+    name: Charlotte 49ers
+    display: Charlotte
+    colors: [[0, 200, 132], [164, 147, 91]]
+
+  CMPBVIL:
+    name: Campbellsville University Tigers
+    display: Camplville
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  CMU:
+    name: Central Michigan Chippewas
+    display: C Michigan
+    colors: [[190, 0, 97], [251, 162, 0]]
+
+  COE:
+    name: Coe College Kohawks
+    display: Coe
+    colors: [[153, 9, 21], [200, 139, 55]]
+
+  COL:
+    name: College Of New Jersey Lions
+    display: C of NJ
+    colors: [[6, 84, 153], [251, 178, 0]]
+
+  COLBY:
+    name: Colby College White Mules
+    display: Colby
+    colors: [[0, 48, 153], [255, 255, 255]]
+
+  COLG:
+    name: Colgate Raiders
+    display: Colgate
+    colors: [[153, 0, 12], [255, 255, 255]]
+
+  COLO:
+    name: Colorado Buffaloes
+    display: Colorado
+    colors: [[207, 180, 111], [248, 227, 173]]
+
+  COLOMINES:
+    name: Colorado School Of Mines Orediggers
+    display: Colo Mines
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  COLU:
+    name: Columbia Lions
+    display: Columbia
+    colors: [[108, 155, 219], [19, 76, 153]]
+
+  CON:
+    name: Concord University Mountain Lions
+    display: Concord
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CON:
+    name: Concordia Moorhead Cobbers
+    display: Cncrdia MH
+    colors: [[153, 22, 85], [255, 255, 255]]
+
+  CONCOIL:
+    name: Concordia University Chicago Cougars
+    display: Cncrdia IL
+    colors: [[217, 0, 33], [255, 190, 14]]
+
+  CONCONE:
+    name: Concordia University Nebraska Clippers
+    display: Cncrdia NE
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  CONN:
+    name: UConn Huskies
+    display: UConn
+    colors: [[0, 73, 165], [162, 170, 173]]
+
+  CONW:
+    name: Concordia-Wisconsin Falcons
+    display: Cncrdia WI
+    colors: [[18, 75, 153], [177, 179, 179]]
+
+  COR:
+    name: Cornell Big Red
+    display: Cornell
+    colors: [[179, 4, 4], [255, 255, 255]]
+
+  CORNELLIA:
+    name: Cornell College (IA) Rams
+    display: Cornellia
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CP:
+    name: Cal Poly Mustangs
+    display: Cal Poly
+    colors: [[0, 192, 53], [238, 212, 137]]
+
+  CROWN:
+    name: Crown College Polars
+    display: Crown
+    colors: [[87, 33, 153], [255, 255, 255]]
+
+  CSU:
+    name: Colorado State Rams
+    display: Colorado St
+    colors: [[0, 190, 87], [200, 194, 101]]
+
+  CULVE:
+    name: Culver-Stockton College Wildcats
+    display: Culvr-Stck
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  CUMB:
+    name: Cumberland (KY) Indians
+    display: Cmbrlnd KY
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  CUMBTN:
+    name: Cumberland (TN) Bulldogs
+    display: Cmbrlnd TN
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  CUR:
+    name: Curry College Colonels
+    display: Curry
+    colors: [[104, 63, 153], [255, 255, 255]]
+
+  CWAU:
+    name: Central Washington Wildcats
+    display: C Wash
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  DAKOT:
+    name: Dakota State University Trojans
+    display: Dakota St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  DART:
+    name: Dartmouth Big Green
+    display: Dartmouth
+    colors: [[0, 217, 120], [102, 255, 186]]
+
+  DAV:
+    name: Davidson Wildcats
+    display: Davidson
+    colors: [[0, 0, 0], [229, 0, 34]]
+
+  DAY:
+    name: Dayton Flyers
+    display: Dayton
+    colors: [[0, 81, 153], [255, 255, 255]]
+
+  DEF:
+    name: Defiance College Yellow Jackets
+    display: Defiance
+    colors: [[76, 34, 153], [222, 208, 109]]
+
+  DEL:
+    name: Delaware Blue Hens
+    display: Delaware
+    colors: [[0, 83, 159], [255, 210, 0]]
+
+  DELTAST:
+    name: Delta State Statesmen
+    display: Del State
+    colors: [[0, 153, 81], [73, 183, 131]]
+
+  DEN:
+    name: Denison University Big Red
+    display: Denison
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  DEP:
+    name: Depauw Tigers
+    display: DePauw
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  DIC:
+    name: Dickinson (PA) Red Devils
+    display: Dicknsn PA
+    colors: [[237, 0, 22], [255, 102, 116]]
+
+  DIC:
+    name: Dickinson State University Blue Hawks
+    display: Dicknsn St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  DRKE:
+    name: Drake Bulldogs
+    display: Drake
+    colors: [[0, 86, 153], [190, 192, 194]]
+
+  DSU:
+    name: Delaware State Hornets
+    display: Delaware St
+    colors: [[0, 156, 219], [213, 0, 14]]
+
+  DUB:
+    name: Dubuque Spartans
+    display: Dubuque
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  DUKE:
+    name: Duke Blue Devils
+    display: Duke
+    colors: [[0, 82, 155], [255, 255, 255]]
+
+  DUQ:
+    name: Duquesne Dukes
+    display: Duquesne
+    colors: [[0, 70, 153], [185, 0, 37]]
+
+  DWU:
+    name: Dakota Wesleyan Tigers
+    display: Dakota Wes
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  EAS:
+    name: East Central (OK) Tigers
+    display: E Cen OK
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  EAS:
+    name: East Texas Baptist University Tigers
+    display: E TX Bapt
+    colors: [[0, 107, 170], [224, 168, 0]]
+
+  EASTERNNM:
+    name: Eastern New Mexico Greyhounds
+    display: Eastern NM
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ECU:
+    name: East Carolina Pirates
+    display: East Carolina
+    colors: [[95, 36, 153], [255, 190, 12]]
+
+  EDI:
+    name: Edinboro University Fighting Scots
+    display: Edinboro
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  EDW:
+    name: Edward Waters Tigers
+    display: Ed Waters
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  EIU:
+    name: Eastern Illinois Panthers
+    display: E Illinois
+    colors: [[0, 0, 0], [190, 186, 185]]
+
+  EKU:
+    name: Eastern Kentucky Colonels
+    display: E Kentucky
+    colors: [[153, 0, 27], [240, 240, 240]]
+
+  ELI:
+    name: Elizabeth City State Vikings
+    display: Eliz City
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ELM:
+    name: Elmhurst Bluejays
+    display: Elmhurst
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ELON:
+    name: Elon Phoenix
+    display: Elon
+    colors: [[2, 3, 3], [181, 149, 72]]
+
+  EMO:
+    name: Emory & Henry College Wasps
+    display: Emory & Henry
+    colors: [[25, 65, 153], [218, 166, 12]]
+
+  EMP:
+    name: Emporia State University Hornets
+    display: Emporia St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  EMU:
+    name: Eastern Michigan Eagles
+    display: E Michigan
+    colors: [[0, 153, 81], [255, 255, 255]]
+
+  END:
+    name: Endicott College Gulls
+    display: Endicott
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  EORE:
+    name: Eastern Oregon
+    display: E Oregon
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  ESTROUD:
+    name: East Stroudsburg University Warriors
+    display: E Strouds
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ETSU:
+    name: East Tennessee State Buccaneers
+    display: ETSU
+    colors: [[0, 70, 153], [255, 187, 1]]
+
+  EUR:
+    name: Eureka College Red Devils
+    display: Eureka
+    colors: [[153, 0, 37], [192, 152, 0]]
+
+  EWU:
+    name: Eastern Washington Eagles
+    display: E Washington
+    colors: [[161, 0, 34], [171, 180, 188]]
+
+  FAMU:
+    name: Florida A&M Rattlers
+    display: Florida A&M
+    colors: [[248, 136, 8], [0, 153, 70]]
+
+  FAU:
+    name: Florida Atlantic Owls
+    display: FAU
+    colors: [[0, 76, 153], [204, 0, 0]]
+
+  FAULKNER:
+    name: Faulkner University Eagles
+    display: Faulkner
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  FAY:
+    name: Fayetteville State Broncos
+    display: Fayetvl St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  FDUFLOR:
+    name: FDU-Florham Devils
+    display: FDU Florhm
+    colors: [[0, 71, 153], [163, 19, 39]]
+
+  FER:
+    name: Ferrum Panthers
+    display: Ferrum
+    colors: [[0, 0, 0], [192, 162, 70]]
+
+  FINDLAY:
+    name: Findlay Oilers
+    display: Findlay
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  FITCH:
+    name: Fitchburg State Falcons
+    display: Fitchburg
+    colors: [[0, 192, 133], [251, 185, 0]]
+
+  FIU:
+    name: Florida International Panthers
+    display: FIU
+    colors: [[0, 67, 165], [195, 146, 43]]
+
+  FLA:
+    name: Florida Gators
+    display: Florida
+    colors: [[0, 33, 165], [250, 52, 0]]
+
+  FOR:
+    name: Fordham Rams
+    display: Fordham
+    colors: [[153, 0, 58], [144, 144, 144]]
+
+  FORTLEW:
+    name: Fort Lewis Skyhawks
+    display: Ft Lewis
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  FRA:
+    name: Franklin & Marshall Diplomats
+    display: Franklin Marsh
+    colors: [[29, 54, 153], [89, 170, 233]]
+
+  FRANKLIN:
+    name: Franklin Grizzlies
+    display: Franklin
+    colors: [[29, 56, 153], [253, 207, 0]]
+
+  FRES:
+    name: Fresno State Bulldogs
+    display: Fresno St
+    colors: [[177, 0, 29], [0, 69, 190]]
+
+  FRIE:
+    name: Friends University Friends
+    display: Friends
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  FRO:
+    name: Frostburg State Bobcats
+    display: Frostburg St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  FRST:
+    name: Ferris State Bulldogs
+    display: Ferris St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  FSU:
+    name: Florida State Seminoles
+    display: Florida St
+    colors: [[153, 45, 70], [206, 180, 125]]
+
+  FTHAYST:
+    name: Fort Hays State Tigers
+    display: Ft Hays St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  FUR:
+    name: Furman Paladins
+    display: Furman
+    colors: [[95, 36, 153], [255, 255, 255]]
+
+  FVSU:
+    name: Fort Valley State Wildcats
+    display: Fort Valley
+    colors: [[249, 186, 0], [35, 43, 153]]
+
+  GAL:
+    name: Gallaudet Bison
+    display: Gallaudet
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  GAN:
+    name: Gannon Golden Knights
+    display: Gannon
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  GASO:
+    name: Georgia Southern Eagles
+    display: GA Southern
+    colors: [[0, 69, 165], [163, 170, 174]]
+
+  GAST:
+    name: Georgia State Panthers
+    display: Georgia St
+    colors: [[0, 56, 166], [255, 255, 255]]
+
+  GENEVA:
+    name: Geneva Golden Tornadoes
+    display: Geneva
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  GETTY:
+    name: Gettysburg Bullets
+    display: Gettysburg
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  GFU:
+    name: NEWBERG Bruins
+    display: George Fox
+    colors: [[0, 70, 153], [194, 162, 0]]
+
+  GLENVILLE:
+    name: Glenville State Pioneers
+    display: Glenville
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  GMU:
+    name: George Mason University Patriots
+    display: George Mason
+    colors: [[1, 153, 0], [236, 171, 0]]
+
+  GRANDVIEW:
+    name: Des Moines Vikings
+    display: Grand View
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  GRC:
+    name: Graceland University Graceland
+    display: Graceland
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  GRI:
+    name: Grinnell Pioneers
+    display: Grinnell
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  GRNSBORO:
+    name: Greensboro College Pride
+    display: Greensboro
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  GRNVIL:
+    name: Greenville Panthers
+    display: Greenville
+    colors: [[243, 90, 0], [255, 158, 102]]
+
+  GRO:
+    name: Grove City College Wolverines
+    display: Grove City
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  GT:
+    name: Georgia Tech Yellow Jackets
+    display: Georgia Tech
+    colors: [[179, 160, 93], [255, 255, 255]]
+
+  GTOWNCOLL:
+    name: Georgetown College Kentucky Tigers
+    display: G'Town Col
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  GTWN:
+    name: Georgetown Hoyas
+    display: Georgetown
+    colors: [[9, 0, 165], [0, 70, 220]]
+
+  GUI:
+    name: Guilford College Quakers
+    display: Guilford
+    colors: [[153, 0, 42], [220, 221, 222]]
+
+  GVSU:
+    name: Grand Valley State University Lakers
+    display: Grand Vall
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  GWEB:
+    name: Gardner-Webb Runnin' Bulldogs
+    display: Gardner-Webb
+    colors: [[193, 13, 31], [144, 144, 144]]
+
+  HAM:
+    name: Hamilton Continentals
+    display: Hamilton
+    colors: [[0, 48, 153], [213, 180, 127]]
+
+  HAM:
+    name: Hamline University Pipers
+    display: Hamline
+    colors: [[153, 0, 45], [255, 255, 255]]
+
+  HAM:
+    name: Hampden-Sydney Tigers
+    display: Hamp Sdney
+    colors: [[153, 0, 42], [168, 177, 183]]
+
+  HAMP:
+    name: Hampton Pirates
+    display: Hampton
+    colors: [[0, 102, 172], [140, 140, 140]]
+
+  HAN:
+    name: Hanover College Panthers
+    display: Hanover
+    colors: [[0, 95, 153], [153, 0, 0]]
+
+  HAR:
+    name: Hartwick Hawks
+    display: Hartwick
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  HARDING:
+    name: Harding University Bisons
+    display: Harding
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  HARV:
+    name: Harvard Crimson
+    display: Harvard
+    colors: [[153, 0, 0], [219, 219, 219]]
+
+  HASKELL:
+    name: Haskell Indian Nations Univ Jayhawks
+    display: Haskell
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  HAW:
+    name: Hawai'i Rainbow Warriors
+    display: Hawai'i
+    colors: [[0, 217, 137], [102, 255, 198]]
+
+  HBRT:
+    name: Hobart College Statesmen
+    display: Hobart
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  HC:
+    name: Holy Cross Crusaders
+    display: Holy Cross
+    colors: [[95, 36, 153], [255, 255, 255]]
+
+  HCU:
+    name: Houston Christian Huskies
+    display: Hou Christian
+    colors: [[0, 82, 156], [140, 140, 140]]
+
+  HEI:
+    name: Heidelberg Student Princes
+    display: Heidelberg
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  HEN:
+    name: Hendrix College Warriors
+    display: Hendrix
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  HENDERSON:
+    name: Henderson State Reddies
+    display: Henderson
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  HILLSDALE:
+    name: Hillsdale Chargers
+    display: Hillsdale
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  HIR:
+    name: Hiram College Terriers
+    display: Hiram
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  HOU:
+    name: Houston Cougars
+    display: Houston
+    colors: [[200, 0, 32], [255, 255, 255]]
+
+  HOW:
+    name: Howard Bison
+    display: Howard
+    colors: [[0, 89, 153], [229, 0, 33]]
+
+  HUSSON:
+    name: Husson Eagles
+    display: Husson
+    colors: [[0, 187, 170], [176, 150, 82]]
+
+  IDHO:
+    name: Idaho Vandals
+    display: Idaho
+    colors: [[0, 0, 0], [153, 115, 70]]
+
+  IDST:
+    name: Idaho State Bengals
+    display: Idaho St
+    colors: [[239, 139, 0], [233, 150, 8]]
+
+  ILL:
+    name: Illinois Fighting Illini
+    display: Illinois
+    colors: [[255, 91, 0], [0, 73, 187]]
+
+  ILLCOLL:
+    name: Illinois College Blueboys
+    display: Ill Col
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ILLWES:
+    name: Illinois Wesleyan Titans
+    display: IL Weslyan
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ILST:
+    name: Illinois State Redbirds
+    display: Illinois St
+    colors: [[206, 0, 22], [255, 228, 0]]
+
+  IND:
+    name: Indianapolis Greyhounds
+    display: Indianapolis
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  INDIANAPA:
+    name: Indiana-Pennsylvania Crimson Hawks
+    display: Indiana PA
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  INST:
+    name: Indiana State Sycamores
+    display: Indiana St
+    colors: [[0, 101, 154], [240, 240, 240]]
+
+  IOWA:
+    name: Iowa Hawkeyes
+    display: Iowa
+    colors: [[140, 124, 128], [252, 204, 0]]
+
+  ISU:
+    name: Iowa State Cyclones
+    display: Iowa State
+    colors: [[174, 2, 25], [255, 190, 10]]
+
+  ITH:
+    name: Ithaca College Bombers
+    display: Ithaca
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  IU:
+    name: Indiana Hoosiers
+    display: Indiana
+    colors: [[153, 0, 13], [255, 255, 255]]
+
+  JCU:
+    name: John Carroll University Blue Streaks
+    display: John Carroll
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  JHU:
+    name: Johns Hopkins University Blue Jays
+    display: Johns Hopkins
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  JKST:
+    name: Jackson State Tigers
+    display: Jackson St
+    colors: [[0, 36, 153], [181, 183, 186]]
+
+  JMU:
+    name: James Madison Dukes
+    display: James Madison
+    colors: [[79, 0, 153], [203, 178, 106]]
+
+  JOH:
+    name: Johnson C Smith Golden Bulls
+    display: Jsn C Smth
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  JUN:
+    name: Juniata College Eagles
+    display: Juniata
+    colors: [[0, 74, 165], [172, 153, 91]]
+
+  JXST:
+    name: Jacksonville State Gamecocks
+    display: Jax State
+    colors: [[204, 0, 0], [244, 97, 97]]
+
+  KAL:
+    name: Kalamazoo Hornets
+    display: Kalamazoo
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  KANSA:
+    name: Kansas Wesleyan Ks Wesleyan
+    display: KS Weslyan
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  KEN:
+    name: Kenyon Owls
+    display: Kenyon
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  KENN:
+    name: Kennesaw State Owls
+    display: Kennesaw St
+    colors: [[253, 177, 17], [69, 136, 153]]
+
+  KENT:
+    name: Kent State Golden Flashes
+    display: Kent State
+    colors: [[0, 58, 153], [234, 171, 0]]
+
+  KIN:
+    name: King's College (PA) Monarchs
+    display: King's PA
+    colors: [[196, 0, 33], [235, 94, 117]]
+
+  KNO:
+    name: Knox College Prairie Fire
+    display: Knox
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  KSU:
+    name: Kansas State Wildcats
+    display: Kansas St
+    colors: [[115, 0, 217], [226, 227, 228]]
+
+  KU:
+    name: Kansas Jayhawks
+    display: Kansas
+    colors: [[0, 81, 186], [232, 0, 13]]
+
+  KUTZTOWN:
+    name: Kutztown University Golden Bears
+    display: Kutztown
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  KYST:
+    name: Kentucky State Thorobreds
+    display: Kentucky St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  KYWESL:
+    name: Kentucky Wesleyan Panthers
+    display: KY Wesleyn
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  LA:
+    name: La Verne Leopards
+    display: Laverne
+    colors: [[0, 179, 44], [248, 137, 8]]
+
+  LAC:
+    name: Lane College Dragons
+    display: Lane
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  LACOLLEGE:
+    name: Louisiana College Wildcats
+    display: LA College
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  LAF:
+    name: Lafayette Leopards
+    display: Lafayette
+    colors: [[153, 0, 0], [165, 145, 108]]
+
+  LAG:
+    name: Lagrange College Panthers
+    display: LaGrange
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  LAK:
+    name: Lake Forest College Foresters
+    display: Lake Forst
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  LAKEERIE:
+    name: Lake Erie Storm
+    display: Lake Erie
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  LAM:
+    name: Lamar Cardinals
+    display: Lamar
+    colors: [[0, 0, 0], [235, 235, 235]]
+
+  LANGSTON:
+    name: Langston University Lions
+    display: Langston
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  LAW:
+    name: Lawrence University Vikings
+    display: Lawrence
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  LEB:
+    name: Lebanon Valley Flying Dutchmen
+    display: Lebanon
+    colors: [[0, 81, 153], [255, 255, 255]]
+
+  LEH:
+    name: Lehigh Mountain Hawks
+    display: Lehigh
+    colors: [[153, 47, 45], [182, 154, 101]]
+
+  LEN:
+    name: Lenoir-Rhyne Bears
+    display: Len-Rhyne
+    colors: [[0, 0, 0], [255, 255, 255]]
+
+  LEW:
+    name: Lewis & Clark College Pioneers
+    display: Lws & Clrk
+    colors: [[243, 100, 26], [255, 164, 118]]
+
+  LHU:
+    name: Lock Haven University Bald Eagles
+    display: Lock Haven
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  LIB:
+    name: Liberty Flames
+    display: Liberty
+    colors: [[0, 77, 195], [183, 9, 15]]
+
+  LIN:
+    name: Linfield College Wildcats
+    display: Linfield
+    colors: [[93, 38, 153], [212, 2, 49]]
+
+  LINP:
+    name: Lincoln (PA) Lions
+    display: Lincoln (PA)
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  LIU:
+    name: Long Island University Sharks
+    display: Long Island
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  LOR:
+    name: Loras College Duhawks
+    display: Loras
+    colors: [[74, 40, 153], [210, 180, 124]]
+
+  LOU:
+    name: Louisville Cardinals
+    display: Louisville
+    colors: [[201, 0, 31], [255, 255, 255]]
+
+  LSU:
+    name: LSU Tigers
+    display: LSU
+    colors: [[81, 20, 153], [253, 201, 2]]
+
+  LT:
+    name: Louisiana Tech Bulldogs
+    display: Louisiana Tech
+    colors: [[0, 54, 153], [203, 28, 37]]
+
+  LUT:
+    name: Luther Norse
+    display: Luther
+    colors: [[0, 89, 156], [157, 182, 218]]
+
+  LYCOMING:
+    name: Lycoming Warriors
+    display: Lycoming
+    colors: [[0, 74, 165], [234, 151, 17]]
+
+  M-OH:
+    name: Miami (OH) RedHawks
+    display: Miami OH
+    colors: [[196, 0, 33], [255, 255, 255]]
+
+  MAC:
+    name: Macalester Scots
+    display: Macalester
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MAI:
+    name: Maine Maritime Mariners
+    display: ME Mrtme
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MAMARI:
+    name: Mass Maritime Buccaneers
+    display: MA Maritme
+    colors: [[36, 56, 153], [254, 206, 2]]
+
+  MANSFIELD:
+    name: Mansfield University Mountaineers
+    display: Mansfield
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MAR:
+    name: Marietta Pioneers
+    display: Marietta
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MAR:
+    name: Martin Luther Knights
+    display: Mart Lther
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MAR:
+    name: Maryville College (TN) Scots
+    display: Maryville
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MARIANIN:
+    name: Marian College Marian
+    display: Marian
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MARY:
+    name: University of Mary Marauders
+    display: Univ of Mary
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MAS:
+    name: UMass Dartmouth Corsairs
+    display: UMass Dart
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MASS:
+    name: Massachusetts Minutemen
+    display: UMass
+    colors: [[153, 13, 13], [255, 255, 255]]
+
+  MAYVILLE:
+    name: Mayville State Comets
+    display: Mayvlle St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MCM:
+    name: McMurry War Hawks
+    display: McMurry
+    colors: [[153, 0, 46], [183, 73, 106]]
+
+  MCN:
+    name: McNeese Cowboys
+    display: McNeese
+    colors: [[0, 81, 156], [140, 140, 140]]
+
+  MD:
+    name: Maryland Terrapins
+    display: Maryland
+    colors: [[206, 0, 22], [255, 255, 255]]
+
+  ME:
+    name: Maine Black Bears
+    display: Maine
+    colors: [[0, 118, 190], [140, 140, 140]]
+
+  MEM:
+    name: Memphis Tigers
+    display: Memphis
+    colors: [[0, 77, 153], [142, 144, 143]]
+
+  MER:
+    name: Mercer Bears
+    display: Mercer
+    colors: [[255, 107, 8], [255, 166, 106]]
+
+  MER:
+    name: Merchant Marine Academy Mariners
+    display: Mrchnt Mar
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MERC:
+    name: Mercyhurst Lakers
+    display: Mercyhurst
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MESA:
+    name: Colorado Mesa Mavericks
+    display: Colo Mesa
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MH:
+    name: Mars Hill Lions
+    display: Mars Hill
+    colors: [[0, 81, 153], [239, 196, 0]]
+
+  MHLBRG:
+    name: Muhlenberg Mules
+    display: Muhlenberg
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MIA:
+    name: Miami Hurricanes
+    display: Miami
+    colors: [[244, 96, 3], [0, 202, 119]]
+
+  MICH:
+    name: Michigan Wolverines
+    display: Michigan
+    colors: [[0, 97, 190], [255, 201, 0]]
+
+  MID:
+    name: Midwestern State Mustangs
+    display: Midwest St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MIDLAND:
+    name: Midland Lutheran College Midland Lutheran
+    display: Mid Luthrn
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MIDLBRY:
+    name: Middlebury Panthers
+    display: Middlebury
+    colors: [[45, 91, 153], [255, 255, 255]]
+
+  MIL:
+    name: Miles College Golden Bears
+    display: Miles
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MIL:
+    name: Millersville Marauders
+    display: Millersvll
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MIL:
+    name: Millikin Big Blue
+    display: Millikin
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MIL:
+    name: Millsaps Majors
+    display: Millsaps
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MIN:
+    name: Minot State Beavers
+    display: Minot St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MINN:
+    name: Minnesota Golden Gophers
+    display: Minnesota
+    colors: [[153, 0, 67], [250, 171, 0]]
+
+  MIS:
+    name: Missouri S&T Miners
+    display: MO S&T
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MISS:
+    name: Ole Miss Rebels
+    display: Ole Miss
+    colors: [[0, 73, 187], [207, 0, 25]]
+
+  MIT:
+    name: MIT Engineers
+    display: MIT
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MIZ:
+    name: Missouri Tigers
+    display: Missouri
+    colors: [[241, 175, 15], [255, 213, 111]]
+
+  MNCHSTR:
+    name: Manchester Spartans
+    display: Manchester
+    colors: [[221, 167, 0], [255, 217, 102]]
+
+  MNMOR:
+    name: Minnesota Morris Cougars
+    display: MN Morris
+    colors: [[153, 8, 10], [225, 145, 8]]
+
+  MNST:
+    name: Minnesota State Mavericks
+    display: Minnesota St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MONM:
+    name: Monmouth Hawks
+    display: Monmouth
+    colors: [[0, 51, 170], [140, 140, 140]]
+
+  MONT:
+    name: Montana Grizzlies
+    display: Montana
+    colors: [[153, 20, 88], [140, 140, 140]]
+
+  MOR:
+    name: Moravian Greyhounds
+    display: Moravian
+    colors: [[33, 69, 153], [165, 166, 169]]
+
+  MOR:
+    name: Morehouse College Maroon Tigers
+    display: Morehouse
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MORE:
+    name: Morehead State Eagles
+    display: Morehead St
+    colors: [[0, 74, 163], [254, 212, 0]]
+
+  MORG:
+    name: Morgan State Bears
+    display: Morgan St
+    colors: [[0, 80, 153], [244, 102, 26]]
+
+  MOSSTC:
+    name: Missouri Southern State Lions
+    display: MO Southrn
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MOW:
+    name: Missouri Western Griffons
+    display: MO Westrn
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MRSH:
+    name: Marshall Thundering Herd
+    display: Marshall
+    colors: [[0, 177, 64], [84, 212, 131]]
+
+  MRST:
+    name: Marist Red Foxes
+    display: Marist
+    colors: [[229, 28, 20], [240, 240, 240]]
+
+  MRYHRBAY:
+    name: Mary Hardin-Baylor Crusaders
+    display: Mry Hr-Bay
+    colors: [[65, 33, 153], [254, 200, 0]]
+
+  MSIDE:
+    name: Morningside College Chiefs
+    display: Morningsde
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MSST:
+    name: Mississippi State Bulldogs
+    display: Mississippi St
+    colors: [[153, 20, 47], [193, 198, 200]]
+
+  MSU:
+    name: Michigan State Spartans
+    display: Michigan St
+    colors: [[0, 165, 124], [255, 255, 255]]
+
+  MTH:
+    name: Methodist Monarchs
+    display: Methodist
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MTS:
+    name: Mount St. Joseph Lions
+    display: Mt St Joe
+    colors: [[0, 74, 153], [245, 200, 34]]
+
+  MTST:
+    name: Montana State Bobcats
+    display: Montana St
+    colors: [[0, 53, 153], [188, 143, 77]]
+
+  MTSU:
+    name: Middle Tennessee Blue Raiders
+    display: MTSU
+    colors: [[0, 108, 183], [255, 255, 255]]
+
+  MTU:
+    name: Michigan Tech Huskies
+    display: Michigan Tech
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MTU:
+    name: University of Mount Union Raiders
+    display: Mt Union
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MUR:
+    name: Murray State Racers
+    display: Murray St
+    colors: [[0, 82, 179], [0, 165, 0]]
+
+  MUS:
+    name: Muskingum University Fighting Muskies
+    display: Muskingum
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  MVSU:
+    name: Mississippi Valley State Delta Devils
+    display: Miss Valley St
+    colors: [[0, 207, 99], [207, 20, 28]]
+
+  NAU:
+    name: Northern Arizona Lumberjacks
+    display: N Arizona
+    colors: [[0, 73, 153], [22, 57, 153]]
+
+  NAVY:
+    name: Navy Midshipmen
+    display: Navy
+    colors: [[0, 57, 153], [181, 163, 115]]
+
+  NBY:
+    name: Newberry Wolves
+    display: Newberry
+    colors: [[208, 5, 24], [138, 140, 143]]
+
+  NCAT:
+    name: North Carolina A&T Aggies
+    display: NC A&T
+    colors: [[0, 0, 170], [0, 81, 153]]
+
+  NCCU:
+    name: North Carolina Central Eagles
+    display: NC Central
+    colors: [[153, 0, 39], [194, 195, 192]]
+
+  NCSU:
+    name: NC State Wolfpack
+    display: NC State
+    colors: [[204, 0, 0], [255, 255, 255]]
+
+  ND:
+    name: Notre Dame Fighting Irish
+    display: Notre Dame
+    colors: [[0, 82, 165], [201, 151, 0]]
+
+  NDSU:
+    name: North Dakota State Bison
+    display: N Dakota St
+    colors: [[0, 165, 107], [255, 255, 255]]
+
+  NEB:
+    name: Nebraska Cornhuskers
+    display: Nebraska
+    colors: [[227, 0, 33], [255, 255, 255]]
+
+  NEKR:
+    name: Nebraska-Kearney Lopers
+    display: Neb Kearney
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  NEV:
+    name: Nevada Wolf Pack
+    display: Nevada
+    colors: [[0, 69, 165], [138, 141, 143]]
+
+  NHVN:
+    name: New Haven Chargers
+    display: New Haven
+    colors: [[0, 69, 165], [255, 187, 4]]
+
+  NICH:
+    name: Nicholls Colonels
+    display: Nicholls
+    colors: [[196, 0, 33], [240, 240, 240]]
+
+  NIU:
+    name: Northern Illinois Huskies
+    display: N Illinois
+    colors: [[200, 0, 32], [240, 96, 119]]
+
+  NMH:
+    name: New Mexico Highlands Cowboys
+    display: NM Highlnd
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  NMI:
+    name: Northern Michigan Wildcats
+    display: N Michigan
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  NMSU:
+    name: New Mexico State Aggies
+    display: New Mexico St
+    colors: [[153, 4, 14], [140, 124, 128]]
+
+  NOR:
+    name: North Park Vikings
+    display: North Park
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  NOR:
+    name: Northeastern State RiverHawks
+    display: NE ST
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  NOR:
+    name: Northern State Wolves
+    display: Northrn St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  NOR:
+    name: Norwich Cadets
+    display: Norwich
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  NORF:
+    name: Norfolk State Spartans
+    display: Norfolk St
+    colors: [[0, 153, 112], [253, 178, 0]]
+
+  NORTH:
+    name: North Carolina Wesleyan Battling Bishops
+    display: NC Wesleyn
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  NU:
+    name: Northwestern Wildcats
+    display: Northwestern
+    colors: [[65, 33, 153], [255, 255, 255]]
+
+  NWMN:
+    name: Northwestern (MN) Eagles
+    display: NW Coll MN
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  NWMS:
+    name: Northwest Missouri St Bearcats
+    display: NW MO ST
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  NWST:
+    name: Northwestern State Demons
+    display: N'Western St
+    colors: [[65, 34, 153], [237, 81, 0]]
+
+  OB:
+    name: Oklahoma Baptist Bison
+    display: Okbaptu
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  OBERLIN:
+    name: Oberlin Yeomen
+    display: Oberlin
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ODU:
+    name: Old Dominion Monarchs
+    display: Old Dominion
+    colors: [[0, 80, 153], [149, 205, 241]]
+
+  OHIO:
+    name: Ohio Bobcats
+    display: Ohio
+    colors: [[0, 177, 110], [255, 255, 255]]
+
+  OHNRTH:
+    name: Ohio Northern Polar Bears
+    display: Ohio Nor
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  OKST:
+    name: Oklahoma State Cowboys
+    display: Oklahoma St
+    colors: [[254, 92, 0], [255, 157, 102]]
+
+  OLAF:
+    name: St. Olaf Oles
+    display: St. Olaf
+    colors: [[0, 0, 0], [209, 129, 15]]
+
+  ORE:
+    name: Oregon Ducks
+    display: Oregon
+    colors: [[0, 153, 78], [255, 242, 0]]
+
+  ORST:
+    name: Oregon State Beavers
+    display: Oregon St
+    colors: [[220, 64, 0], [255, 146, 102]]
+
+  OSU:
+    name: Ohio State Buckeyes
+    display: Ohio State
+    colors: [[186, 0, 37], [168, 173, 180]]
+
+  OTT:
+    name: Otterbein Cardinals
+    display: Otterbein
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  OU:
+    name: Oklahoma Sooners
+    display: Oklahoma
+    colors: [[153, 0, 0], [255, 255, 255]]
+
+  PAC:
+    name: Pace Setters
+    display: Pace
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  PAC:
+    name: Pacific (OR) Boxers
+    display: Pacificor
+    colors: [[180, 0, 39], [255, 255, 255]]
+
+  PACLTH:
+    name: Pacific Lutheran Lutes
+    display: Pacluthern
+    colors: [[255, 187, 1], [255, 214, 102]]
+
+  PENN:
+    name: Pennsylvania Quakers
+    display: Penn
+    colors: [[0, 48, 153], [166, 0, 45]]
+
+  PIKEV:
+    name: Pikeville Bears
+    display: Pikeville
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  PITT:
+    name: Pittsburgh Panthers
+    display: Pitt
+    colors: [[0, 54, 153], [255, 175, 0]]
+
+  PRES:
+    name: Presbyterian Blue Hose
+    display: Presbyterian
+    colors: [[6, 61, 153], [153, 0, 51]]
+
+  PRIN:
+    name: Princeton Tigers
+    display: Princeton
+    colors: [[0, 0, 0], [255, 96, 0]]
+
+  PRST:
+    name: Portland State Vikings
+    display: Portland St
+    colors: [[0, 165, 101], [235, 235, 235]]
+
+  PST:
+    name: Pittsburg St Gorillas
+    display: Pittsburg St
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  PSU:
+    name: Penn State Nittany Lions
+    display: Penn State
+    colors: [[0, 40, 165], [255, 255, 255]]
+
+  PV:
+    name: Prairie View A&M Panthers
+    display: Prairie View
+    colors: [[95, 36, 153], [234, 170, 0]]
+
+  RED:
+    name: Redlands Bulldogs
+    display: Redlands
+    colors: [[153, 21, 0], [255, 255, 255]]
+
+  RICE:
+    name: Rice Owls
+    display: Rice
+    colors: [[0, 53, 153], [193, 198, 200]]
+
+  RICH:
+    name: Richmond Spiders
+    display: Richmond
+    colors: [[158, 0, 11], [185, 0, 37]]
+
+  ROC:
+    name: University of Rochester (NY) Yellow Jackets
+    display: Rochester
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ROOSE:
+    name: Robert Morris University-Illinois Lakers
+    display: Rob Mor IL
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ROSEHUL:
+    name: Rose-Hulman Fightin' Engineers
+    display: Rosehulman
+    colors: [[153, 0, 0], [179, 178, 177]]
+
+  RUTG:
+    name: Rutgers Scarlet Knights
+    display: Rutgers
+    colors: [[206, 0, 33], [255, 255, 255]]
+
+  SAC:
+    name: Sacramento State Hornets
+    display: Sacramento St
+    colors: [[0, 217, 150], [205, 181, 113]]
+
+  SAGI:
+    name: Saginaw Valley State Cardinals
+    display: Saginawval
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  SCKS:
+    name: Southwestern College Moundbuilders
+    display: SW Coll
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  SDAK:
+    name: South Dakota Coyotes
+    display: South Dakota
+    colors: [[205, 0, 51], [240, 240, 240]]
+
+  SDMT:
+    name: South Dakota Mines Hardrockers
+    display: SD Mines
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  SDSU:
+    name: San Diego State Aztecs
+    display: San Diego St
+    colors: [[166, 3, 27], [199, 81, 99]]
+
+  SEOS:
+    name: Southeastern Oklahoma State Savage Storm
+    display: SE OK ST
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  SETONHILL:
+    name: Seton Hill Griffins
+    display: Seton Hill
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  SEU:
+    name: LAKELAND Fires
+    display: Southeastern
+    colors: [[0, 125, 195], [255, 187, 1]]
+
+  SIU:
+    name: Southern Illinois Salukis
+    display: S Illinois
+    colors: [[153, 29, 57], [194, 195, 192]]
+
+  SJFISH:
+    name: St John Fisher University Cardinals
+    display: St John Fisher
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  SJSU:
+    name: San José State Spartans
+    display: San José St
+    colors: [[0, 55, 168], [255, 175, 0]]
+
+  SPR:
+    name: Springfield Pride
+    display: Springfield
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  SRU:
+    name: Slippery Rock The Rock
+    display: Sliprock
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  ST:
+    name: St. Scholastica Saints
+    display: Scholastic
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  STAN:
+    name: Stanford Cardinal
+    display: Stanford
+    colors: [[153, 3, 3], [255, 255, 255]]
+
+  STCKS:
+    name: Sterling College Sterling Ks
+    display: Sterling
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  STET:
+    name: Stetson Hatters
+    display: Stetson
+    colors: [[0, 215, 152], [90, 153, 80]]
+
+  STN:
+    name: Southern Nazarene Crimson Storm
+    display: S Nazarene
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  STO:
+    name: Stonehill Skyhawks
+    display: Stonehill
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  STU:
+    name: Stevenson Mustangs
+    display: Stevenson
+    colors: [[0, 217, 177], [102, 255, 226]]
+
+  SUS:
+    name: Susquehanna River Hawks
+    display: Susquehanna
+    colors: [[153, 19, 57], [253, 99, 0]]
+
+  SUU:
+    name: Southern Utah Thunderbirds
+    display: Southern Utah
+    colors: [[199, 6, 13], [238, 99, 104]]
+
+  SYR:
+    name: Syracuse Orange
+    display: Syracuse
+    colors: [[0, 35, 210], [255, 44, 0]]
+
+  TA&M:
+    name: Texas A&M Aggies
+    display: Texas A&M
+    colors: [[200, 0, 0], [255, 255, 255]]
+
+  TAYLOR:
+    name: Taylor Trojans
+    display: Taylor
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  TEM:
+    name: Temple Owls
+    display: Temple
+    colors: [[164, 9, 36], [255, 255, 255]]
+
+  TEX:
+    name: Texas Longhorns
+    display: Texas
+    colors: [[175, 79, 37], [255, 255, 255]]
+
+  TLSA:
+    name: Tulsa Golden Hurricane
+    display: Tulsa
+    colors: [[0, 54, 153], [208, 179, 124]]
+
+  TOW:
+    name: Towson Tigers
+    display: Towson
+    colors: [[255, 184, 8], [140, 140, 140]]
+
+  TRTX:
+    name: Trinity University TX Tigers
+    display: Trinity TX
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  TUF:
+    name: Tufts Jumbos
+    display: Tufts
+    colors: [[38, 130, 222], [198, 190, 182]]
+
+  TXST:
+    name: Texas State Bobcats
+    display: Texas St
+    colors: [[200, 0, 6], [153, 119, 70]]
+
+  UAB:
+    name: UAB Blazers
+    display: UAB
+    colors: [[0, 215, 85], [253, 179, 0]]
+
+  UALB:
+    name: UAlbany Great Danes
+    display: UAlbany
+    colors: [[67, 34, 153], [255, 255, 255]]
+
+  UAPB:
+    name: Arkansas-Pine Bluff Golden Lions
+    display: AR-Pine Bluff
+    colors: [[224, 166, 0], [234, 170, 0]]
+
+  UCD:
+    name: UC Davis Aggies
+    display: UC Davis
+    colors: [[0, 100, 212], [195, 196, 198]]
+
+  UCF:
+    name: UCF Knights
+    display: UCF
+    colors: [[0, 0, 0], [180, 158, 93]]
+
+  UCLA:
+    name: UCLA Bruins
+    display: UCLA
+    colors: [[18, 107, 174], [242, 169, 0]]
+
+  UGA:
+    name: Georgia Bulldogs
+    display: Georgia
+    colors: [[186, 0, 37], [140, 133, 130]]
+
+  UK:
+    name: Kentucky Wildcats
+    display: Kentucky
+    colors: [[0, 50, 160], [255, 255, 255]]
+
+  UL:
+    name: Louisiana Ragin' Cajuns
+    display: Louisiana
+    colors: [[206, 0, 6], [247, 98, 103]]
+
+  ULM:
+    name: UL Monroe Warhawks
+    display: UL Monroe
+    colors: [[153, 0, 47], [253, 179, 0]]
+
+  UMD:
+    name: Minnesota Duluth Bulldogs
+    display: Minn Duluth
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  UNA:
+    name: North Alabama Lions
+    display: North Alabama
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  UNC:
+    name: North Carolina Tar Heels
+    display: North Carolina
+    colors: [[109, 169, 212], [0, 73, 187]]
+
+  UNCO:
+    name: Northern Colorado Bears
+    display: N Colorado
+    colors: [[0, 83, 153], [255, 188, 20]]
+
+  UND:
+    name: North Dakota Fighting Hawks
+    display: North Dakota
+    colors: [[0, 162, 106], [194, 195, 192]]
+
+  UNH:
+    name: New Hampshire Wildcats
+    display: New Hampshire
+    colors: [[0, 77, 153], [195, 196, 198]]
+
+  UNI:
+    name: Northern Iowa Panthers
+    display: Northern Iowa
+    colors: [[73, 44, 153], [255, 255, 255]]
+
+  UNLV:
+    name: UNLV Rebels
+    display: UNLV
+    colors: [[207, 0, 35], [202, 200, 200]]
+
+  UNM:
+    name: New Mexico Lobos
+    display: New Mexico
+    colors: [[186, 0, 37], [167, 168, 170]]
+
+  UNNY:
+    name: Union Garnet Chargers
+    display: Union
+    colors: [[153, 29, 54], [183, 94, 112]]
+
+  UNT:
+    name: North Texas Mean Green
+    display: North Texas
+    colors: [[0, 153, 50], [255, 255, 255]]
+
+  UOO:
+    name: Olivet Comets
+    display: Olivet
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  UPP:
+    name: Upper Iowa University Peacocks
+    display: Upper Iowa
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  URI:
+    name: Rhode Island Rams
+    display: Rhode Island
+    colors: [[0, 67, 165], [68, 171, 232]]
+
+  USA:
+    name: South Alabama Jaguars
+    display: South Alabama
+    colors: [[0, 53, 153], [191, 0, 52]]
+
+  USC:
+    name: USC Trojans
+    display: USC
+    colors: [[157, 15, 37], [255, 190, 12]]
+
+  USD:
+    name: San Diego Toreros
+    display: San Diego
+    colors: [[22, 144, 212], [22, 144, 212]]
+
+  USF:
+    name: South Florida Bulls
+    display: South Florida
+    colors: [[0, 153, 105], [207, 194, 138]]
+
+  USU:
+    name: Utah State Aggies
+    display: Utah State
+    colors: [[0, 82, 165], [255, 255, 255]]
+
+  UTAH:
+    name: Utah Utes
+    display: Utah
+    colors: [[190, 0, 0], [255, 255, 255]]
+
+  UTC:
+    name: Chattanooga Mocs
+    display: Chattanooga
+    colors: [[0, 80, 153], [220, 159, 0]]
+
+  UTICA:
+    name: Utica Pioneers
+    display: Utica
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  UVA:
+    name: Virginia Cavaliers
+    display: Virginia
+    colors: [[248, 52, 0], [0, 46, 187]]
+
+  VALCST:
+    name: Valley City State Valley City St
+    display: Vall City
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  VAN:
+    name: Vanderbilt Commodores
+    display: Vanderbilt
+    colors: [[0, 0, 0], [207, 169, 97]]
+
+  VILL:
+    name: Villanova Wildcats
+    display: Villanova
+    colors: [[0, 53, 153], [0, 176, 234]]
+
+  VIR:
+    name: Virginia St Trojans
+    display: VA State
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  VIRLYN:
+    name: Virginia University Of Lynchburg Dragons
+    display: Lynchburg
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  VT:
+    name: Virginia Tech Hokies
+    display: Virginia Tech
+    colors: [[153, 50, 79], [207, 48, 5]]
+
+  WAB:
+    name: Wabash College Little Giants
+    display: Wabash
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  WAKE:
+    name: Wake Forest Demon Deacons
+    display: Wake Forest
+    colors: [[206, 180, 125], [140, 133, 130]]
+
+  WASH:
+    name: Washington Huskies
+    display: Washington
+    colors: [[70, 0, 153], [232, 207, 151]]
+
+  WAY:
+    name: Wayne State (MI) Warriors
+    display: Wayne State MI
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  WAYLAND:
+    name: Wayland Baptist Pioneers
+    display: Wayland
+    colors: [[140, 140, 140], [140, 140, 140]]
+
+  WES:
+    name: Wesleyan University (CT) Cardinals
+    display: Wesleyan
+    colors: [[215, 5, 5], [255, 105, 105]]
+
+  WES:
+    name: West Chester Golden Rams
+    display: W Chester
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  WEST:
+    name: West Virginia Wesleyan Bobcats
+    display: WV Weslyan
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  WHEATON:
+    name: Wheaton Thunder
+    display: Wheaton
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  WILKES:
+    name: Wilkes Colonels
+    display: Wilkes
+    colors: [[0, 100, 215], [255, 205, 0]]
+
+  WIN:
+    name: Wingate Bulldogs
+    display: Wingate
+    colors: [[0, 48, 165], [193, 179, 124]]
+
+  WIPL:
+    name: Wisconsin-Platteville Pioneers
+    display: UW Platteville
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  WIS:
+    name: Wisconsin Badgers
+    display: Wisconsin
+    colors: [[160, 0, 0], [255, 255, 255]]
+
+  WISO:
+    name: Wisconsin-Oshkosh Titans
+    display: Wis Osh
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  WKU:
+    name: Western Kentucky Hilltoppers
+    display: Western KY
+    colors: [[225, 32, 37], [255, 255, 255]]
+
+  WMN:
+    name: Westminster College (MO) Blue Jays
+    display: Wmnstermo
+    colors: [[0, 97, 153], [255, 255, 255]]
+
+  WORST:
+    name: Worcester St Lancers
+    display: Wor State
+    colors: [[0, 80, 153], [255, 189, 8]]
+
+  WSTL:
+    name: Washington University (St. Louis) Bears
+    display: Wash St Louis
+    colors: [[0, 0, 0], [140, 140, 140]]
+
+  WSU:
+    name: Washington State Cougars
+    display: Washington St
+    colors: [[166, 0, 32], [140, 140, 140]]
+
+  WVU:
+    name: West Virginia Mountaineers
+    display: West Virginia
+    colors: [[234, 170, 0], [0, 100, 212]]
+
+  YALE:
+    name: Yale Bulldogs
+    display: Yale
+    colors: [[0, 87, 153], [17, 96, 192]]

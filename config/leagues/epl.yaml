@@ -1,0 +1,108 @@
+# English Premier League Team Colors for Game Lights
+# Auto-generated from ESPN API — 20 teams
+# Colors are [R, G, B] — saturated for LED punch
+
+name: English Premier League
+sport: soccer
+espn_league: eng.1
+
+teams:
+  ARS:
+    name: Arsenal
+    display: Arsenal
+    colors: [[226, 0, 27], [0, 47, 217]]
+
+  AVL:
+    name: Aston Villa
+    display: Aston Villa
+    colors: [[153, 1, 70], [255, 255, 255]]
+
+  BHA:
+    name: Brighton & Hove Albion
+    display: Brighton
+    colors: [[0, 0, 250], [255, 221, 0]]
+
+  BOU:
+    name: AFC Bournemouth
+    display: Bournemouth
+    colors: [[244, 8, 8], [255, 255, 255]]
+
+  BRE:
+    name: Brentford
+    display: Brentford
+    colors: [[244, 8, 8], [248, 199, 212]]
+
+  BUR:
+    name: Burnley
+    display: Burnley
+    colors: [[153, 24, 89], [140, 140, 140]]
+
+  CHE:
+    name: Chelsea
+    display: Chelsea
+    colors: [[1, 65, 153], [255, 238, 238]]
+
+  CRY:
+    name: Crystal Palace
+    display: C Palace
+    colors: [[0, 0, 251], [255, 221, 0]]
+
+  EVE:
+    name: Everton
+    display: Everton
+    colors: [[0, 0, 250], [0, 47, 217]]
+
+  FUL:
+    name: Fulham
+    display: Fulham
+    colors: [[255, 255, 255], [209, 0, 4]]
+
+  LEE:
+    name: Leeds United
+    display: Leeds
+    colors: [[255, 255, 255], [255, 255, 0]]
+
+  LIV:
+    name: Liverpool
+    display: Liverpool
+    colors: [[209, 0, 4], [0, 47, 217]]
+
+  MAN:
+    name: Manchester United
+    display: Man United
+    colors: [[218, 0, 12], [1, 65, 153]]
+
+  MNC:
+    name: Manchester City
+    display: Man City
+    colors: [[140, 191, 234], [229, 255, 0]]
+
+  NEW:
+    name: Newcastle United
+    display: Newcastle
+    colors: [[0, 0, 0], [205, 0, 34]]
+
+  NFO:
+    name: Nottingham Forest
+    display: Nottm Forest
+    colors: [[200, 0, 32], [0, 47, 217]]
+
+  SUN:
+    name: Sunderland
+    display: Sunderland
+    colors: [[235, 0, 22], [119, 199, 237]]
+
+  TOT:
+    name: Tottenham Hotspur
+    display: Spurs
+    colors: [[255, 255, 255], [145, 168, 216]]
+
+  WHU:
+    name: West Ham United
+    display: West Ham
+    colors: [[153, 39, 60], [183, 101, 116]]
+
+  WOL:
+    name: Wolverhampton Wanderers
+    display: Wolves
+    colors: [[253, 179, 0], [205, 0, 34]]

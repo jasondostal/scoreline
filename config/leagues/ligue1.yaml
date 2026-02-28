@@ -1,0 +1,98 @@
+# Ligue 1 Team Colors for Game Lights
+# Auto-generated from ESPN API — 18 teams
+# Colors are [R, G, B] — saturated for LED punch
+
+name: Ligue 1
+sport: soccer
+espn_league: fra.1
+
+teams:
+  ANG:
+    name: Angers
+    display: Angers
+    colors: [[140, 140, 140], [255, 255, 255]]
+
+  AUX:
+    name: AJ Auxerre
+    display: Auxerre
+    colors: [[255, 255, 255], [140, 140, 140]]
+
+  BRE:
+    name: Brest
+    display: Brest
+    colors: [[239, 18, 5], [255, 255, 255]]
+
+  HAC:
+    name: Le Havre AC
+    display: Le Havre AC
+    colors: [[0, 44, 153], [237, 237, 237]]
+
+  LILL:
+    name: Lille
+    display: Lille
+    colors: [[194, 0, 22], [226, 211, 215]]
+
+  LOR:
+    name: Lorient
+    display: Lorient
+    colors: [[244, 97, 0], [140, 140, 140]]
+
+  LYON:
+    name: Lyon
+    display: Lyon
+    colors: [[255, 255, 255], [140, 140, 140]]
+
+  METZ:
+    name: Metz
+    display: Metz
+    colors: [[153, 38, 57], [230, 187, 85]]
+
+  MON:
+    name: AS Monaco
+    display: Monaco
+    colors: [[233, 1, 0], [0, 190, 137]]
+
+  NAN:
+    name: Nantes
+    display: Nantes
+    colors: [[255, 255, 0], [0, 44, 153]]
+
+  NICE:
+    name: Nice
+    display: Nice
+    colors: [[239, 18, 5], [226, 211, 215]]
+
+  OLM:
+    name: Marseille
+    display: Marseille
+    colors: [[255, 255, 255], [0, 44, 153]]
+
+  PAR:
+    name: Paris FC
+    display: Paris FC
+    colors: [[0, 0, 0], [0, 0, 0]]
+
+  PSG:
+    name: Paris Saint-Germain
+    display: PSG
+    colors: [[0, 44, 153], [255, 255, 255]]
+
+  RCL:
+    name: Lens
+    display: Lens
+    colors: [[233, 1, 0], [0, 190, 137]]
+
+  REN:
+    name: Stade Rennais
+    display: Rennes
+    colors: [[239, 18, 5], [255, 255, 255]]
+
+  STR:
+    name: Strasbourg
+    display: Strasbourg
+    colors: [[0, 0, 191], [255, 255, 255]]
+
+  TOU:
+    name: Toulouse
+    display: Toulouse
+    colors: [[102, 0, 153], [255, 255, 0]]

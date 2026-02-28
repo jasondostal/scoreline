@@ -1,0 +1,188 @@
+# UEFA Champions League Team Colors for Game Lights
+# Auto-generated from ESPN API — 36 teams
+# Colors are [R, G, B] — saturated for LED punch
+
+name: UEFA Champions League
+sport: soccer
+espn_league: uefa.champions
+
+teams:
+  AJA:
+    name: Ajax Amsterdam
+    display: Ajax
+    colors: [[223, 0, 13], [78, 105, 153]]
+
+  ARS:
+    name: Arsenal
+    display: Arsenal
+    colors: [[226, 0, 27], [0, 47, 217]]
+
+  ATA:
+    name: Atalanta
+    display: Atalanta
+    colors: [[0, 76, 191], [255, 255, 255]]
+
+  ATH:
+    name: Athletic Club
+    display: Athletic
+    colors: [[200, 0, 30], [0, 0, 255]]
+
+  ATM:
+    name: Atlético Madrid
+    display: Atlético
+    colors: [[202, 31, 11], [195, 195, 195]]
+
+  B04:
+    name: Bayer Leverkusen
+    display: Leverkusen
+    colors: [[218, 0, 5], [249, 251, 252]]
+
+  BAR:
+    name: Barcelona
+    display: Barcelona
+    colors: [[0, 82, 159], [140, 140, 140]]
+
+  BODO:
+    name: Bodo/Glimt
+    display: Bodo/Glimt
+    colors: [[252, 235, 20], [255, 255, 255]]
+
+  BRU:
+    name: Club Brugge
+    display: Club Brugge
+    colors: [[0, 129, 255], [255, 255, 255]]
+
+  CHE:
+    name: Chelsea
+    display: Chelsea
+    colors: [[1, 65, 153], [255, 238, 238]]
+
+  DOR:
+    name: Borussia Dortmund
+    display: Dortmund
+    colors: [[255, 238, 0], [140, 140, 136]]
+
+  GAL:
+    name: Galatasaray
+    display: Galatasaray
+    colors: [[170, 0, 49], [255, 255, 255]]
+
+  INT:
+    name: Internazionale
+    display: Inter Milan
+    colors: [[0, 35, 156], [255, 255, 255]]
+
+  JUV:
+    name: Juventus
+    display: Juventus
+    colors: [[0, 0, 0], [255, 236, 19]]
+
+  KAI:
+    name: Kairat Almaty
+    display: Kairat Almaty
+    colors: [[252, 235, 20], [110, 182, 255]]
+
+  KBH:
+    name: F.C. København
+    display: København
+    colors: [[255, 255, 255], [140, 140, 140]]
+
+  LIV:
+    name: Liverpool
+    display: Liverpool
+    colors: [[209, 0, 4], [0, 47, 217]]
+
+  MNC:
+    name: Manchester City
+    display: Man City
+    colors: [[140, 191, 234], [229, 255, 0]]
+
+  MON:
+    name: AS Monaco
+    display: Monaco
+    colors: [[233, 1, 0], [0, 190, 137]]
+
+  MUN:
+    name: Bayern Munich
+    display: Bayern
+    colors: [[220, 0, 40], [140, 140, 140]]
+
+  NAP:
+    name: Napoli
+    display: Napoli
+    colors: [[0, 116, 210], [255, 255, 255]]
+
+  NEW:
+    name: Newcastle United
+    display: Newcastle
+    colors: [[0, 0, 0], [205, 0, 34]]
+
+  OLM:
+    name: Marseille
+    display: Marseille
+    colors: [[255, 255, 255], [0, 44, 153]]
+
+  OLY:
+    name: Olympiacos
+    display: Olympiacos
+    colors: [[208, 0, 20], [0, 0, 251]]
+
+  PAF:
+    name: Pafos
+    display: Pafos
+    colors: [[111, 182, 254], [0, 50, 153]]
+
+  PSG:
+    name: Paris Saint-Germain
+    display: PSG
+    colors: [[0, 44, 153], [255, 255, 255]]
+
+  PSV:
+    name: PSV Eindhoven
+    display: PSV
+    colors: [[239, 18, 5], [255, 113, 105]]
+
+  QAR:
+    name: FK Qarabag
+    display: FK Qarabag
+    colors: [[0, 0, 0], [255, 255, 255]]
+
+  RMA:
+    name: Real Madrid
+    display: Real Madrid
+    colors: [[255, 255, 255], [242, 136, 0]]
+
+  SCP:
+    name: Sporting CP
+    display: Sporting
+    colors: [[0, 153, 46], [255, 255, 255]]
+
+  SGE:
+    name: Eintracht Frankfurt
+    display: Frankfurt
+    colors: [[255, 255, 255], [140, 140, 136]]
+
+  SLB:
+    name: Benfica
+    display: Benfica
+    colors: [[202, 15, 3], [140, 140, 140]]
+
+  SLP:
+    name: Slavia Prague
+    display: Slavia Prague
+    colors: [[220, 2, 10], [110, 182, 255]]
+
+  TOT:
+    name: Tottenham Hotspur
+    display: Spurs
+    colors: [[255, 255, 255], [145, 168, 216]]
+
+  USG:
+    name: Union St.-Gilloise
+    display: Union SG
+    colors: [[252, 235, 20], [255, 255, 255]]
+
+  VIL:
+    name: Villarreal
+    display: Villarreal
+    colors: [[255, 255, 0], [90, 163, 228]]
