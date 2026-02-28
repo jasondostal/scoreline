@@ -23,5 +23,20 @@ Thumbs.db
 # Docker
 .docker/
 
-# Config with secrets (keep settings.yaml.example tracked instead)
-# config/settings.yaml  # Uncomment if settings contain secrets
+# Runtime config (contains real IPs, personal preferences)
+config/settings.yaml
+
+# Claude Code project instructions
+CLAUDE.md
+
+# Session logs / test artifacts
+AUTOWATCH_SESSION.md
+docs/SESSION_*
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Images
+*.jpg
+._*

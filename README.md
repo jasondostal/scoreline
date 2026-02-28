@@ -4,8 +4,6 @@ Live sports win probability visualized on your LED strip.
 
 Scoreline polls ESPN for real-time game data and translates win probability into a dynamic light display on [WLED](https://kno.wled.ge/)-controlled LEDs. Watch the "battle line" shift as momentum swings.
 
-![Scoreline LED visualization](scoreline.jpg)
-
 ## Features
 
 ### Core
@@ -190,11 +188,19 @@ League files are YAML - drop in your own to add a league.
 | `/api/wled/add` | POST | Add WLED device to config |
 | `/api/reload` | POST | Hot-reload config from disk |
 
+## Tech Stack
+
+- **Backend**: Python 3.12, FastAPI, uvicorn, httpx
+- **Frontend**: React 19, TypeScript, Vite, Tailwind v4, shadcn/ui
+- **Config**: YAML with hot-reload (watchdog)
+- **Discovery**: zeroconf (mDNS)
+- **Container**: Multi-stage Docker build (Node + Python)
+
 ## Requirements
 
 - WLED-controlled LED strip
 - Network access to WLED device
-- Docker or Python 3.11+
+- Docker or Python 3.12+
 
 ## License
 

@@ -1,5 +1,5 @@
 """
-Game Lights - Live ESPN win probability → WLED visualization.
+Scoreline - Live ESPN win probability → WLED visualization.
 
 FastAPI app with game picker UI and background polling.
 """
@@ -638,10 +638,12 @@ async def check_celebration_end(inst: InstanceState):
     await transition_from_final(inst)
 
 
-# API Routes
+# SPA frontend
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    return FileResponse("static/index.html")
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 
 @app.get("/api/leagues")
@@ -1365,8 +1367,14 @@ async def save_simulator_settings(req: SimulatorDefaultsRequest):
     })
 
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# SPA fallback — must be AFTER all API routes
+@app.get("/{path:path}")
+async def spa_fallback(path: str):
+    """Serve static assets or fall back to index.html for client-side routing."""
+    file_path = os.path.join(STATIC_DIR, path)
+    if os.path.isfile(file_path):
+        return FileResponse(file_path)
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 
 if __name__ == "__main__":

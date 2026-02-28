@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-02-27
+
+### Added
+- **React Frontend** — Complete rewrite from vanilla JS to React 19 + Vite + TypeScript + Tailwind v4
+- **shadcn/ui Components** — All dropdowns, buttons, and badges use shadcn/ui primitives (Radix-based)
+- **Multi-Select Watch Teams** — Searchable multi-select across all 153 teams, grouped by league, with team color dots
+- **Team Color Dots** — Primary team color shown inline in all team dropdowns and scoreboard
+- **Sport Icons** — League-specific icons in all league selectors
+- **Icon System** — Lucide icons throughout: status badges, health indicators, section headers, action buttons
+- **Electric Blue Palette** — Broadcast-style design with OKLCH color tokens
+- **Multi-Stage Docker Build** — Node build stage compiles React frontend, Python stage serves it as SPA
+
+### Changed
+- Frontend served as SPA with catch-all fallback (replaces static file mount)
+- All native `<select>` elements replaced with shadcn Select
+- All raw `<button>` elements replaced with shadcn Button
+- Watch teams UX: single multi-select replaces league→team→add workflow
+- `config/settings.yaml` removed from version control (use `.default` as template)
+
+### Removed
+- Vanilla JS frontend (`static/index.html` — 104KB monolith)
+
 ## [1.2.0] - 2025-01-25
 
 ### Added
@@ -50,7 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - mDNS device discovery
 - Web UI for configuration
 
-[Unreleased]: https://github.com/jasondostal/scoreline/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/jasondostal/scoreline/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/jasondostal/scoreline/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/jasondostal/scoreline/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/jasondostal/scoreline/releases/tag/v1.0.0
