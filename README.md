@@ -6,83 +6,22 @@ Scoreline polls ESPN for real-time game data and translates win probability into
 
 ![Scoreline v2](scoreline_v2.png)
 
-## Features
+## Supported Leagues
 
-### Core
-- **Real-time win probability** - WebSocket push updates, falls back to polling automatically
-- **16 leagues, 1500+ teams** - NFL, NBA, MLB, NHL, MLS, WNBA, College Football, Men's/Women's College Basketball, EPL, La Liga, Bundesliga, Serie A, Ligue 1, Liga MX, Champions League
-- **Multi-instance** - Run different games on different LED strips simultaneously
-- **Battle line visualization** - Home/away team colors chase inward toward an animated divider
-- **Win probability sparkline** - SVG chart tracks momentum shifts over the course of a game
+| League | Teams | | League | Teams |
+|--------|------:|-|--------|------:|
+| NFL | 32 | | EPL | 20 |
+| NBA | 30 | | La Liga | 20 |
+| MLB | 30 | | Bundesliga | 18 |
+| NHL | 32 | | Serie A | 20 |
+| MLS | 30 | | Ligue 1 | 18 |
+| WNBA | 15 | | Liga MX | 18 |
+| College Football | 500 | | Champions League | 36 |
+| Men's College Basketball | 362 | | Women's College Basketball | 361 |
 
-### Auto-Watch
-- **Favorite teams** - Configure teams to watch per WLED instance (e.g., `nfl:GB`, `nba:MIL`)
-- **Auto-start** - When your team's game goes live, lights turn on automatically
-- **Priority ordering** - Drag-and-drop to set priority; #1 wins when multiple games start
-- **Game cascade** - When a game ends, automatically starts next priority game if available
-- **Per-instance** - Each strip can watch different teams
-
-### Post-Game Celebration
-Two-phase system when a game ends:
-
-**Phase 1 - Celebration** (in winner colors):
-- **Chase** - Full strip chase effect (default)
-- **Twinkle** - Sparkle/twinkle effect
-- **Flash** - Strobe effect
-- **Solid** - Static winner colors
-- **Freeze** - Keep final win probability display
-
-**Configurable duration**: 30 seconds to 10+ minutes
-
-**Phase 2 - After Celebration**:
-- **Fade off** - Graceful fade to black (default)
-- **Off** - Immediate off
-- **Restore** - Return to whatever preset was playing before the game
-- **Preset** - Switch to a specific WLED preset
-
-### Display Customization (Per-Instance)
-- **Minimum dignity** - Losing team always keeps at least X% of the strip
-- **Dark buffer** - Black pixels separating teams from the battle line
-- **Divider size** - Width of the animated center divider
-- **Divider style** - Preset animations: default (orange scanner), intense (red fire), ice (blue scanner), pulse (white breathe), chaos (orange strobe)
-- **Chase speed & intensity** - Control the team color chase effect
-
-### Simulator
-- **Draggable strip preview** - Drag directly on the LED preview bar to set win percentage
-- **Live preview** - See exactly how your LED strip will look before game day
-- **Team picker** - Select any two teams from any league
-- **Scenario presets** - Nail-biter, dominant, blowout, comeback, overtime, momentum, buzzer, collapse
-- **Share card** - Export a PNG snapshot of your simulation
-
-### State Machine
-Explicit UI states with visual feedback:
-- **Idle** - No game, no watch teams configured
-- **Armed** - Watch teams configured, waiting for game to start
-- **Watching (Auto)** - Game started automatically from watch list
-- **Watching (Manual)** - Game started manually
-- **Override** - Manually watching a different game than auto-watch would choose
-- **Final** - Game ended, celebration playing
-- **Simulating** - Simulator mode active
-
-### Health Tracking
-- **Connectivity status** - Healthy / Stale / Unreachable indicators per instance
-- **Automatic detection** - Tracks successful/failed WLED communications
-- **Non-blocking** - Warnings don't interrupt operation
-
-### Quality of Life
-- **Toast notifications** - Instant feedback on every action (sonner)
-- **Share cards** - Export game or sim snapshots as PNG (html2canvas)
-- **Two-column layout** - Instances + simulator side by side on wide screens
-- **Dismissible watch teams** - Click the X on team badges to remove directly
-- **Preset preservation** - Saves your current WLED state before taking over, can restore after
-- **Mini scoreboard** - Live game scores displayed in the web UI per instance
-- **mDNS discovery** - Auto-find WLED devices on your network
-- **Hot-reload config** - YAML changes detected automatically, state preserved
-- **Instant settings** - Display changes push to WLED immediately
+League files are YAML — drop in your own to add a league. Team colors are calibrated for LED saturation.
 
 ## Quick Start
-
-### Docker Compose (Recommended)
 
 ```yaml
 services:
@@ -106,17 +45,56 @@ docker compose up -d
 
 Open `http://localhost:8084` and pick a game.
 
-### Docker Run
+<details>
+<summary><strong>Features</strong></summary>
 
-```bash
-mkdir scoreline && cd scoreline
-docker run -d --name scoreline \
-  -p 8084:8080 \
-  -v ./config:/app/config \
-  ghcr.io/jasondostal/scoreline:latest
-```
+### Core
+- **Real-time win probability** - WebSocket push updates, falls back to polling automatically
+- **Multi-instance** - Run different games on different LED strips simultaneously
+- **Battle line visualization** - Home/away team colors chase inward toward an animated divider
+- **Win probability sparkline** - SVG chart tracks momentum shifts over the course of a game
 
-## Configuration
+### Auto-Watch
+- **Favorite teams** - Configure teams to watch per WLED instance (e.g., `nfl:GB`, `nba:MIL`)
+- **Auto-start** - When your team's game goes live, lights turn on automatically
+- **Priority ordering** - Drag-and-drop to set priority; #1 wins when multiple games start
+- **Game cascade** - When a game ends, automatically starts next priority game if available
+- **Per-instance** - Each strip can watch different teams
+
+### Post-Game Celebration
+Two-phase system when a game ends:
+
+**Phase 1 - Celebration** (in winner colors): Chase, Twinkle, Flash, Solid, or Freeze. Configurable duration (30s to 10+ minutes).
+
+**Phase 2 - After Celebration**: Fade off, Off, Restore previous preset, or switch to a specific WLED preset.
+
+### Display Customization (Per-Instance)
+- **Minimum dignity** - Losing team always keeps at least X% of the strip
+- **Dark buffer** - Black pixels separating teams from the battle line
+- **Divider style** - Preset animations: classic, intense, ice, pulse, chaos
+- **Chase speed & intensity** - Control the team color chase effect
+
+### Simulator
+- **Draggable strip preview** - Drag directly on the LED preview bar to set win percentage
+- **Team picker** - Select any two teams from any league
+- **Scenario presets** - Nail-biter, dominant, blowout, comeback, overtime, momentum, buzzer, collapse
+- **Share card** - Export a PNG snapshot of your simulation
+
+### Quality of Life
+- Toast notifications on every action
+- Share cards — export game or sim snapshots as PNG
+- Two-column layout on wide screens
+- Dismissible watch team badges
+- Preset preservation — saves your WLED state, can restore after
+- Live scoreboard per instance
+- mDNS device discovery
+- Hot-reload config (YAML changes detected automatically)
+- Instant settings push to WLED
+
+</details>
+
+<details>
+<summary><strong>Configuration</strong></summary>
 
 Edit `config/settings.yaml`:
 
@@ -151,7 +129,7 @@ post_game:
   after_action: fade_off
 ```
 
-## Data Directory
+### Data Directory
 
 First run auto-populates with defaults:
 
@@ -165,22 +143,20 @@ config/
     └── ucl.yaml
 ```
 
-## Supported Leagues
+### Docker Run (alternative)
 
-| League | Teams | | League | Teams |
-|--------|------:|-|--------|------:|
-| NFL | 32 | | EPL | 20 |
-| NBA | 30 | | La Liga | 20 |
-| MLB | 30 | | Bundesliga | 18 |
-| NHL | 32 | | Serie A | 20 |
-| MLS | 30 | | Ligue 1 | 18 |
-| WNBA | 15 | | Liga MX | 18 |
-| College Football | 500 | | Champions League | 36 |
-| Men's College Basketball | 362 | | Women's College Basketball | 361 |
+```bash
+mkdir scoreline && cd scoreline
+docker run -d --name scoreline \
+  -p 8084:8080 \
+  -v ./config:/app/config \
+  ghcr.io/jasondostal/scoreline:latest
+```
 
-League files are YAML — drop in your own to add a league. Team colors are calibrated for LED saturation.
+</details>
 
-## API
+<details>
+<summary><strong>API</strong></summary>
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -199,7 +175,10 @@ League files are YAML — drop in your own to add a league. Team colors are cali
 | `/api/reload` | POST | Hot-reload config from disk |
 | `/ws` | WebSocket | Real-time instance updates (auto-reconnect) |
 
-## Tech Stack
+</details>
+
+<details>
+<summary><strong>Tech Stack</strong></summary>
 
 - **Backend**: Python 3.12, FastAPI, uvicorn, httpx
 - **Frontend**: React 19, TypeScript, Vite, Tailwind v4, shadcn/ui
@@ -207,11 +186,12 @@ League files are YAML — drop in your own to add a league. Team colors are cali
 - **Discovery**: zeroconf (mDNS)
 - **Container**: Multi-stage Docker build (Node + Python)
 
-## Requirements
-
+### Requirements
 - WLED-controlled LED strip
 - Network access to WLED device
 - Docker or Python 3.12+
+
+</details>
 
 ## License
 
