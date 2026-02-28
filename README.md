@@ -4,13 +4,16 @@ Live sports win probability visualized on your LED strip.
 
 Scoreline polls ESPN for real-time game data and translates win probability into a dynamic light display on [WLED](https://kno.wled.ge/)-controlled LEDs. Watch the "battle line" shift as momentum swings.
 
+![Scoreline v2](scoreline_v2.png)
+
 ## Features
 
 ### Core
-- **Real-time win probability** - Polls ESPN every 30 seconds, updates LED segments proportionally
-- **5 leagues supported** - NFL, NBA, MLB, NHL, MLS (153 teams total)
+- **Real-time win probability** - WebSocket push updates, falls back to polling automatically
+- **16 leagues, 1500+ teams** - NFL, NBA, MLB, NHL, MLS, WNBA, College Football, Men's/Women's College Basketball, EPL, La Liga, Bundesliga, Serie A, Ligue 1, Liga MX, Champions League
 - **Multi-instance** - Run different games on different LED strips simultaneously
 - **Battle line visualization** - Home/away team colors chase inward toward an animated divider
+- **Win probability sparkline** - SVG chart tracks momentum shifts over the course of a game
 
 ### Auto-Watch
 - **Favorite teams** - Configure teams to watch per WLED instance (e.g., `nfl:GB`, `nba:MIL`)
@@ -45,10 +48,11 @@ Two-phase system when a game ends:
 - **Chase speed & intensity** - Control the team color chase effect
 
 ### Simulator
-- **Test without live games** - Drag a slider to preview any win percentage
+- **Draggable strip preview** - Drag directly on the LED preview bar to set win percentage
 - **Live preview** - See exactly how your LED strip will look before game day
 - **Team picker** - Select any two teams from any league
-- **Auto-play mode** - Watch it cycle through scenarios automatically
+- **Scenario presets** - Nail-biter, dominant, blowout, comeback, overtime, momentum, buzzer, collapse
+- **Share card** - Export a PNG snapshot of your simulation
 
 ### State Machine
 Explicit UI states with visual feedback:
@@ -66,10 +70,12 @@ Explicit UI states with visual feedback:
 - **Non-blocking** - Warnings don't interrupt operation
 
 ### Quality of Life
+- **Toast notifications** - Instant feedback on every action (sonner)
+- **Share cards** - Export game or sim snapshots as PNG (html2canvas)
+- **Two-column layout** - Instances + simulator side by side on wide screens
+- **Dismissible watch teams** - Click the X on team badges to remove directly
 - **Preset preservation** - Saves your current WLED state before taking over, can restore after
-- **Sync-on-load** - Detects if WLED was changed externally and reflects reality
 - **Mini scoreboard** - Live game scores displayed in the web UI per instance
-- **Blackout mode** - Pixels outside your configured range go dark during games
 - **mDNS discovery** - Auto-find WLED devices on your network
 - **Hot-reload config** - YAML changes detected automatically, state preserved
 - **Instant settings** - Display changes push to WLED immediately
@@ -153,22 +159,26 @@ First run auto-populates with defaults:
 config/
 ├── settings.yaml      # WLED instances, preferences, watch teams
 └── leagues/           # League definitions (team colors, ESPN mappings)
-    ├── nfl.yaml
+    ├── nfl.yaml       # 16 league files included
     ├── nba.yaml
-    ├── mlb.yaml
-    ├── nhl.yaml
-    └── mls.yaml
+    ├── ...
+    └── ucl.yaml
 ```
 
 ## Supported Leagues
 
-- NFL (32 teams)
-- NBA (30 teams)
-- MLB (30 teams)
-- NHL (32 teams)
-- MLS (29 teams)
+| League | Teams | | League | Teams |
+|--------|------:|-|--------|------:|
+| NFL | 32 | | EPL | 20 |
+| NBA | 30 | | La Liga | 20 |
+| MLB | 30 | | Bundesliga | 18 |
+| NHL | 32 | | Serie A | 20 |
+| MLS | 30 | | Ligue 1 | 18 |
+| WNBA | 15 | | Liga MX | 18 |
+| College Football | 500 | | Champions League | 36 |
+| Men's College Basketball | 362 | | Women's College Basketball | 361 |
 
-League files are YAML - drop in your own to add a league.
+League files are YAML — drop in your own to add a league. Team colors are calibrated for LED saturation.
 
 ## API
 
@@ -187,6 +197,7 @@ League files are YAML - drop in your own to add a league.
 | `/api/discover` | GET | Scan for WLED devices via mDNS |
 | `/api/wled/add` | POST | Add WLED device to config |
 | `/api/reload` | POST | Hot-reload config from disk |
+| `/ws` | WebSocket | Real-time instance updates (auto-reconnect) |
 
 ## Tech Stack
 

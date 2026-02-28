@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-02-27
+
+### Added
+- **WebSocket Live Updates** — Real-time push via `/ws`, automatic fallback to polling when disconnected
+- **Win Probability Sparkline** — SVG chart tracks momentum over the course of a game
+- **16 Leagues, 1500+ Teams** — Added WNBA, College Football, Men's/Women's College Basketball, EPL, La Liga, Bundesliga, Serie A, Ligue 1, Liga MX, Champions League
+- **Toast Notifications** — Instant feedback on watch, stop, settings, share, and all mutations (sonner)
+- **Share Cards** — Export game or sim snapshots as PNG with team colors, scores, sparkline, and strip preview
+- **Draggable Strip Preview** — Drag directly on the LED preview bar to set simulator win percentage
+- **Dismissible Watch Teams** — Click X on team badges in the "Watching for" notice to remove inline
+- **Two-Column Layout** — Instances and simulator side by side on wide screens (>1280px), stacked on narrow
+- **Logo + Favicon** — SVG logo mark with lightning-bolt divider
+- **Scenario Presets** — Nail-biter, dominant, blowout, comeback, overtime, momentum, buzzer, collapse
+- **Unified Display Architecture** — Single rendering path for game and sim data
+
+### Changed
+- Simulator uses draggable strip instead of separate range slider
+- All mutation endpoints broadcast state via WebSocket (no more stale UI)
+- League YAML files support `espn_league` field for ESPN API slug mapping
+- Layout widened from `max-w-4xl` to `max-w-6xl` with responsive grid
+- Simulator panel sticks to viewport on scroll (wide screens)
+
+### Fixed
+- Sim start/stop now syncs instantly across all connected clients
+- Share card rendering with oklch/oklab CSS color functions (html2canvas workaround)
+
 ## [2.0.0] - 2026-02-27
 
 ### Added
@@ -72,7 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - mDNS device discovery
 - Web UI for configuration
 
-[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/jasondostal/scoreline/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/jasondostal/scoreline/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/jasondostal/scoreline/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/jasondostal/scoreline/compare/v1.0.0...v1.1.0
