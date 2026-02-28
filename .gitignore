@@ -39,4 +39,6 @@ frontend/dist/
 
 # Images
 *.jpg
+*.mov
+scoreline-sim-*.png
 ._*

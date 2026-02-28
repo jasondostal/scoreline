@@ -75,6 +75,8 @@ export interface Game {
   away_team: string;
   home_display: string;
   away_display: string;
+  home_colors?: number[][];
+  away_colors?: number[][];
   home_score: number;
   away_score: number;
 }
@@ -116,6 +118,9 @@ export interface SimTestPayload {
   away: string;
   host: string | null;
   settings: DisplaySettings;
+  home_score?: number;
+  away_score?: number;
+  period?: string;
 }
 
 export interface SimulatorDefaults {

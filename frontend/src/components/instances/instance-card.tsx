@@ -5,7 +5,7 @@ import type { Instance, League, UIState } from "@/lib/types";
 import { HealthBadge } from "./health-badge";
 import { StateBadge } from "./state-badge";
 import { Scoreboard } from "./scoreboard";
-import { GameSelector } from "./game-selector";
+import { GamePicker } from "./game-picker";
 import { StripPreview } from "./strip-preview";
 import { Pencil, ChevronDown, ChevronUp, Trash2, RotateCcw, Square, X } from "lucide-react";
 import { DisplaySliders } from "./display-sliders";
@@ -203,9 +203,9 @@ export function InstanceCard({ instance: inst, leagues, onMutate }: InstanceCard
         </div>
       )}
 
-      {/* Game selector — always visible unless FINAL */}
+      {/* Game picker — always visible unless FINAL */}
       {!isFinal && (
-        <GameSelector
+        <GamePicker
           instance={inst}
           leagues={leagues}
           onWatch={handleWatch}

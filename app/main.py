@@ -836,6 +836,8 @@ async def get_games(league: str):
             "away_team": g["away_team"],
             "home_display": get_team_display(league, g["home_team"]),
             "away_display": get_team_display(league, g["away_team"]),
+            "home_colors": get_team_colors(league, g["home_team"]),
+            "away_colors": get_team_colors(league, g["away_team"]),
             "home_score": g["home_score"],
             "away_score": g["away_score"],
         }
@@ -1411,6 +1413,9 @@ class TestRequest(BaseModel):
     away: str = "CHI"
     host: Optional[str] = None  # Specific instance, or all if None
     settings: Optional[SimSettings] = None  # Override display settings for simulation
+    home_score: Optional[int] = None  # For demo mode
+    away_score: Optional[int] = None
+    period: Optional[str] = None
 
 
 @app.post("/api/test")
@@ -1459,7 +1464,9 @@ async def test_percentage(req: TestRequest):
                 "home_colors": home_colors,
                 "away_colors": away_colors,
                 "home_win_pct": req.pct / 100,
-                "period": "SIM",
+                "period": req.period or "SIM",
+                "home_score": req.home_score,
+                "away_score": req.away_score,
             }
             inst.win_pct_history.append({"t": time.time(), "pct": req.pct / 100})
 

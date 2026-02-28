@@ -89,9 +89,9 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
     });
   }, 100);
 
-  // Send data whenever relevant state changes
+  // Send data whenever relevant state changes (skip when a scripted animation is driving)
   useEffect(() => {
-    debouncedSend();
+    if (!animationRef.current) debouncedSend();
   }, [winPct, dignity, buffer, divider, preset, chaseSpeed, chaseIntensity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSetPct = useCallback((pct: number) => {
@@ -258,6 +258,19 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
         activeScenario={activeScenario}
         setActiveScenario={setActiveScenario}
         animationRef={animationRef}
+        demoContext={hasTeams ? {
+          league,
+          home: homeTeam,
+          away: awayTeam,
+          settings: {
+            min_team_pct: dignity / 100,
+            dark_buffer_pixels: buffer,
+            contested_zone_pixels: divider,
+            divider_preset: preset,
+            chase_speed: chaseSpeed,
+            chase_intensity: chaseIntensity,
+          },
+        } : undefined}
       />
 
       {/* Stop / Save / Share buttons */}
