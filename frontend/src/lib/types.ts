@@ -57,6 +57,7 @@ export interface Instance {
   home_win_pct?: number;
   period?: string;
   status?: string;
+  win_pct_history?: { t: number; pct: number }[];
 }
 
 export interface League {
