@@ -6,7 +6,11 @@ Scoreline polls ESPN for real-time game data and translates win probability into
 
 ![Scoreline v2](scoreline_v2.png)
 
-<video src="scoreline-demo.mp4" autoplay loop muted playsinline width="100%"></video>
+
+https://github.com/user-attachments/assets/cae2373f-027f-4d76-85f3-05e8d1a17b81
+
+
+
 
 ## Supported Leagues
 
