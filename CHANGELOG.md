@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-02-27
+
+### Added
+- **Searchable Game Picker** — Single search-as-you-type combobox replaces dual league+game dropdowns. Finds games across all leagues, grouped by league, with team color dots
+- **Demo Game Mode** — Scripted 40-tick NBA game for simulator with realistic scores, periods, and win probability progression
+- **Demo Video** — Inline MP4 in README showing the simulator in action
+
+### Changed
+- Team colors now included in `/api/games/{league}` response (enables color dots in game picker)
+- README restructured: screenshot + demo video above the fold
+
+### Fixed
+- Simulator demo mode scores no longer flash/disappear (debounced simTest was overwriting scripted scores)
+
 ## [2.1.0] - 2026-02-27
 
 ### Added
@@ -98,7 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - mDNS device discovery
 - Web UI for configuration
 
-[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/jasondostal/scoreline/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/jasondostal/scoreline/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/jasondostal/scoreline/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/jasondostal/scoreline/compare/v1.1.0...v1.2.0
