@@ -7,7 +7,7 @@ import { StateBadge } from "./state-badge";
 import { Scoreboard } from "./scoreboard";
 import { GameSelector } from "./game-selector";
 import { StripPreview } from "./strip-preview";
-import { Pencil, ChevronDown, ChevronUp, Trash2, RotateCcw, Square } from "lucide-react";
+import { Pencil, ChevronDown, ChevronUp, Trash2, RotateCcw, Square, X } from "lucide-react";
 import { DisplaySliders } from "./display-sliders";
 import { WatchTeams } from "./watch-teams";
 import { PostGameConfig } from "./post-game-config";
@@ -36,12 +36,7 @@ export function InstanceCard({ instance: inst, leagues, onMutate }: InstanceCard
   const [editStart, setEditStart] = useState(inst.start);
   const [editEnd, setEditEnd] = useState(inst.end);
 
-  const isWatching = [
-    "watching_auto",
-    "watching_manual",
-    "watching_override",
-    "final",
-  ].includes(inst.state);
+  const hasDisplay = !!inst.home_team;
   const isFinal = inst.state === "final";
   const isAutoWatch = inst.state === "idle_autowatch";
   const totalPixels = inst.end - inst.start + 1;
@@ -67,7 +62,7 @@ export function InstanceCard({ instance: inst, leagues, onMutate }: InstanceCard
   };
 
   const previewPct =
-    isWatching && inst.home_win_pct !== undefined ? inst.home_win_pct : 0.5;
+    hasDisplay && inst.home_win_pct !== undefined ? inst.home_win_pct : 0.5;
 
   return (
     <div
@@ -161,18 +156,38 @@ export function InstanceCard({ instance: inst, leagues, onMutate }: InstanceCard
       )}
 
       {/* Auto-watch armed notice */}
-      {isAutoWatch && !isWatching && inst.watch_teams.length > 0 && (
+      {isAutoWatch && !hasDisplay && inst.watch_teams.length > 0 && (
         <div className="mb-2 rounded border border-armed/20 bg-armed/10 px-2 py-1.5 text-[11px] text-armed">
-          <strong>◉ Watching for:</strong>{" "}
-          {inst.watch_teams.map((t) => t.split(":")[1] || t).join(", ")}
+          <strong className="mr-1.5">◉ Watching for:</strong>
+          {inst.watch_teams.map((t) => (
+            <span
+              key={t}
+              className="mr-1 inline-flex items-center gap-0.5 rounded bg-armed/15 px-1.5 py-0.5"
+            >
+              {t.split(":")[1] || t}
+              <button
+                onClick={async () => {
+                  await api.setWatchTeams(
+                    inst.host,
+                    inst.watch_teams.filter((wt) => wt !== t),
+                  );
+                  onMutate();
+                }}
+                className="ml-0.5 rounded-full p-0.5 hover:bg-armed/30 transition-colors"
+                title={`Remove ${t.split(":")[1] || t}`}
+              >
+                <X className="h-2.5 w-2.5" />
+              </button>
+            </span>
+          ))}
         </div>
       )}
 
-      {/* Live scoreboard */}
-      {(isWatching || isFinal) && <Scoreboard instance={inst} />}
+      {/* Scoreboard — renders whenever there's display data */}
+      {hasDisplay && <Scoreboard instance={inst} />}
 
       {/* Strip preview */}
-      {(isWatching || isFinal) && (
+      {hasDisplay && (
         <div className="mb-2">
           <StripPreview
             start={inst.start}

@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import type { DividerPreset, Instance, League, Team } from "@/lib/types";
-import { Save, Square } from "lucide-react";
+import { Save, Share2, Square } from "lucide-react";
+import { captureAndShare } from "@/lib/share";
 
 interface SimulatorPanelProps {
   instances: Instance[];
@@ -215,7 +216,7 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
         </Select>
       </div>
 
-      {/* Strip preview */}
+      {/* Strip preview — draggable to set win pct */}
       <StripPreview
         start={0}
         end={299}
@@ -226,30 +227,24 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
         dividerPreset={preset}
         homeColors={homeColors}
         awayColors={awayColors}
+        onDragPct={(pct) => {
+          if (activeScenario) {
+            if (animationRef.current) clearInterval(animationRef.current);
+            animationRef.current = null;
+            setActiveScenario(null);
+          }
+          setWinPct(Math.round(pct * 100));
+        }}
       />
 
-      {/* Win percentage slider */}
-      <div>
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{homeName}</span>
-          <span className="font-mono font-semibold text-foreground">{winPct}%</span>
-          <span>{awayName}</span>
-        </div>
-        <input
-          type="range"
-          className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-secondary accent-primary"
-          min={0}
-          max={100}
-          value={winPct}
-          onChange={(e) => {
-            if (activeScenario) {
-              if (animationRef.current) clearInterval(animationRef.current);
-              animationRef.current = null;
-              setActiveScenario(null);
-            }
-            setWinPct(Number(e.target.value));
-          }}
-        />
+      {/* Win percentage label + hint */}
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>{homeName}</span>
+        <span className="font-mono font-semibold text-foreground">{winPct}%</span>
+        <span>{awayName}</span>
+      </div>
+      <div className="-mt-1 text-center text-[10px] text-muted-foreground/50">
+        drag the strip to adjust
       </div>
 
       {/* Scenario presets */}
@@ -316,7 +311,7 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
       </div>
 
       <div className="text-[11px] text-muted-foreground">
-        Toggle instances, pick teams, adjust settings. Changes apply instantly to targeted strips.
+        Changes apply instantly to targeted strips.
       </div>
     </div>
   );
