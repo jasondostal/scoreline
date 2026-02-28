@@ -120,33 +120,33 @@ export const api = {
 
   // Instance actions
   watch: (host: string, league: string, gameId: string) =>
-    post<unknown>(`/instance/${host}/watch`, { league, game_id: gameId }),
+    post<unknown>(`/instance/${host}/watch`, { league, game_id: gameId }).then((r) => { toast.success("Watching game"); return r; }),
   stop: (host: string) =>
-    post<unknown>(`/instance/${host}/stop`, {}),
+    post<unknown>(`/instance/${host}/stop`, {}).then((r) => { toast.success("Stopped"); return r; }),
   updateSettings: (host: string, settings: Partial<DisplaySettings>) =>
-    post<unknown>(`/instance/${host}/settings`, settings),
+    post<unknown>(`/instance/${host}/settings`, settings, true),
   setWatchTeams: (host: string, teams: string[]) =>
-    post<unknown>(`/instance/${host}/watch_teams`, { watch_teams: teams }),
+    post<unknown>(`/instance/${host}/watch_teams`, { watch_teams: teams }).then((r) => { toast.success("Watch teams updated"); return r; }),
   updatePostGame: (host: string, config: PostGameConfig) =>
-    post<unknown>(`/instance/${host}/post_game`, config),
+    post<unknown>(`/instance/${host}/post_game`, config, true),
   editInstance: (host: string, data: { host?: string; start?: number; end?: number }) =>
-    patch<unknown>(`/instance/${host}`, data),
+    patch<unknown>(`/instance/${host}`, data).then((r) => { toast.success("Instance updated"); return r; }),
   removeInstance: (host: string) =>
-    del<unknown>(`/instance/${host}`),
+    del<unknown>(`/instance/${host}`).then((r) => { toast.success("Instance removed"); return r; }),
 
   // Simulator
   simStart: (host: string) =>
-    post<unknown>(`/instance/${host}/sim/start`, {}),
+    post<unknown>(`/instance/${host}/sim/start`, {}).then((r) => { toast.success("Sim started"); return r; }),
   simStop: (host: string) =>
-    post<unknown>(`/instance/${host}/sim/stop`, {}),
+    post<unknown>(`/instance/${host}/sim/stop`, {}).then((r) => { toast.success("Sim stopped"); return r; }),
   simTest: (data: SimTestPayload) =>
     post<unknown>("/test", data, true),
   saveSimDefaults: (data: SimulatorDefaults) =>
-    post<unknown>("/simulator", data),
+    post<unknown>("/simulator", data).then((r) => { toast.success("Defaults saved"); return r; }),
 
   // Device management
   addDevice: (host: string, start: number, end: number) =>
-    post<unknown>("/wled/add", { host, start, end }),
+    post<unknown>("/wled/add", { host, start, end }).then((r) => { toast.success("Device added"); return r; }),
   reload: () =>
-    post<unknown>("/reload", {}),
+    post<unknown>("/reload", {}).then((r) => { toast.success("Config reloaded"); return r; }),
 };

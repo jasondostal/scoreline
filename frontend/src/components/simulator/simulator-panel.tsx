@@ -36,6 +36,7 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
   const [teams, setTeams] = useState<Team[]>([]);
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
   const animationRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const shareRef = useRef<HTMLDivElement>(null);
 
   // Display settings
   const [dignity, setDignity] = useState(5);
@@ -129,14 +130,18 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
     };
   }, []);
 
+  const homeName = teams.find((t) => t.id === homeTeam)?.name ?? "Home";
+  const awayName = teams.find((t) => t.id === awayTeam)?.name ?? "Away";
   const hasTeams = league && homeTeam && awayTeam;
   const hasSimulating = instances.some((i) => i.simulating) || activeScenario;
 
-  const homeName = teams.find((t) => t.id === homeTeam)?.name ?? "Home";
-  const awayName = teams.find((t) => t.id === awayTeam)?.name ?? "Away";
+  const handleShare = useCallback(async () => {
+    if (!shareRef.current) return;
+    await captureAndShare(shareRef.current, `scoreline-sim-${homeName}-vs-${awayName}.png`);
+  }, [homeName, awayName]);
 
   return (
-    <div className="space-y-3">
+    <div className="relative space-y-3">
       {/* Target toggles */}
       <div className="flex flex-wrap gap-2">
         {instances.map((inst) => (
@@ -255,7 +260,7 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
         animationRef={animationRef}
       />
 
-      {/* Stop / Save buttons */}
+      {/* Stop / Save / Share buttons */}
       <div className="flex justify-end gap-1.5">
         <Button
           variant="outline"
@@ -265,6 +270,15 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
         >
           <Square className="h-3 w-3" />
           Stop
+        </Button>
+        <Button
+          variant="outline"
+          size="icon-xs"
+          onClick={handleShare}
+          disabled={!hasTeams}
+          title="Share sim card"
+        >
+          <Share2 className="h-3 w-3" />
         </Button>
         <Button
           variant="outline"
@@ -312,6 +326,59 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
 
       <div className="text-[11px] text-muted-foreground">
         Changes apply instantly to targeted strips.
+      </div>
+
+      {/* Offscreen share card for html2canvas capture */}
+      <div style={{ position: "absolute", left: -9999, top: -9999, overflow: "hidden" }}>
+        <div
+          ref={shareRef}
+          style={{
+            width: 600,
+            padding: 24,
+            background: "#1a1a1a",
+            color: "#f0f0f0",
+            fontFamily: "'Inter', sans-serif",
+            borderRadius: 12,
+          }}
+        >
+          <div style={{ fontSize: 11, color: "#888", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>
+            Simulation
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {homeColors && <TeamDot colors={homeColors} size={16} />}
+              <span style={{ fontSize: 20, fontWeight: 600 }}>{homeName}</span>
+            </div>
+            <span style={{ fontSize: 28, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+              {winPct}%
+            </span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {awayColors && <TeamDot colors={awayColors} size={16} />}
+              <span style={{ fontSize: 20, fontWeight: 600 }}>{awayName}</span>
+            </div>
+            <span style={{ fontSize: 28, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+              {100 - winPct}%
+            </span>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <StripPreview
+              start={0}
+              end={299}
+              winPct={winPct / 100}
+              minTeamPct={dignity / 100}
+              contestedZonePixels={divider}
+              darkBufferPixels={buffer}
+              dividerPreset={preset}
+              homeColors={homeColors}
+              awayColors={awayColors}
+            />
+          </div>
+          <div style={{ textAlign: "right", fontSize: 11, color: "#555" }}>
+            Scoreline
+          </div>
+        </div>
       </div>
     </div>
   );

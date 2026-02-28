@@ -45,7 +45,7 @@ export function AppLayout({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border px-6 py-4">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-6xl">
           <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-primary">
             <ScorelineMark className="h-7 w-7" />
             Scoreline
@@ -56,43 +56,47 @@ export function AppLayout({
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 py-6 space-y-8">
-        {/* WLED Instances */}
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <Monitor className="h-5 w-5 text-muted-foreground" />
-              WLED Instances
-            </h2>
-            <div className="flex gap-2">
-              <AddDeviceForm onMutate={onMutate} />
-              <DiscoverPanel onMutate={onMutate} />
+      <main className="mx-auto max-w-6xl px-6 py-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8">
+          {/* WLED Instances — left / top */}
+          <section>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <Monitor className="h-5 w-5 text-muted-foreground" />
+                WLED Instances
+              </h2>
+              <div className="flex gap-2">
+                <AddDeviceForm onMutate={onMutate} />
+                <DiscoverPanel onMutate={onMutate} />
+              </div>
             </div>
-          </div>
-          <InstanceList
-            instances={instances}
-            instancesLoading={instancesLoading}
-            instancesError={instancesError}
-            leagues={leagues ?? []}
-            onMutate={onMutate}
-          />
-        </section>
+            <InstanceList
+              instances={instances}
+              instancesLoading={instancesLoading}
+              instancesError={instancesError}
+              leagues={leagues ?? []}
+              onMutate={onMutate}
+            />
+          </section>
 
-        {/* Simulator */}
-        <section>
-          <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
-            <Play className="h-5 w-5 text-muted-foreground" />
-            Simulator
-          </h2>
-          <SimulatorPanel
-            instances={instances ?? []}
-            leagues={leagues ?? []}
-            onMutate={onMutate}
-          />
-        </section>
+          {/* Simulator — right / bottom */}
+          <section>
+            <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
+              <Play className="h-5 w-5 text-muted-foreground" />
+              Simulator
+            </h2>
+            <div className="xl:sticky xl:top-6">
+              <SimulatorPanel
+                instances={instances ?? []}
+                leagues={leagues ?? []}
+                onMutate={onMutate}
+              />
+            </div>
+          </section>
+        </div>
 
         {/* Footer */}
-        <footer className="text-xs text-muted-foreground pt-4 border-t border-border">
+        <footer className="text-xs text-muted-foreground pt-4 mt-8 border-t border-border">
           <p className="flex items-center gap-1.5">
             <Activity className="h-3 w-3" />
             {leaguesLoading
