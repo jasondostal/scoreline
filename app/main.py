@@ -84,6 +84,7 @@ class InstanceState:
         self.host = host
         self.start = start
         self.end = end
+        self.mac: Optional[str] = None  # WLED device MAC address
         self.controller: Optional[WLEDController] = None
         self.game: Optional[dict] = None  # {league, game_id, last_info, last_status}
         self.previous_preset: Optional[int] = None  # Preset to restore after game
@@ -403,11 +404,30 @@ config_observer: Optional[PollingObserver] = None
 
 
 @asynccontextmanager
+async def resolve_instance_macs():
+    """Fetch MAC addresses from all WLED instances (best-effort, non-blocking)."""
+    for host, inst in state.instances.items():
+        if inst.mac:
+            continue
+        try:
+            config = build_wled_config(host, inst.start, inst.end)
+            controller = WLEDController(config)
+            mac = await controller.get_mac()
+            await controller.close()
+            if mac:
+                inst.mac = mac
+                logger.info(f"[INIT] {host}: Resolved MAC {mac}")
+        except Exception as e:
+            logger.debug(f"[INIT] {host}: Could not resolve MAC: {e}")
+
+
 async def lifespan(app: FastAPI):
     global config_observer
     # Startup
     state.espn = ESPNClient()
     init_instances()
+    # Resolve WLED MAC addresses in background (non-blocking)
+    asyncio.create_task(resolve_instance_macs())
     # Start the unified poll task
     state.poll_task = asyncio.create_task(poll_all_games())
     # Start auto-watch task (scans for watched teams' games)
@@ -930,6 +950,7 @@ async def list_instances():
 
         item = {
             "host": host,
+            "mac": inst.mac,
             "start": inst.start,
             "end": inst.end,
             "simulating": simulating,

@@ -64,6 +64,21 @@ class WLEDController:
     async def close(self):
         await self.client.aclose()
 
+    async def get_info(self) -> dict:
+        """Get WLED device info (name, version, MAC, etc.)."""
+        try:
+            resp = await self.client.get(f"{self.base_url}/json/info")
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            print(f"WLED info error: {e}")
+            return {}
+
+    async def get_mac(self) -> Optional[str]:
+        """Get WLED device MAC address."""
+        info = await self.get_info()
+        return info.get("mac")
+
     async def get_state(self) -> dict:
         """Get current WLED state."""
         try:
