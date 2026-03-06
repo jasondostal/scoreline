@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-03-05
+
+### Added
+- **Home Assistant Integration** — [scoreline-ha](https://github.com/jasondostal/scoreline-ha) HACS custom integration with WebSocket local push, 13 entities per WLED instance, 3 services
+- **WLED MAC Address** — Instances now expose MAC address (fetched from WLED `/json/info` at startup), enabling cross-device linking with the WLED HA integration
+- **CI Pipeline** — 4-stage GitHub Actions workflow: lint (ruff, mypy, bandit, hadolint, shellcheck, pip-audit, npm audit) > build (Docker + cosign signing) > scan (Trivy CVE) > smoke (API + UI assertions)
+
+### Changed
+- All `Optional[X]` annotations modernized to `X | None` (Python 3.12 style)
+- `str, Enum` base classes updated to `StrEnum` where applicable
+- Import blocks sorted and organized per isort rules
+- 25 mypy type errors fixed (narrowing guards, proper annotations)
+
 ## [2.2.0] - 2026-02-27
 
 ### Added
@@ -112,7 +125,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - mDNS device discovery
 - Web UI for configuration
 
-[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/jasondostal/scoreline/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/jasondostal/scoreline/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/jasondostal/scoreline/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/jasondostal/scoreline/compare/v1.2.0...v2.0.0
