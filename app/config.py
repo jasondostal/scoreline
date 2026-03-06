@@ -5,8 +5,8 @@ Loads settings from user config, leagues from user config or built-in defaults.
 
 import os
 from pathlib import Path
-from typing import Any
-import yaml
+
+import yaml  # type: ignore[import-untyped]
 
 # User config directory (mounted volume)
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/app/config"))
@@ -177,8 +177,8 @@ def load_leagues() -> dict:
 
 
 # Cached data - loaded once at startup, can be reloaded
-_settings: dict = None
-_leagues: dict = None
+_settings: dict | None = None
+_leagues: dict | None = None
 
 
 def get_settings() -> dict:
@@ -278,7 +278,7 @@ def remove_wled_instance(host: str) -> dict:
     return {"status": "removed", "message": f"{host} removed from config"}
 
 
-def update_wled_instance(host: str, new_host: str = None, start: int = None, end: int = None) -> dict:
+def update_wled_instance(host: str, new_host: str | None = None, start: int | None = None, end: int | None = None) -> dict:
     """
     Update core properties of a WLED instance (host, start, end).
 

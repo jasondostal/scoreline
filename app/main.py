@@ -10,21 +10,19 @@ import os
 import threading
 import time
 from collections import deque
-from contextlib import asynccontextmanager
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
+
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
-from watchdog.observers.polling import PollingObserver
 from watchdog.events import FileSystemEventHandler
+from watchdog.observers.polling import PollingObserver
 
 logger = logging.getLogger("uvicorn.error")
 
 
 # Explicit UI state machine
-class UIState(str, Enum):
+class UIState(StrEnum):
     """Explicit states for instance UI behavior."""
     IDLE = "idle"                        # No game, no auto-watch
     IDLE_AUTOWATCH = "idle_autowatch"    # No game, auto-watch armed
@@ -35,23 +33,32 @@ class UIState(str, Enum):
     SIMULATING = "simulating"            # Simulator active
 
 
-class HealthStatus(str, Enum):
+class HealthStatus(StrEnum):
     """WLED connection health tiers."""
     HEALTHY = "healthy"
     STALE = "stale"
     UNREACHABLE = "unreachable"
 
-from espn import ESPNClient, GameInfo
-from wled import WLEDController, WLEDConfig
-from teams import get_team_colors, get_team_display
-from config import (
-    get_settings, get_leagues, reload_config, add_wled_instance, remove_wled_instance,
-    CONFIG_DIR, get_instance_display_settings, get_all_watched_teams,
-    get_instance_watch_teams, update_instance_watch_teams,
-    get_instance_post_game_settings, update_instance_post_game_settings,
-    get_simulator_defaults, update_simulator_defaults,
-)
 from discovery import discover_wled_devices
+from espn import ESPNClient, GameInfo
+from teams import get_team_colors, get_team_display
+from wled import WLEDConfig, WLEDController
+
+from config import (
+    CONFIG_DIR,
+    add_wled_instance,
+    get_instance_display_settings,
+    get_instance_post_game_settings,
+    get_instance_watch_teams,
+    get_leagues,
+    get_settings,
+    get_simulator_defaults,
+    reload_config,
+    remove_wled_instance,
+    update_instance_post_game_settings,
+    update_instance_watch_teams,
+    update_simulator_defaults,
+)
 
 
 def espn_slug(league: str) -> str:
@@ -84,34 +91,34 @@ class InstanceState:
         self.host = host
         self.start = start
         self.end = end
-        self.mac: Optional[str] = None  # WLED device MAC address
-        self.controller: Optional[WLEDController] = None
-        self.game: Optional[dict] = None  # {league, game_id, last_info, last_status}
-        self.previous_preset: Optional[int] = None  # Preset to restore after game
+        self.mac: str | None = None  # WLED device MAC address
+        self.controller: WLEDController | None = None
+        self.game: dict | None = None  # {league, game_id, last_info, last_status}
+        self.previous_preset: int | None = None  # Preset to restore after game
         self.simulating: bool = False  # True when driven by simulator
-        self.sim_saved_preset: Optional[int] = None  # Preset to restore when sim stops
+        self.sim_saved_preset: int | None = None  # Preset to restore when sim stops
         # Unified display payload — populated by ESPN, simulator, or any future source
         # Keys: league, home_team, away_team, home_display, away_display,
         #        home_colors, away_colors, home_score, away_score, home_win_pct, period, status
-        self.display: Optional[dict] = None
+        self.display: dict | None = None
 
         # Explicit state machine
         self.ui_state: UIState = UIState.IDLE
-        self.watch_trigger: Optional[str] = None  # "auto" or "manual" - how watching started
+        self.watch_trigger: str | None = None  # "auto" or "manual" - how watching started
 
         # Health tracking
         self.health_last_success: float = time.time()
         self.health_consecutive_failures: int = 0
-        self.health_last_error: Optional[str] = None
+        self.health_last_error: str | None = None
 
         # FINAL state linger
-        self.final_linger_until: Optional[float] = None
-        self.final_game_info: Optional[dict] = None  # Preserved game info for FINAL display
+        self.final_linger_until: float | None = None
+        self.final_game_info: dict | None = None  # Preserved game info for FINAL display
 
         # Celebration state tracking (two-phase post-game)
-        self.celebration_end_time: Optional[float] = None  # When celebration phase ends
-        self.celebration_after_action: Optional[str] = None  # What to do after celebration
-        self.celebration_preset_id: Optional[int] = None  # For preset after_action
+        self.celebration_end_time: float | None = None  # When celebration phase ends
+        self.celebration_after_action: str | None = None  # What to do after celebration
+        self.celebration_preset_id: int | None = None  # For preset after_action
 
         # Win probability history for sparkline (circular buffer)
         self.win_pct_history: deque = deque(maxlen=120)
@@ -172,10 +179,10 @@ async def broadcast_state():
 
 
 class AppState:
-    espn: Optional[ESPNClient] = None
+    espn: ESPNClient | None = None
     instances: dict[str, InstanceState] = {}  # host -> InstanceState
-    poll_task: Optional[asyncio.Task] = None
-    auto_watch_task: Optional[asyncio.Task] = None
+    poll_task: asyncio.Task | None = None
+    auto_watch_task: asyncio.Task | None = None
 
 
 state = AppState()
@@ -288,7 +295,7 @@ async def transition_from_final(inst: InstanceState):
     logger.info(f"[STATE] {inst.host}: → {inst.ui_state.value}")
 
 
-async def find_next_priority_game(host: str, watch_teams: list[str]) -> Optional[dict]:
+async def find_next_priority_game(host: str, watch_teams: list[str]) -> dict | None:
     """
     Find the next in-progress game from watch list in priority order.
 
@@ -310,6 +317,7 @@ async def find_next_priority_game(host: str, watch_teams: list[str]) -> Optional
 
         sport = get_leagues()[league]["sport"]
         try:
+            assert state.espn is not None
             games = await state.espn.get_scoreboard(sport, espn_slug(league))
             for game in games:
                 if game["status"] != "in":
@@ -400,10 +408,9 @@ class ConfigWatcher(FileSystemEventHandler):
         logger.info(f"Reloaded: {len(state.instances)} instance(s)")
 
 
-config_observer: Optional[PollingObserver] = None
+config_observer: PollingObserver | None = None
 
 
-@asynccontextmanager
 async def resolve_instance_macs():
     """Fetch MAC addresses from all WLED instances (best-effort, non-blocking)."""
     for host, inst in state.instances.items():
@@ -434,7 +441,7 @@ async def lifespan(app: FastAPI):
     state.auto_watch_task = asyncio.create_task(auto_watch_all())
     # Start config file watcher (polling for Docker compatibility)
     config_observer = PollingObserver(timeout=5)
-    config_observer.schedule(ConfigWatcher(), CONFIG_DIR, recursive=True)
+    config_observer.schedule(ConfigWatcher(), str(CONFIG_DIR), recursive=True)
     config_observer.start()
     logger.info(f"Watching {CONFIG_DIR} for config changes (polling every 5s)")
     yield
@@ -609,6 +616,7 @@ async def handle_game_ended(inst: InstanceState, game_info: GameInfo):
     if not inst.controller:
         return
 
+    assert inst.game is not None
     league = inst.game["league"]
     post_game = get_instance_post_game_settings(inst.host)
 
@@ -704,6 +712,9 @@ async def check_celebration_end(inst: InstanceState):
     # Phase 2: Execute after_action
     after_action = inst.celebration_after_action or "fade_off"
     logger.info(f"[CELEBRATION] {inst.host}: Celebration ended, executing {after_action}")
+
+    if not inst.controller:
+        return
 
     try:
         if after_action == "off":
@@ -844,6 +855,7 @@ async def get_games(league: str):
         raise HTTPException(404, f"Unknown league: {league}")
 
     sport = get_leagues()[league]["sport"]
+    assert state.espn is not None
     games = await state.espn.get_scoreboard(sport, espn_slug(league))
 
     return [
@@ -1045,7 +1057,7 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
         logger.warning(f"[WATCH] {host}: Could not save preset: {e}")
 
     # Build game dict
-    game = {
+    game: dict[str, object] = {
         "league": req.league,
         "game_id": req.game_id,
         "last_info": None,
@@ -1055,6 +1067,7 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
     # Fetch game data immediately so UI has scores right away
     try:
         sport = get_leagues().get(req.league, {}).get("sport", "football")
+        assert state.espn is not None
         game_info = await state.espn.get_game_detail(sport, espn_slug(req.league), req.game_id)
         if game_info:
             game["last_info"] = game_info
@@ -1128,9 +1141,9 @@ async def delete_instance(host: str):
 
 
 class UpdateInstanceRequest(BaseModel):
-    host: Optional[str] = None
-    start: Optional[int] = None
-    end: Optional[int] = None
+    host: str | None = None
+    start: int | None = None
+    end: int | None = None
 
 
 @app.patch("/api/instance/{host}")
@@ -1174,12 +1187,12 @@ async def update_instance(host: str, req: UpdateInstanceRequest):
 
 
 class InstanceSettingsRequest(BaseModel):
-    min_team_pct: Optional[float] = None
-    contested_zone_pixels: Optional[int] = None
-    dark_buffer_pixels: Optional[int] = None
-    divider_preset: Optional[str] = None
-    chase_speed: Optional[int] = None
-    chase_intensity: Optional[int] = None
+    min_team_pct: float | None = None
+    contested_zone_pixels: int | None = None
+    dark_buffer_pixels: int | None = None
+    divider_preset: str | None = None
+    chase_speed: int | None = None
+    chase_intensity: int | None = None
 
 
 @app.post("/api/instance/{host}/settings")
@@ -1191,7 +1204,7 @@ async def update_instance_settings(host: str, req: InstanceSettingsRequest):
         raise HTTPException(404, f"Unknown instance: {host}")
 
     # Build settings dict from non-None values
-    settings = {}
+    settings: dict[str, float | int | str] = {}
     if req.min_team_pct is not None:
         settings["min_team_pct"] = req.min_team_pct
     if req.contested_zone_pixels is not None:
@@ -1267,7 +1280,7 @@ class PostGameRequest(BaseModel):
     celebration: str  # freeze | chase | twinkle | flash | solid
     celebration_duration_s: int = 60
     after_action: str  # off | fade_off | restore | preset
-    preset_id: Optional[int] = None
+    preset_id: int | None = None
 
 
 @app.post("/api/instance/{host}/post_game")
@@ -1419,12 +1432,12 @@ async def get_status():
 
 
 class SimSettings(BaseModel):
-    min_team_pct: Optional[float] = None
-    dark_buffer_pixels: Optional[int] = None
-    contested_zone_pixels: Optional[int] = None
-    divider_preset: Optional[str] = None
-    chase_speed: Optional[int] = None
-    chase_intensity: Optional[int] = None
+    min_team_pct: float | None = None
+    dark_buffer_pixels: int | None = None
+    contested_zone_pixels: int | None = None
+    divider_preset: str | None = None
+    chase_speed: int | None = None
+    chase_intensity: int | None = None
 
 
 class TestRequest(BaseModel):
@@ -1432,11 +1445,11 @@ class TestRequest(BaseModel):
     league: str = "nfl"
     home: str = "GB"
     away: str = "CHI"
-    host: Optional[str] = None  # Specific instance, or all if None
-    settings: Optional[SimSettings] = None  # Override display settings for simulation
-    home_score: Optional[int] = None  # For demo mode
-    away_score: Optional[int] = None
-    period: Optional[str] = None
+    host: str | None = None  # Specific instance, or all if None
+    settings: SimSettings | None = None  # Override display settings for simulation
+    home_score: int | None = None  # For demo mode
+    away_score: int | None = None
+    period: str | None = None
 
 
 @app.post("/api/test")

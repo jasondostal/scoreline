@@ -5,10 +5,9 @@ Handles segment creation, color assignment, and the "battle line" effect.
 """
 
 import asyncio
-import httpx
-from typing import Optional
 from dataclasses import dataclass
 
+import httpx
 
 # Effect IDs in WLED
 EFFECT_CHASE = 28      # Original Chase
@@ -44,7 +43,7 @@ class WLEDConfig:
     chase_intensity: int = 190  # Controls chase segment size (higher = smaller segments)
     chase_speed: int = 185  # Base chase speed
     divider_preset: str = "classic"  # Preset name from DIVIDER_PRESETS
-    divider_color: list[int] = None  # Override color (optional)
+    divider_color: list[int] | None = None  # Override color (optional)
 
     def get_divider_settings(self) -> tuple:
         """Get divider (color, effect, speed, intensity) from preset or override."""
@@ -74,7 +73,7 @@ class WLEDController:
             print(f"WLED info error: {e}")
             return {}
 
-    async def get_mac(self) -> Optional[str]:
+    async def get_mac(self) -> str | None:
         """Get WLED device MAC address."""
         info = await self.get_info()
         return info.get("mac")
@@ -89,7 +88,7 @@ class WLEDController:
             print(f"WLED state error: {e}")
             return {}
 
-    async def get_current_preset(self) -> Optional[int]:
+    async def get_current_preset(self) -> int | None:
         """Get currently active preset ID, or None if no preset active."""
         state = await self.get_state()
         ps = state.get("ps", -1)

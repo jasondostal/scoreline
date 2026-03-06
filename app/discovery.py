@@ -6,9 +6,9 @@ WLED devices advertise themselves as _wled._tcp.local.
 
 import asyncio
 from dataclasses import dataclass
-from typing import Optional
-from zeroconf import Zeroconf, ServiceBrowser, ServiceListener
-from zeroconf.asyncio import AsyncZeroconf, AsyncServiceBrowser
+
+from zeroconf import ServiceListener, Zeroconf
+from zeroconf.asyncio import AsyncServiceBrowser, AsyncZeroconf
 
 
 @dataclass
@@ -18,7 +18,7 @@ class WLEDDevice:
     host: str
     ip: str
     port: int
-    mac: Optional[str] = None
+    mac: str | None = None
 
 
 class WLEDDiscoveryListener(ServiceListener):

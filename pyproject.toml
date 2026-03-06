@@ -1,0 +1,23 @@
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I", "UP", "S"]
+ignore = [
+    "E402",   # module-level import ordering (local imports after enum defs)
+    "E501",   # line length (not enforced)
+    "B008",   # function-call-in-default-arg (FastAPI Query() pattern)
+    "S101",   # assert usage (fine in non-web code)
+    "S104",   # bind-all-interfaces (intentional in container)
+    "S110",   # try-except-pass (intentional best-effort patterns)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "app"

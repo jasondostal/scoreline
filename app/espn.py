@@ -2,12 +2,10 @@
 ESPN API client for fetching live game data and win probabilities.
 """
 
-import httpx
 import os
-from typing import Optional
 from dataclasses import dataclass
-from datetime import datetime
 
+import httpx
 
 ESPN_BASE = os.environ.get("ESPN_BASE_URL", "https://site.api.espn.com/apis/site/v2/sports")
 
@@ -24,7 +22,7 @@ class GameInfo:
     home_win_pct: float  # 0.0 to 1.0
     period: str
     clock: str
-    last_play: Optional[str] = None
+    last_play: str | None = None
 
 
 class ESPNClient:
@@ -81,7 +79,7 @@ class ESPNClient:
 
         return games
 
-    async def get_game_detail(self, sport: str, league: str, game_id: str) -> Optional[GameInfo]:
+    async def get_game_detail(self, sport: str, league: str, game_id: str) -> GameInfo | None:
         """
         Get detailed game info including win probability.
 
