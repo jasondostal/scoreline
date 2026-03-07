@@ -148,6 +148,8 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
           <button
             key={inst.host}
             onClick={() => handleToggleSim(inst.host, inst.simulating)}
+            aria-label={`${inst.simulating ? "Disable" : "Enable"} simulation on ${inst.host}`}
+            aria-pressed={inst.simulating}
             className={`flex items-center gap-1.5 rounded border px-2 py-1 text-xs transition-colors ${
               inst.simulating
                 ? "border-sim/40 bg-sim/10 text-sim"
@@ -185,7 +187,7 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
           onValueChange={setHomeTeam}
           disabled={!league || teams.length === 0}
         >
-          <SelectTrigger size="sm" className="h-8 flex-1 text-xs bg-secondary border-input">
+          <SelectTrigger size="sm" className="h-8 flex-1 text-xs bg-secondary border-input" aria-label="Home team">
             <SelectValue placeholder="Home..." />
           </SelectTrigger>
           <SelectContent>
@@ -205,7 +207,7 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
           onValueChange={setAwayTeam}
           disabled={!league || teams.length === 0}
         >
-          <SelectTrigger size="sm" className="h-8 flex-1 text-xs bg-secondary border-input">
+          <SelectTrigger size="sm" className="h-8 flex-1 text-xs bg-secondary border-input" aria-label="Away team">
             <SelectValue placeholder="Away..." />
           </SelectTrigger>
           <SelectContent>
@@ -314,12 +316,12 @@ export function SimulatorPanel({ instances, leagues, onMutate }: SimulatorPanelP
           <SliderRow label="Buffer" value={buffer} min={0} max={20} format={(v) => `${v}px`} onChange={setBuffer} />
           <SliderRow label="Divider" value={divider} min={2} max={30} format={(v) => `${v}px`} onChange={setDivider} />
           <div className="flex items-center gap-3">
-            <span className="w-24 shrink-0 text-[11px] text-muted-foreground">Style</span>
+            <span id="sim-style-label" className="w-24 shrink-0 text-[11px] text-muted-foreground">Style</span>
             <Select
               value={preset}
               onValueChange={(val) => setPreset(val as DividerPreset)}
             >
-              <SelectTrigger size="sm" className="h-7 flex-1 text-[11px] bg-secondary border-input">
+              <SelectTrigger size="sm" className="h-7 flex-1 text-[11px] bg-secondary border-input" aria-labelledby="sim-style-label">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -412,10 +414,12 @@ function SliderRow({
   format?: (v: number) => string;
   onChange: (v: number) => void;
 }) {
+  const id = `sim-slider-${label.toLowerCase().replace(/\s+/g, "-")}`;
   return (
     <div className="flex items-center gap-3">
-      <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{label}</span>
+      <label htmlFor={id} className="w-24 shrink-0 text-[11px] text-muted-foreground">{label}</label>
       <input
+        id={id}
         type="range"
         className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-secondary accent-primary"
         min={min}

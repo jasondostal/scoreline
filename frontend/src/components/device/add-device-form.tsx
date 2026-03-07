@@ -49,6 +49,7 @@ export function AddDeviceForm({ onMutate }: AddDeviceFormProps) {
           value={host}
           onChange={(e) => setHost(e.target.value)}
           placeholder="IP / Hostname"
+          aria-label="WLED IP or hostname"
           className="min-w-[120px] flex-[2] rounded border border-input bg-secondary px-2 py-1.5 text-xs text-foreground"
         />
         <input
@@ -56,6 +57,7 @@ export function AddDeviceForm({ onMutate }: AddDeviceFormProps) {
           value={start}
           onChange={(e) => setStart(Number(e.target.value))}
           placeholder="Start"
+          aria-label="LED start pixel"
           className="w-20 rounded border border-input bg-secondary px-2 py-1.5 text-xs text-foreground"
         />
         <input
@@ -63,6 +65,7 @@ export function AddDeviceForm({ onMutate }: AddDeviceFormProps) {
           value={end}
           onChange={(e) => setEnd(Number(e.target.value))}
           placeholder="End"
+          aria-label="LED end pixel"
           className="w-20 rounded border border-input bg-secondary px-2 py-1.5 text-xs text-foreground"
         />
       </div>

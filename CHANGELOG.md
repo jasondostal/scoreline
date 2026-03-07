@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Authentication System** — Optional single-user local login, API key auth, and reverse proxy header bypass (Authentik/SWAG compatible) with fail-closed proxy trust validation
+- **Health Endpoint** — `GET /api/health` with ESPN client, background task, and config checks; Docker `HEALTHCHECK` directive uses it
+- **SSRF Protection** — WLED host validation blocks loopback/link-local addresses and enforces hostname format
+- **Error Boundary** — React `ErrorBoundary` wraps the app with crash recovery UI
+- **Test Suite** — pytest infrastructure with `conftest.py`, tests for config, ESPN client, LED segments, and state machine; CI runs tests between lint and build stages
+- **Non-Root Container** — `appuser` created in Dockerfile, entrypoint drops privileges via `gosu` after config setup
+
+### Changed
+- **CORS** — Configurable via `CORS_ORIGINS` env var (locked to same-origin by default)
+- **WebSocket Limits** — Max 50 concurrent connections with proper rejection (code 1013)
+- **Atomic Config Writes** — `settings.yaml` writes use tmp file + rename to prevent partial reads
+- **Path Traversal Prevention** — SPA fallback resolves and validates paths against static root
+- **Dependency Pinning** — All `requirements.txt` entries now have upper-bound version constraints
+- **Structured Logging** — `print()` calls in ESPN/WLED clients replaced with `logging.getLogger("uvicorn.error")`
+- **Mutable Class-Level State** — `AppState` fields moved from class variables to `__init__` (prevents cross-instance leakage)
+- **ConfigWatcher Thread Safety** — Reload scheduled on event loop via `call_soon_threadsafe` instead of direct mutation
+- **Graceful Shutdown** — WLED strips restored to previous preset (or turned off) on container stop
+- **Assertion Cleanup** — Bare `assert` statements replaced with proper guards (`if`/`raise HTTPException`)
+- **Pydantic Validation** — `TestRequest.pct` constrained to 0–100 via `Field(ge=0, le=100)`
+- **settings.yaml.default** — Post-game comments updated to reflect two-phase celebration model
+
+### Fixed
+- **Display Sliders Sync** — `useEffect` syncs local slider state when props change (WebSocket updates from other clients no longer ignored)
+- **Post-Game Config Sync** — Same `useEffect` sync pattern applied to post-game settings panel
+
+### Accessibility
+- `aria-label` added to WLED host/pixel inputs, team selects, watch-team remove buttons, and sim toggle buttons
+- `aria-pressed` on simulator instance toggle buttons
+- `aria-labelledby` on Style, Celebration, Duration, and Action select triggers
+- Slider `<span>` labels converted to proper `<label>` elements with `htmlFor`
+
 ## [2.3.0] - 2026-03-05
 
 ### Added

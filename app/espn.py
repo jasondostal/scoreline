@@ -2,10 +2,13 @@
 ESPN API client for fetching live game data and win probabilities.
 """
 
+import logging
 import os
 from dataclasses import dataclass
 
 import httpx
+
+logger = logging.getLogger("uvicorn.error")
 
 ESPN_BASE = os.environ.get("ESPN_BASE_URL", "https://site.api.espn.com/apis/site/v2/sports")
 
@@ -52,7 +55,7 @@ class ESPNClient:
             resp.raise_for_status()
             data = resp.json()
         except Exception as e:
-            print(f"ESPN scoreboard error: {e}")
+            logger.warning(f"ESPN scoreboard error: {e}")
             return []
 
         games = []
@@ -93,7 +96,7 @@ class ESPNClient:
             resp.raise_for_status()
             data = resp.json()
         except Exception as e:
-            print(f"ESPN game detail error: {e}")
+            logger.warning(f"ESPN game detail error: {e}")
             return None
 
         # Extract basic info

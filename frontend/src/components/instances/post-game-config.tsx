@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebounce } from "@/lib/use-debounce";
 import { api } from "@/lib/api";
 import {
@@ -36,6 +36,15 @@ export function PostGameConfig({ instance: inst }: PostGameConfigProps) {
     inst.post_game_preset_id,
   );
 
+  // Sync local state when props change
+  useEffect(() => {
+    setCelebration(inst.post_game_celebration);
+    setDuration(inst.post_game_duration);
+    setIsCustomDuration(!DURATION_OPTIONS.some((o) => o.value > 0 && o.value === inst.post_game_duration));
+    setAfterAction(inst.post_game_after_action);
+    setPresetId(inst.post_game_preset_id);
+  }, [inst.post_game_celebration, inst.post_game_duration, inst.post_game_after_action, inst.post_game_preset_id]);
+
   const debouncedSave = useDebounce(() => {
     api.updatePostGame(inst.host, {
       celebration,
@@ -53,7 +62,7 @@ export function PostGameConfig({ instance: inst }: PostGameConfigProps) {
 
       {/* Celebration type */}
       <div className="flex items-center gap-3">
-        <span className="w-20 shrink-0 text-[11px] text-muted-foreground">
+        <span id="celebration-label" className="w-20 shrink-0 text-[11px] text-muted-foreground">
           Celebration
         </span>
         <Select
@@ -63,7 +72,7 @@ export function PostGameConfig({ instance: inst }: PostGameConfigProps) {
             debouncedSave();
           }}
         >
-          <SelectTrigger size="sm" className="h-8 flex-1 text-xs bg-secondary border-input">
+          <SelectTrigger size="sm" className="h-8 flex-1 text-xs bg-secondary border-input" aria-labelledby="celebration-label">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -78,7 +87,7 @@ export function PostGameConfig({ instance: inst }: PostGameConfigProps) {
 
       {/* Duration */}
       <div className="flex items-center gap-3">
-        <span className="w-20 shrink-0 text-[11px] text-muted-foreground">
+        <span id="duration-label" className="w-20 shrink-0 text-[11px] text-muted-foreground">
           Duration
         </span>
         <Select
@@ -93,7 +102,7 @@ export function PostGameConfig({ instance: inst }: PostGameConfigProps) {
             }
           }}
         >
-          <SelectTrigger size="sm" className="h-8 flex-1 text-xs bg-secondary border-input">
+          <SelectTrigger size="sm" className="h-8 flex-1 text-xs bg-secondary border-input" aria-labelledby="duration-label">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -108,6 +117,7 @@ export function PostGameConfig({ instance: inst }: PostGameConfigProps) {
           <>
             <input
               type="number"
+              aria-label="Custom duration in seconds"
               className="w-16 rounded border border-input bg-secondary px-2 py-1 text-xs text-foreground"
               value={duration}
               min={5}
@@ -128,7 +138,7 @@ export function PostGameConfig({ instance: inst }: PostGameConfigProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="w-20 shrink-0 text-[11px] text-muted-foreground">
+        <span id="after-action-label" className="w-20 shrink-0 text-[11px] text-muted-foreground">
           Action
         </span>
         <Select
@@ -138,7 +148,7 @@ export function PostGameConfig({ instance: inst }: PostGameConfigProps) {
             debouncedSave();
           }}
         >
-          <SelectTrigger size="sm" className="h-8 flex-1 text-xs bg-secondary border-input">
+          <SelectTrigger size="sm" className="h-8 flex-1 text-xs bg-secondary border-input" aria-labelledby="after-action-label">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -158,6 +168,7 @@ export function PostGameConfig({ instance: inst }: PostGameConfigProps) {
           </span>
           <input
             type="number"
+            aria-label="WLED preset ID"
             className="w-20 rounded border border-input bg-secondary px-2 py-1 text-xs text-foreground"
             value={presetId ?? ""}
             min={1}

@@ -32,10 +32,10 @@ auto_watch_interval: 300
 #   chase_speed: 185               # Chase animation speed (0-255)
 #   chase_intensity: 190           # Chase segment size (higher = smaller)
 
-# Post-game settings (optional - what happens when a game ends)
+# Post-game settings (optional - two-phase: celebration then after-action)
 # post_game:
-#   action: flash_then_off         # off | fade_off | flash_then_off | restore | preset
-#   flash_count: 3                 # Number of winner color flashes
-#   flash_duration_ms: 500         # Duration of each flash
-#   fade_duration_s: 3             # Fade out duration
-#   preset_id: 1                   # WLED preset ID (only for action: preset)
+#   celebration: chase              # freeze | chase | twinkle | flash | solid
+#   celebration_duration_s: 60      # How long to celebrate (seconds)
+#   after_action: fade_off          # off | fade_off | restore | preset
+#   fade_duration_s: 3              # Fade out duration (for fade_off)
+#   preset_id: 1                    # WLED preset ID (only for after_action: preset)

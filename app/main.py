@@ -5,16 +5,21 @@ FastAPI app with game picker UI and background polling.
 """
 
 import asyncio
+import ipaddress
 import logging
 import os
+import re
 import threading
 import time
 from collections import deque
 from enum import StrEnum
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, HTMLResponse
-from pydantic import BaseModel
+from auth import AUTH_ENABLED, check_auth, log_auth_config
+from auth import router as auth_router
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from pydantic import BaseModel, Field
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver
 
@@ -143,14 +148,21 @@ class InstanceState:
         self.health_last_error = error
 
 
+MAX_WS_CONNECTIONS = 50
+
+
 class ConnectionManager:
     """WebSocket connection manager for real-time updates."""
     def __init__(self):
         self.connections: set[WebSocket] = set()
 
     async def connect(self, ws: WebSocket):
+        if len(self.connections) >= MAX_WS_CONNECTIONS:
+            await ws.close(code=1013, reason="Too many connections")
+            return False
         await ws.accept()
         self.connections.add(ws)
+        return True
 
     def disconnect(self, ws: WebSocket):
         self.connections.discard(ws)
@@ -174,15 +186,16 @@ async def broadcast_state():
         try:
             data = await list_instances()
             await ws_manager.broadcast({"type": "instances_update", "data": data})
-        except Exception:
-            pass  # Best effort
+        except Exception as e:
+            logger.debug(f"WebSocket broadcast error: {e}")
 
 
 class AppState:
-    espn: ESPNClient | None = None
-    instances: dict[str, InstanceState] = {}  # host -> InstanceState
-    poll_task: asyncio.Task | None = None
-    auto_watch_task: asyncio.Task | None = None
+    def __init__(self):
+        self.espn: ESPNClient | None = None
+        self.instances: dict[str, InstanceState] = {}  # host -> InstanceState
+        self.poll_task: asyncio.Task | None = None
+        self.auto_watch_task: asyncio.Task | None = None
 
 
 state = AppState()
@@ -317,7 +330,8 @@ async def find_next_priority_game(host: str, watch_teams: list[str]) -> dict | N
 
         sport = get_leagues()[league]["sport"]
         try:
-            assert state.espn is not None
+            if state.espn is None:
+                continue
             games = await state.espn.get_scoreboard(sport, espn_slug(league))
             for game in games:
                 if game["status"] != "in":
@@ -378,9 +392,10 @@ def init_instances():
 # Config file watcher for auto-reload
 class ConfigWatcher(FileSystemEventHandler):
     """Watch config directory for changes and auto-reload."""
-    def __init__(self):
+    def __init__(self, loop: asyncio.AbstractEventLoop):
         self._debounce_timer = None
         self._lock = threading.Lock()
+        self._loop = loop
 
     def on_modified(self, event):
         if event.is_directory:
@@ -402,6 +417,11 @@ class ConfigWatcher(FileSystemEventHandler):
             self._debounce_timer.start()
 
     def _do_reload(self):
+        """Schedule reload on the event loop thread (thread-safe)."""
+        self._loop.call_soon_threadsafe(self._reload_sync)
+
+    def _reload_sync(self):
+        """Runs on the event loop thread — safe to mutate shared state."""
         logger.info("Config changed, reloading...")
         reload_config()
         init_instances()
@@ -431,6 +451,7 @@ async def resolve_instance_macs():
 async def lifespan(app: FastAPI):
     global config_observer
     # Startup
+    log_auth_config()
     state.espn = ESPNClient()
     init_instances()
     # Resolve WLED MAC addresses in background (non-blocking)
@@ -440,8 +461,9 @@ async def lifespan(app: FastAPI):
     # Start auto-watch task (scans for watched teams' games)
     state.auto_watch_task = asyncio.create_task(auto_watch_all())
     # Start config file watcher (polling for Docker compatibility)
+    loop = asyncio.get_running_loop()
     config_observer = PollingObserver(timeout=5)
-    config_observer.schedule(ConfigWatcher(), str(CONFIG_DIR), recursive=True)
+    config_observer.schedule(ConfigWatcher(loop), str(CONFIG_DIR), recursive=True)
     config_observer.start()
     logger.info(f"Watching {CONFIG_DIR} for config changes (polling every 5s)")
     yield
@@ -455,12 +477,54 @@ async def lifespan(app: FastAPI):
         state.auto_watch_task.cancel()
     if state.espn:
         await state.espn.close()
+    # Restore WLED strips to known state before closing
     for inst in state.instances.values():
         if inst.controller:
+            try:
+                if inst.previous_preset is not None:
+                    await inst.controller.restore_preset(inst.previous_preset)
+                else:
+                    await inst.controller.turn_off()
+            except Exception as e:
+                logger.debug(f"[SHUTDOWN] {inst.host}: Could not restore WLED: {e}")
             await inst.controller.close()
 
 
 app = FastAPI(title="Game Lights", lifespan=lifespan)
+
+# Auth routes (login, logout, me)
+app.include_router(auth_router, prefix="/api")
+
+# CORS — restrict to same-origin by default, configurable via env
+_cors_origins = os.environ.get("CORS_ORIGINS", "")
+if _cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[o.strip() for o in _cors_origins.split(",")],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    """Authentication middleware — protects /api/* routes when auth is enabled."""
+    path = request.url.path
+
+    # Open paths — static assets, auth endpoints, health/status, WebSocket
+    if not path.startswith("/api/") or path.startswith("/api/auth/") or path in ("/api/status", "/api/health"):
+        return await call_next(request)
+
+    if not AUTH_ENABLED:
+        return await call_next(request)
+
+    user = check_auth(request)
+    if user is None:
+        return JSONResponse(status_code=401, content={"detail": "Authentication required"})
+
+    request.state.user = user
+    return await call_next(request)
 
 
 # Background polling
@@ -616,7 +680,8 @@ async def handle_game_ended(inst: InstanceState, game_info: GameInfo):
     if not inst.controller:
         return
 
-    assert inst.game is not None
+    if inst.game is None:
+        return
     league = inst.game["league"]
     post_game = get_instance_post_game_settings(inst.host)
 
@@ -815,6 +880,28 @@ async def api_discover_wled():
     ]
 
 
+_HOST_PATTERN = re.compile(r"^[a-zA-Z0-9._-]{1,253}$")
+_BLOCKED_NETS = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+]
+
+
+def _validate_wled_host(host: str) -> str | None:
+    """Validate a WLED host. Returns error message or None if valid."""
+    if not _HOST_PATTERN.match(host):
+        return f"Invalid host: {host!r} (only alphanumeric, dots, hyphens, underscores)"
+    try:
+        addr = ipaddress.ip_address(host)
+        for net in _BLOCKED_NETS:
+            if addr in net:
+                return f"Blocked address: {host}"
+    except ValueError:
+        pass  # Not an IP — hostname, that's fine
+    return None
+
+
 class AddWLEDRequest(BaseModel):
     host: str
     start: int = 0
@@ -824,6 +911,9 @@ class AddWLEDRequest(BaseModel):
 @app.post("/api/wled/add")
 async def api_add_wled(req: AddWLEDRequest):
     """Add a WLED device to settings.yaml and reload instances."""
+    err = _validate_wled_host(req.host)
+    if err:
+        raise HTTPException(400, err)
     result = add_wled_instance(req.host, req.start, req.end)
     if result.get("status") == "added":
         reload_config()
@@ -855,7 +945,8 @@ async def get_games(league: str):
         raise HTTPException(404, f"Unknown league: {league}")
 
     sport = get_leagues()[league]["sport"]
-    assert state.espn is not None
+    if state.espn is None:
+        raise HTTPException(503, "ESPN client not initialized")
     games = await state.espn.get_scoreboard(sport, espn_slug(league))
 
     return [
@@ -1067,7 +1158,8 @@ async def watch_game_on_instance(host: str, req: InstanceWatchRequest):
     # Fetch game data immediately so UI has scores right away
     try:
         sport = get_leagues().get(req.league, {}).get("sport", "football")
-        assert state.espn is not None
+        if state.espn is None:
+            raise HTTPException(503, "ESPN client not initialized")
         game_info = await state.espn.get_game_detail(sport, espn_slug(req.league), req.game_id)
         if game_info:
             game["last_info"] = game_info
@@ -1150,6 +1242,11 @@ class UpdateInstanceRequest(BaseModel):
 async def update_instance(host: str, req: UpdateInstanceRequest):
     """Update core instance properties (host, start, end)."""
     from config import update_wled_instance
+
+    if req.host:
+        err = _validate_wled_host(req.host)
+        if err:
+            raise HTTPException(400, err)
 
     if host not in state.instances:
         raise HTTPException(404, f"Unknown instance: {host}")
@@ -1431,6 +1528,32 @@ async def get_status():
     return result
 
 
+@app.get("/api/health")
+async def health_check():
+    """Health endpoint — checks ESPN client, background tasks, and config."""
+    checks = {}
+
+    # ESPN client alive
+    checks["espn_client"] = state.espn is not None
+
+    # Background tasks alive (not done = still running)
+    checks["poll_task"] = state.poll_task is not None and not state.poll_task.done()
+    checks["auto_watch_task"] = state.auto_watch_task is not None and not state.auto_watch_task.done()
+
+    # Config loaded
+    checks["config_loaded"] = len(get_settings()) > 0
+
+    # Instances initialized
+    checks["instances"] = len(state.instances)
+
+    healthy = all([checks["espn_client"], checks["poll_task"], checks["auto_watch_task"], checks["config_loaded"]])
+
+    if not healthy:
+        return JSONResponse(status_code=503, content={"healthy": False, **checks})
+
+    return {"healthy": True, **checks}
+
+
 class SimSettings(BaseModel):
     min_team_pct: float | None = None
     dark_buffer_pixels: int | None = None
@@ -1441,7 +1564,7 @@ class SimSettings(BaseModel):
 
 
 class TestRequest(BaseModel):
-    pct: int
+    pct: int = Field(ge=0, le=100)
     league: str = "nfl"
     home: str = "GB"
     away: str = "CHI"
@@ -1535,7 +1658,9 @@ async def save_simulator_settings(req: SimulatorDefaultsRequest):
 # WebSocket endpoint for real-time updates
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await ws_manager.connect(websocket)
+    accepted = await ws_manager.connect(websocket)
+    if not accepted:
+        return
     try:
         # Send initial state immediately on connect
         instances_data = await list_instances()
@@ -1553,8 +1678,9 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.get("/{path:path}")
 async def spa_fallback(path: str):
     """Serve static assets or fall back to index.html for client-side routing."""
-    file_path = os.path.join(STATIC_DIR, path)
-    if os.path.isfile(file_path):
+    file_path = os.path.realpath(os.path.join(STATIC_DIR, path))
+    static_root = os.path.realpath(STATIC_DIR)
+    if file_path.startswith(static_root) and os.path.isfile(file_path):
         return FileResponse(file_path)
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
