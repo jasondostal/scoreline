@@ -127,6 +127,7 @@ export function InstanceCard({ instance: inst, leagues, onMutate }: InstanceCard
               value={editHost}
               onChange={(e) => setEditHost(e.target.value)}
               placeholder="IP / Hostname"
+              aria-label="WLED IP or hostname"
               className="flex-[2] rounded border border-input bg-secondary px-2 py-1 text-xs text-foreground"
             />
             <input
@@ -134,6 +135,7 @@ export function InstanceCard({ instance: inst, leagues, onMutate }: InstanceCard
               value={editStart}
               onChange={(e) => setEditStart(Number(e.target.value))}
               placeholder="Start"
+              aria-label="LED start pixel"
               className="w-20 rounded border border-input bg-secondary px-2 py-1 text-xs text-foreground"
             />
             <input
@@ -141,6 +143,7 @@ export function InstanceCard({ instance: inst, leagues, onMutate }: InstanceCard
               value={editEnd}
               onChange={(e) => setEditEnd(Number(e.target.value))}
               placeholder="End"
+              aria-label="LED end pixel"
               className="w-20 rounded border border-input bg-secondary px-2 py-1 text-xs text-foreground"
             />
           </div>
@@ -175,6 +178,7 @@ export function InstanceCard({ instance: inst, leagues, onMutate }: InstanceCard
                 }}
                 className="ml-0.5 rounded-full p-0.5 hover:bg-armed/30 transition-colors"
                 title={`Remove ${t.split(":")[1] || t}`}
+                aria-label={`Remove ${t.split(":")[1] || t} from watch list`}
               >
                 <X className="h-2.5 w-2.5" />
               </button>

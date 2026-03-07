@@ -10,6 +10,13 @@ services:
       - ./config:/app/config
     environment:
       - TZ=America/Chicago
+      # Auth (all optional — omit for no auth)
+      # - ADMIN_USER=admin
+      # - ADMIN_PASS=changeme
+      # - API_KEY=your-api-key
+      # - AUTH_PROXY_HEADER=Remote-User
+      # - TRUSTED_PROXY_IPS=172.16.0.0/12
+      # - CORS_ORIGINS=https://sl.witekdivers.com
     networks:
       - homelab
 

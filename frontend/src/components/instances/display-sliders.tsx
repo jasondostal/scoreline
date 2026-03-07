@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebounce } from "@/lib/use-debounce";
 import { api } from "@/lib/api";
 import { DIVIDER_PRESETS } from "@/lib/constants";
@@ -25,10 +25,12 @@ interface SliderRowProps {
 }
 
 function SliderRow({ label, value, min, max, format, onChange }: SliderRowProps) {
+  const id = `slider-${label.toLowerCase().replace(/\s+/g, "-")}`;
   return (
     <div className="flex items-center gap-3">
-      <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{label}</span>
+      <label htmlFor={id} className="w-24 shrink-0 text-[11px] text-muted-foreground">{label}</label>
       <input
+        id={id}
         type="range"
         className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-secondary accent-primary"
         min={min}
@@ -50,6 +52,16 @@ export function DisplaySliders({ instance: inst }: DisplaySlidersProps) {
   const [preset, setPreset] = useState<DividerPreset>(inst.divider_preset);
   const [chaseSpeed, setChaseSpeed] = useState(inst.chase_speed);
   const [chaseIntensity, setChaseIntensity] = useState(inst.chase_intensity);
+
+  // Sync local state when props change (e.g. from another client or WebSocket update)
+  useEffect(() => {
+    setDignity(Math.round(inst.min_team_pct * 100));
+    setBuffer(inst.dark_buffer_pixels);
+    setDivider(inst.contested_zone_pixels);
+    setPreset(inst.divider_preset);
+    setChaseSpeed(inst.chase_speed);
+    setChaseIntensity(inst.chase_intensity);
+  }, [inst.min_team_pct, inst.dark_buffer_pixels, inst.contested_zone_pixels, inst.divider_preset, inst.chase_speed, inst.chase_intensity]);
 
   const debouncedSave = useDebounce(() => {
     api.updateSettings(inst.host, {
@@ -97,7 +109,7 @@ export function DisplaySliders({ instance: inst }: DisplaySlidersProps) {
       />
 
       <div className="flex items-center gap-3">
-        <span className="w-24 shrink-0 text-[11px] text-muted-foreground">Style</span>
+        <span id="style-label" className="w-24 shrink-0 text-[11px] text-muted-foreground">Style</span>
         <Select
           value={preset}
           onValueChange={(val) => {
@@ -105,7 +117,7 @@ export function DisplaySliders({ instance: inst }: DisplaySlidersProps) {
             debouncedSave();
           }}
         >
-          <SelectTrigger size="sm" className="h-7 flex-1 text-[11px] bg-secondary border-input">
+          <SelectTrigger size="sm" className="h-7 flex-1 text-[11px] bg-secondary border-input" aria-labelledby="style-label">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

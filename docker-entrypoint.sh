@@ -23,5 +23,8 @@ fi
 
 echo "Config ready at $CONFIG_DIR"
 
-# Hand off to the main command
-exec "$@"
+# Ensure appuser owns the config directory (for writes during runtime)
+chown -R appuser:appuser "$CONFIG_DIR"
+
+# Drop to non-root user
+exec gosu appuser "$@"

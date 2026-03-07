@@ -5,9 +5,12 @@ Handles segment creation, color assignment, and the "battle line" effect.
 """
 
 import asyncio
+import logging
 from dataclasses import dataclass
 
 import httpx
+
+logger = logging.getLogger("uvicorn.error")
 
 # Effect IDs in WLED
 EFFECT_CHASE = 28      # Original Chase
@@ -70,7 +73,7 @@ class WLEDController:
             resp.raise_for_status()
             return resp.json()
         except Exception as e:
-            print(f"WLED info error: {e}")
+            logger.warning(f"WLED info error: {e}")
             return {}
 
     async def get_mac(self) -> str | None:
@@ -85,7 +88,7 @@ class WLEDController:
             resp.raise_for_status()
             return resp.json()
         except Exception as e:
-            print(f"WLED state error: {e}")
+            logger.warning(f"WLED state error: {e}")
             return {}
 
     async def get_current_preset(self) -> int | None:
@@ -96,11 +99,7 @@ class WLEDController:
 
     async def set_state(self, state: dict) -> bool:
         """Push state update to WLED."""
-        import logging
-        logger = logging.getLogger(__name__)
-
         try:
-            # Log what we're sending
             import json
             logger.info(f"[WLED] {self.config.host} sending state with {len(state.get('seg', []))} segments")
             logger.debug(f"[WLED] Payload: {json.dumps(state)}")

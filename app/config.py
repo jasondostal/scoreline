@@ -4,9 +4,22 @@ Loads settings from user config, leagues from user config or built-in defaults.
 """
 
 import os
+import tempfile
 from pathlib import Path
 
 import yaml  # type: ignore[import-untyped]
+
+
+def _atomic_yaml_write(path: Path, data: dict) -> None:
+    """Write YAML atomically via tmp file + rename (prevents partial reads)."""
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, suffix=".yaml.tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+        os.replace(tmp_path, path)
+    except BaseException:
+        os.unlink(tmp_path)
+        raise
 
 # User config directory (mounted volume)
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/app/config"))
@@ -132,8 +145,7 @@ def update_instance_watch_teams(host: str, watch_teams: list[str]) -> dict:
         return {"status": "error", "message": f"Instance {host} not found"}
 
     # Write back
-    with open(settings_path, "w") as f:
-        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+    _atomic_yaml_write(settings_path, raw_settings)
 
     # Reload cache
     _settings = load_settings()
@@ -235,8 +247,7 @@ def add_wled_instance(host: str, start: int = 0, end: int = 300) -> dict:
     })
 
     # Write back
-    with open(settings_path, "w") as f:
-        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+    _atomic_yaml_write(settings_path, raw_settings)
 
     # Reload cache
     _settings = load_settings()
@@ -269,8 +280,7 @@ def remove_wled_instance(host: str) -> dict:
         return {"status": "error", "message": f"{host} not found in config"}
 
     # Write back
-    with open(settings_path, "w") as f:
-        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+    _atomic_yaml_write(settings_path, raw_settings)
 
     # Reload cache
     _settings = load_settings()
@@ -319,8 +329,7 @@ def update_wled_instance(host: str, new_host: str | None = None, start: int | No
         inst["end"] = end
 
     # Write back
-    with open(settings_path, "w") as f:
-        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+    _atomic_yaml_write(settings_path, raw_settings)
 
     # Reload cache
     _settings = load_settings()
@@ -363,8 +372,7 @@ def update_instance_settings(host: str, display_settings: dict) -> dict:
         return {"status": "error", "message": f"Instance {host} not found"}
 
     # Write back
-    with open(settings_path, "w") as f:
-        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+    _atomic_yaml_write(settings_path, raw_settings)
 
     # Reload cache
     _settings = load_settings()
@@ -430,8 +438,7 @@ def update_instance_post_game_settings(host: str, post_game_settings: dict) -> d
         return {"status": "error", "message": f"Instance {host} not found"}
 
     # Write back
-    with open(settings_path, "w") as f:
-        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+    _atomic_yaml_write(settings_path, raw_settings)
 
     # Reload cache
     _settings = load_settings()
@@ -515,8 +522,7 @@ def update_simulator_defaults(simulator_settings: dict) -> dict:
     raw_settings["simulator"].update(simulator_settings)
 
     # Write back
-    with open(settings_path, "w") as f:
-        yaml.dump(raw_settings, f, default_flow_style=False, sort_keys=False)
+    _atomic_yaml_write(settings_path, raw_settings)
 
     # Reload cache
     _settings = load_settings()
