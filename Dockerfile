@@ -12,10 +12,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends gosu && rm -rf /var/lib/apt/lists/*
-
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gosu=1.17-3+b4 \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir -r requirements.txt
 
 COPY app/ ./
 
@@ -28,10 +29,8 @@ COPY config/settings.yaml.default ./defaults/settings.yaml
 
 # Entrypoint populates user config with defaults if missing
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-
-# Non-root user (entrypoint runs as root for first-run config copy, then exec drops to appuser)
-RUN adduser --disabled-password --no-create-home --gecos "" appuser
+RUN chmod +x /docker-entrypoint.sh \
+    && adduser --disabled-password --no-create-home --gecos "" appuser
 
 EXPOSE 8080
 
