@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
+from starlette.requests import HTTPConnection
 from pydantic import BaseModel
 
 log = logging.getLogger("uvicorn.error")
@@ -78,7 +79,7 @@ def _is_trusted_proxy(client_ip: str) -> bool:
     return False
 
 
-def _check_proxy_header(request: Request) -> str | None:
+def _check_proxy_header(request: HTTPConnection) -> str | None:
     """Check if a trusted reverse proxy sent the configured auth header.
 
     Fail-closed: if AUTH_PROXY_HEADER is set but TRUSTED_PROXY_IPS is not,
@@ -109,7 +110,7 @@ def _check_proxy_header(request: Request) -> str | None:
     return header_value
 
 
-def _check_api_key(request: Request) -> str | None:
+def _check_api_key(request: HTTPConnection) -> str | None:
     """Check X-API-Key header with constant-time comparison."""
     if not API_KEY:
         return None
@@ -119,7 +120,7 @@ def _check_api_key(request: Request) -> str | None:
     return None
 
 
-def _check_session(request: Request) -> str | None:
+def _check_session(request: HTTPConnection) -> str | None:
     """Check if request has a valid session cookie."""
     token = request.cookies.get(SESSION_COOKIE)
     if token and token in _sessions:
@@ -130,7 +131,7 @@ def _check_session(request: Request) -> str | None:
     return None
 
 
-def check_auth(request: Request) -> str | None:
+def check_auth(request: HTTPConnection) -> str | None:
     """Check all auth methods. Returns username or None.
 
     Order: proxy header -> API key -> session cookie.
