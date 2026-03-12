@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-03-12
+
+### Added
+- **Login UI** — Frontend login page with auth gate; checks `/api/auth/me` on load, shows login form when authentication is required, redirects on session expiry
+- **Login Rate Limiting** — 5 attempts per 15-minute window per IP with `429 Too Many Requests` and `Retry-After` header
+- **Security Headers Middleware** — `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` on all responses
+- **Conditional HSTS** — `Strict-Transport-Security` header when `FORCE_HTTPS` env var is set
+- **WebSocket Auth Gate** — WebSocket connections require authentication before acceptance (closes with 1008 if unauthenticated)
+- **WebSocket Idle Timeout** — Connections idle for 5 minutes are closed cleanly
+- **Session Invalidation** — `invalidate_all_sessions()` helper for credential rotation
+- **`FORCE_HTTPS` env var** — Controls secure cookie flag and HSTS header independently of proxy config
+
+### Changed
+- **SSRF Blocklist Expanded** — Added `0.0.0.0/8`, IPv6 ULA (`fc00::/7`), link-local (`fe80::/10`), and multicast (`224.0.0.0/4`, `ff00::/8`) to blocked networks
+- **Input Validation** — Pydantic `Field` validators with bounds on `InstanceSettingsRequest` (min_team_pct, contested_zone_pixels, dark_buffer_pixels, chase_speed, chase_intensity); `divider_preset` validated against `DIVIDER_PRESETS`
+- **CSP Policy** — Allows Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) for Inter and JetBrains Mono
+- **401 Interceptor** — Frontend API layer detects 401 responses and triggers re-authentication
+- **Login Audit Logging** — Success and failure events logged with client IP
+
 ## [2.4.0] - 2026-03-07
 
 ### Added
@@ -159,7 +178,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - mDNS device discovery
 - Web UI for configuration
 
-[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.5.0...HEAD
+[2.5.0]: https://github.com/jasondostal/scoreline/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/jasondostal/scoreline/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/jasondostal/scoreline/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/jasondostal/scoreline/compare/v2.1.0...v2.2.0

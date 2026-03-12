@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { triggerForceLogout } from "./auth";
 import type {
   Instance,
   League,
@@ -42,6 +43,12 @@ export function invalidateCache(pathPrefix?: string) {
   }
 }
 
+function check401(res: Response) {
+  if (res.status === 401 && !res.url.includes("/auth/")) {
+    triggerForceLogout();
+  }
+}
+
 async function get<T>(path: string): Promise<T> {
   const key = buildUrl(path);
 
@@ -50,6 +57,7 @@ async function get<T>(path: string): Promise<T> {
 
   const doFetch = async (): Promise<T> => {
     const res = await fetch(key);
+    check401(res);
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     const data = await res.json();
     _cache.set(key, { data, timestamp: Date.now() });
@@ -67,6 +75,7 @@ async function post<T>(path: string, body: unknown, silent = false): Promise<T> 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+  check401(res);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     const msg = err.detail || `${res.status} ${res.statusText}`;
@@ -83,6 +92,7 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+  check401(res);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     const msg = err.detail || `${res.status} ${res.statusText}`;
@@ -95,6 +105,7 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
 
 async function del<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { method: "DELETE" });
+  check401(res);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     const msg = err.detail || `${res.status} ${res.statusText}`;

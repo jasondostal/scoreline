@@ -49,6 +49,13 @@ services:
       - ./config:/app/config
     environment:
       - TZ=America/Chicago
+      # Auth (all optional — omit for no auth)
+      # - ADMIN_USER=admin
+      # - ADMIN_PASS=changeme
+      # - API_KEY=your-api-key
+      # - AUTH_PROXY_HEADER=Remote-User
+      # - TRUSTED_PROXY_IPS=172.16.0.0/12
+      # - FORCE_HTTPS=true
 ```
 
 ```bash
@@ -58,6 +65,55 @@ docker compose up -d
 ```
 
 Open `http://localhost:8084` and pick a game.
+
+<details>
+<summary><strong>Authentication</strong></summary>
+
+Authentication is **optional** — omit all auth env vars for open access.
+
+### Local Login
+
+```yaml
+environment:
+  - ADMIN_USER=admin
+  - ADMIN_PASS=your-password
+```
+
+A login page appears when auth is enabled. Sessions last 7 days via HttpOnly cookie. Login rate-limited to 5 attempts per 15 minutes per IP.
+
+### API Key (Programmatic Access)
+
+```yaml
+environment:
+  - API_KEY=your-api-key
+```
+
+Include `X-API-Key: your-api-key` header in requests. Used by the [Home Assistant integration](https://github.com/jasondostal/scoreline-ha) and scripts.
+
+### Reverse Proxy (Authentik / SSO)
+
+```yaml
+environment:
+  - AUTH_PROXY_HEADER=X-authentik-username
+  - TRUSTED_PROXY_IPS=172.19.0.0/16
+```
+
+Trusts the configured header only from requests originating within `TRUSTED_PROXY_IPS`. Fail-closed: if `TRUSTED_PROXY_IPS` is not set, proxy headers are ignored entirely.
+
+### HTTPS
+
+```yaml
+environment:
+  - FORCE_HTTPS=true
+```
+
+Sets the `Secure` flag on session cookies and adds the `Strict-Transport-Security` header. Use when behind a TLS-terminating reverse proxy.
+
+### Open Endpoints
+
+`/api/health` and `/api/status` are always accessible (no auth required) for health checks and monitoring.
+
+</details>
 
 <details>
 <summary><strong>Features</strong></summary>
@@ -183,6 +239,10 @@ docker run -d --name scoreline \
 | `/api/instance/{host}/watch_teams` | GET/POST | Get/set auto-watch teams |
 | `/api/instance/{host}/post_game` | POST | Set post-game action |
 | `/api/status` | GET | Current watching status |
+| `/api/health` | GET | Health check (always open) |
+| `/api/auth/login` | POST | Login with username/password |
+| `/api/auth/logout` | POST | Clear session |
+| `/api/auth/me` | GET | Check auth status |
 | `/api/test` | POST | Test mode - set arbitrary win % |
 | `/api/discover` | GET | Scan for WLED devices via mDNS |
 | `/api/wled/add` | POST | Add WLED device to config |
