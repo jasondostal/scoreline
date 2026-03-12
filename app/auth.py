@@ -4,6 +4,7 @@ import ipaddress
 import logging
 import os
 import secrets
+import time
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Request
@@ -20,6 +21,11 @@ _sessions: dict[str, dict] = {}
 SESSION_COOKIE = "sl_session"
 SESSION_MAX_AGE = 86400 * 7  # 7 days
 MAX_SESSIONS = 100
+
+# Rate limiting — per-IP login attempt tracking
+_login_attempts: dict[str, list[float]] = {}
+RATE_LIMIT_WINDOW = 900  # 15 minutes
+RATE_LIMIT_MAX = 5       # max attempts per window
 
 
 def _secret_or_env(name: str) -> str:
@@ -39,6 +45,7 @@ ADMIN_PASS = _secret_or_env("ADMIN_PASS")
 AUTH_PROXY_HEADER = os.environ.get("AUTH_PROXY_HEADER", "")
 TRUSTED_PROXY_IPS = os.environ.get("TRUSTED_PROXY_IPS", "")
 API_KEY = _secret_or_env("API_KEY")
+FORCE_HTTPS = bool(os.environ.get("FORCE_HTTPS", ""))
 
 # Derived properties
 LOGIN_REQUIRED = bool(ADMIN_USER)
@@ -174,16 +181,64 @@ def log_auth_config():
     log.info("[AUTH] Enabled: %s", " + ".join(methods))
 
 
+def _check_rate_limit(client_ip: str) -> int | None:
+    """Check if client_ip has exceeded login rate limit.
+
+    Returns seconds until retry is allowed, or None if under the limit.
+    """
+    now = time.monotonic()
+    attempts = _login_attempts.get(client_ip, [])
+    # Prune attempts outside the window
+    attempts = [t for t in attempts if now - t < RATE_LIMIT_WINDOW]
+    _login_attempts[client_ip] = attempts
+
+    if len(attempts) >= RATE_LIMIT_MAX:
+        oldest_in_window = attempts[0]
+        retry_after = int(RATE_LIMIT_WINDOW - (now - oldest_in_window)) + 1
+        return retry_after
+    return None
+
+
+def _record_login_attempt(client_ip: str):
+    """Record a login attempt for rate limiting."""
+    now = time.monotonic()
+    _login_attempts.setdefault(client_ip, []).append(now)
+
+
+def invalidate_all_sessions():
+    """Clear all sessions. Use when credentials are rotated."""
+    count = len(_sessions)
+    _sessions.clear()
+    if count:
+        log.info("[AUTH] Invalidated %d active sessions", count)
+
+
 # --- Routes ---
 
 @router.post("/auth/login")
-async def login(body: LoginRequest):
+async def login(request: Request, body: LoginRequest):
     """Login with username and password. Returns a session cookie."""
+    client_ip = request.client.host if request.client else "unknown"
+
     if not LOGIN_REQUIRED:
         return {"user": "anonymous", "message": "Auth not configured"}
 
+    # Rate limit check
+    retry_after = _check_rate_limit(client_ip)
+    if retry_after is not None:
+        log.warning("[AUTH] Rate limited login from %s", client_ip)
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Too many login attempts, try again later"},
+            headers={"Retry-After": str(retry_after)},
+        )
+
     if body.username != ADMIN_USER or body.password != ADMIN_PASS:
+        _record_login_attempt(client_ip)
+        log.warning("[AUTH] Failed login: user=%r from %s", body.username, client_ip)
         return JSONResponse(status_code=401, content={"detail": "Invalid credentials"})
+
+    log.info("[AUTH] Successful login: user=%r from %s", body.username, client_ip)
 
     # Clean up expired sessions and enforce max count
     now = datetime.now(UTC).timestamp()
@@ -206,7 +261,7 @@ async def login(body: LoginRequest):
         max_age=SESSION_MAX_AGE,
         httponly=True,
         samesite="lax",
-        secure=bool(AUTH_PROXY_HEADER),
+        secure=FORCE_HTTPS,
         path="/",
     )
     return response

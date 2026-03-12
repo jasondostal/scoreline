@@ -14,7 +14,7 @@ import time
 from collections import deque
 from enum import StrEnum
 
-from auth import AUTH_ENABLED, check_auth, log_auth_config
+from auth import AUTH_ENABLED, FORCE_HTTPS, check_auth, log_auth_config
 from auth import router as auth_router
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -508,6 +508,23 @@ if _cors_origins:
 
 
 @app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    """Add security headers to all responses."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; connect-src 'self' ws: wss:; font-src 'self'"
+    )
+    if FORCE_HTTPS:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
+
+@app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     """Authentication middleware — protects /api/* routes when auth is enabled."""
     path = request.url.path
@@ -882,9 +899,14 @@ async def api_discover_wled():
 
 _HOST_PATTERN = re.compile(r"^[a-zA-Z0-9._-]{1,253}$")
 _BLOCKED_NETS = [
-    ipaddress.ip_network("127.0.0.0/8"),
-    ipaddress.ip_network("169.254.0.0/16"),
-    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("127.0.0.0/8"),       # Loopback
+    ipaddress.ip_network("0.0.0.0/8"),          # Unspecified
+    ipaddress.ip_network("169.254.0.0/16"),     # Link-local
+    ipaddress.ip_network("224.0.0.0/4"),        # Multicast
+    ipaddress.ip_network("::1/128"),            # IPv6 loopback
+    ipaddress.ip_network("fe80::/10"),          # IPv6 link-local
+    ipaddress.ip_network("fc00::/7"),           # IPv6 ULA
+    ipaddress.ip_network("ff00::/8"),           # IPv6 multicast
 ]
 
 
@@ -1284,17 +1306,19 @@ async def update_instance(host: str, req: UpdateInstanceRequest):
 
 
 class InstanceSettingsRequest(BaseModel):
-    min_team_pct: float | None = None
-    contested_zone_pixels: int | None = None
-    dark_buffer_pixels: int | None = None
+    min_team_pct: float | None = Field(default=None, ge=0.0, le=0.5)
+    contested_zone_pixels: int | None = Field(default=None, ge=0, le=50)
+    dark_buffer_pixels: int | None = Field(default=None, ge=0, le=20)
     divider_preset: str | None = None
-    chase_speed: int | None = None
-    chase_intensity: int | None = None
+    chase_speed: int | None = Field(default=None, ge=0, le=255)
+    chase_intensity: int | None = Field(default=None, ge=0, le=255)
 
 
 @app.post("/api/instance/{host}/settings")
 async def update_instance_settings(host: str, req: InstanceSettingsRequest):
     """Update display settings for a specific WLED instance."""
+    from wled import DIVIDER_PRESETS
+
     from config import update_instance_settings as cfg_update
 
     if host not in state.instances:
@@ -1309,6 +1333,8 @@ async def update_instance_settings(host: str, req: InstanceSettingsRequest):
     if req.dark_buffer_pixels is not None:
         settings["dark_buffer_pixels"] = req.dark_buffer_pixels
     if req.divider_preset is not None:
+        if req.divider_preset not in DIVIDER_PRESETS:
+            raise HTTPException(400, f"Invalid divider_preset: {req.divider_preset!r}")
         settings["divider_preset"] = req.divider_preset
     if req.chase_speed is not None:
         settings["chase_speed"] = req.chase_speed
@@ -1656,8 +1682,16 @@ async def save_simulator_settings(req: SimulatorDefaultsRequest):
 
 
 # WebSocket endpoint for real-time updates
+WS_IDLE_TIMEOUT = 300.0  # 5 minutes
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    # Authenticate before accepting — WebSocket inherits HTTPConnection
+    if AUTH_ENABLED and check_auth(websocket) is None:
+        await websocket.close(code=1008, reason="Authentication required")
+        return
+
     accepted = await ws_manager.connect(websocket)
     if not accepted:
         return
@@ -1665,9 +1699,15 @@ async def websocket_endpoint(websocket: WebSocket):
         # Send initial state immediately on connect
         instances_data = await list_instances()
         await websocket.send_json({"type": "instances_update", "data": instances_data})
-        # Keep connection alive — client can send pings
+        # Keep connection alive — client can send pings, idle connections time out
         while True:
-            await websocket.receive_text()
+            await asyncio.wait_for(websocket.receive_text(), timeout=WS_IDLE_TIMEOUT)
+    except TimeoutError:
+        ws_manager.disconnect(websocket)
+        try:
+            await websocket.close(code=1000, reason="Idle timeout")
+        except Exception:
+            pass
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
     except Exception:
