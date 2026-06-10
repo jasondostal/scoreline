@@ -9,6 +9,7 @@ import ipaddress
 import logging
 import os
 import re
+import socket
 import threading
 import time
 from collections import deque
@@ -916,13 +917,33 @@ def _validate_wled_host(host: str) -> str | None:
     """Validate a WLED host. Returns error message or None if valid."""
     if not _HOST_PATTERN.match(host):
         return f"Invalid host: {host!r} (only alphanumeric, dots, hyphens, underscores)"
+    # Reject the loopback hostname outright (case-insensitive).
+    if host.lower() == "localhost":
+        return f"Blocked address: {host}"
     try:
         addr = ipaddress.ip_address(host)
         for net in _BLOCKED_NETS:
             if addr in net:
                 return f"Blocked address: {host}"
+        return None
     except ValueError:
-        pass  # Not an IP — hostname, that's fine
+        pass  # Not an IP literal — it's a hostname, resolve and validate below.
+    # Hostname: resolve to every A/AAAA address and block if any lands in a
+    # disallowed net (prevents DNS-rebinding / internal-name SSRF bypass).
+    # getaddrinfo blocks, which is acceptable here as this is config-time validation.
+    try:
+        results = socket.getaddrinfo(host, None)
+    except socket.gaierror:
+        return f"Could not resolve host: {host}"
+    for res in results:
+        ip = res[4][0]
+        try:
+            addr = ipaddress.ip_address(ip)
+        except ValueError:
+            continue
+        for net in _BLOCKED_NETS:
+            if addr in net:
+                return f"Blocked: {host} resolves to a disallowed address ({ip})"
     return None
 
 
