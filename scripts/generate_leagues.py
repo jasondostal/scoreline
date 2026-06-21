@@ -32,6 +32,8 @@ LEAGUES = {
     "ligue1": {"sport": "soccer", "slug": "fra.1", "name": "Ligue 1"},
     "ucl": {"sport": "soccer", "slug": "uefa.champions", "name": "UEFA Champions League"},
     "ligamx": {"sport": "soccer", "slug": "mex.1", "name": "Liga MX"},
+    # International
+    "worldcup": {"sport": "soccer", "slug": "fifa.world", "name": "FIFA World Cup"},
 }
 
 

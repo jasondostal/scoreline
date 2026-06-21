@@ -1,0 +1,248 @@
+# FIFA World Cup Team Colors for Game Lights
+# Auto-generated from ESPN API — 48 teams
+# Colors are [R, G, B] — saturated for LED punch
+
+name: FIFA World Cup
+sport: soccer
+espn_league: fifa.world
+
+teams:
+  ALG:
+    name: Algeria
+    display: Algeria
+    colors: [[67, 154, 55], [255, 255, 255]]
+
+  ARG:
+    name: Argentina
+    display: Argentina
+    colors: [[99, 164, 223], [15, 80, 153]]
+
+  AUS:
+    name: Australia
+    display: Australia
+    colors: [[255, 205, 0], [255, 205, 0]]
+
+  AUT:
+    name: Austria
+    display: Austria
+    colors: [[215, 17, 18], [255, 114, 114]]
+
+  BEL:
+    name: Belgium
+    display: Belgium
+    colors: [[227, 0, 13], [255, 102, 110]]
+
+  BIH:
+    name: Bosnia-Herzegovina
+    display: Bosnia-Herz
+    colors: [[0, 71, 212], [255, 255, 255]]
+
+  BRA:
+    name: Brazil
+    display: Brazil
+    colors: [[254, 224, 0], [14, 53, 153]]
+
+  CAN:
+    name: Canada
+    display: Canada
+    colors: [[237, 3, 5], [255, 103, 105]]
+
+  CIV:
+    name: Ivory Coast
+    display: Ivory Coast
+    colors: [[255, 130, 0], [255, 130, 0]]
+
+  COD:
+    name: Congo DR
+    display: Congo DR
+    colors: [[41, 131, 222], [198, 0, 0]]
+
+  COL:
+    name: Colombia
+    display: Colombia
+    colors: [[251, 208, 19], [18, 58, 153]]
+
+  CPV:
+    name: Cape Verde
+    display: Cape Verde
+    colors: [[0, 0, 153], [239, 22, 37]]
+
+  CRO:
+    name: Croatia
+    display: Croatia
+    colors: [[255, 0, 0], [0, 36, 255]]
+
+  CUW:
+    name: Curaçao
+    display: Curaçao
+    colors: [[0, 51, 228], [0, 51, 228]]
+
+  CZE:
+    name: Czechia
+    display: Czechia
+    colors: [[215, 0, 6], [255, 255, 255]]
+
+  ECU:
+    name: Ecuador
+    display: Ecuador
+    colors: [[255, 221, 0], [0, 76, 162]]
+
+  EGY:
+    name: Egypt
+    display: Egypt
+    colors: [[210, 2, 0], [255, 255, 255]]
+
+  ENG:
+    name: England
+    display: England
+    colors: [[255, 255, 255], [234, 0, 12]]
+
+  ESP:
+    name: Spain
+    display: Spain
+    colors: [[198, 0, 20], [153, 0, 0]]
+
+  FRA:
+    name: France
+    display: France
+    colors: [[0, 0, 153], [200, 230, 216]]
+
+  GER:
+    name: Germany
+    display: Germany
+    colors: [[255, 255, 255], [0, 206, 209]]
+
+  GHA:
+    name: Ghana
+    display: Ghana
+    colors: [[251, 208, 19], [255, 228, 113]]
+
+  HAI:
+    name: Haiti
+    display: Haiti
+    colors: [[0, 50, 160], [255, 255, 255]]
+
+  IRN:
+    name: Iran
+    display: Iran
+    colors: [[255, 255, 255], [218, 0, 0]]
+
+  IRQ:
+    name: Iraq
+    display: Iraq
+    colors: [[0, 192, 103], [255, 255, 255]]
+
+  JOR:
+    name: Jordan
+    display: Jordan
+    colors: [[231, 0, 0], [255, 255, 255]]
+
+  JPN:
+    name: Japan
+    display: Japan
+    colors: [[0, 12, 212], [0, 12, 212]]
+
+  KOR:
+    name: South Korea
+    display: South Korea
+    colors: [[206, 5, 15], [151, 119, 200]]
+
+  KSA:
+    name: Saudi Arabia
+    display: Saudi Arabia
+    colors: [[255, 255, 255], [11, 153, 77]]
+
+  MAR:
+    name: Morocco
+    display: Morocco
+    colors: [[223, 3, 11], [255, 255, 255]]
+
+  MEX:
+    name: Mexico
+    display: Mexico
+    colors: [[0, 153, 104], [73, 183, 148]]
+
+  NED:
+    name: Netherlands
+    display: Netherlands
+    colors: [[251, 92, 0], [251, 92, 0]]
+
+  NOR:
+    name: Norway
+    display: Norway
+    colors: [[200, 0, 32], [240, 96, 119]]
+
+  NZL:
+    name: New Zealand
+    display: New Zealand
+    colors: [[0, 0, 0], [255, 255, 255]]
+
+  PAN:
+    name: Panama
+    display: Panama
+    colors: [[210, 0, 38], [0, 85, 153]]
+
+  PAR:
+    name: Paraguay
+    display: Paraguay
+    colors: [[234, 35, 0], [18, 58, 153]]
+
+  POR:
+    name: Portugal
+    display: Portugal
+    colors: [[218, 14, 0], [0, 153, 71]]
+
+  QAT:
+    name: Qatar
+    display: Qatar
+    colors: [[153, 20, 84], [255, 255, 255]]
+
+  RSA:
+    name: South Africa
+    display: South Africa
+    colors: [[255, 175, 0], [0, 215, 98]]
+
+  SCO:
+    name: Scotland
+    display: Scotland
+    colors: [[20, 52, 153], [222, 56, 44]]
+
+  SEN:
+    name: Senegal
+    display: Senegal
+    colors: [[0, 153, 82], [255, 255, 255]]
+
+  SUI:
+    name: Switzerland
+    display: Switzerland
+    colors: [[255, 0, 0], [180, 236, 162]]
+
+  SWE:
+    name: Sweden
+    display: Sweden
+    colors: [[254, 203, 0], [0, 106, 167]]
+
+  TUN:
+    name: Tunisia
+    display: Tunisia
+    colors: [[210, 2, 0], [255, 255, 255]]
+
+  TUR:
+    name: Türkiye
+    display: Türkiye
+    colors: [[255, 255, 255], [239, 22, 37]]
+
+  URU:
+    name: Uruguay
+    display: Uruguay
+    colors: [[63, 173, 229], [0, 0, 153]]
+
+  USA:
+    name: United States
+    display: USA
+    colors: [[212, 8, 33], [34, 60, 153]]
+
+  UZB:
+    name: Uzbekistan
+    display: Uzbekistan
+    colors: [[255, 255, 255], [0, 114, 206]]

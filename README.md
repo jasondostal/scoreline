@@ -4,7 +4,7 @@
   <a href="https://github.com/jasondostal/scoreline/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/jasondostal/scoreline/build.yml?style=flat-square&label=build" alt="Build"></a>
   <a href="https://github.com/jasondostal/scoreline/releases"><img src="https://img.shields.io/github/v/release/jasondostal/scoreline?style=flat-square" alt="Release"></a>
   <a href="https://github.com/jasondostal/scoreline-ha"><img src="https://img.shields.io/badge/Home_Assistant-HACS-41BDF5?style=flat-square&logo=home-assistant" alt="HACS"></a>
-  <img src="https://img.shields.io/badge/leagues-16-brightgreen?style=flat-square" alt="Leagues">
+  <img src="https://img.shields.io/badge/leagues-17-brightgreen?style=flat-square" alt="Leagues">
   <img src="https://img.shields.io/badge/teams-1500+-brightgreen?style=flat-square" alt="Teams">
 </p>
 
@@ -32,6 +32,7 @@ https://github.com/user-attachments/assets/cae2373f-027f-4d76-85f3-05e8d1a17b81
 | WNBA | 15 | | Liga MX | 18 |
 | College Football | 500 | | Champions League | 36 |
 | Men's College Basketball | 362 | | Women's College Basketball | 361 |
+| FIFA World Cup | 48 | | | |
 
 League files are YAML — drop in your own to add a league. Team colors are calibrated for LED saturation.
 
