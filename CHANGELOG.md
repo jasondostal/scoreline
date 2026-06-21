@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-06-20
+
+### Added
+- **FIFA World Cup league** — New `worldcup` league (ESPN `fifa.world`) with the full 48-team 2026 field, including hosts USA/Canada/Mexico, each with LED-calibrated team colors. Generated via `scripts/generate_leagues.py worldcup`.
+
+### Notes
+- ESPN does not publish win probability for soccer feeds (World Cup included), so the battle line stays centered for these matches; team colors, live score, and goal/final celebrations behave as with the other soccer leagues.
+
 ## [2.5.0] - 2026-03-12
 
 ### Added
