@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - ESPN does not publish win probability for soccer feeds (World Cup included), so the battle line stays centered for these matches; team colors, live score, and goal/final celebrations behave as with the other soccer leagues.
 
+## [2.5.1] - 2026-06-10
+
+### Security
+- **SSRF hostname resolution** — `_validate_wled_host` now resolves hostnames via `getaddrinfo` and rejects any that resolve into a disallowed network (loopback/link-local/ULA/etc.), and rejects `localhost` outright. Previously only IP literals were checked, so a hostname or DNS-rebinding record could bypass the SSRF guard.
+- **Frontend dependency audit** — `npm audit fix` patches build-time deps: vite (dev-server path traversal / file read), postcss (XSS), picomatch (ReDoS), flatted (DoS / prototype pollution). Clears the npm-audit CI gate.
+
 ## [2.5.0] - 2026-03-12
 
 ### Added
