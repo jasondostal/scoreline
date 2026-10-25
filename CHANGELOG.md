@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Proxy-header-only auth no longer fails open** — Setting `AUTH_PROXY_HEADER` + `TRUSTED_PROXY_IPS` without `ADMIN_USER`/`API_KEY` left `AUTH_ENABLED` false, so every request (including a direct hit on the container port that bypasses the proxy) was served as `anonymous`. Proxy-header config now enables auth on its own.
+- **Empty `ADMIN_PASS` no longer accepts an empty password** — With `ADMIN_USER` set and `ADMIN_PASS` unset (or an unreadable `ADMIN_PASS_SECRETFILE`), logging in with a blank password succeeded. Login is now refused, an error is logged at startup, and secret-file read failures are logged instead of silently swallowed. Credential comparison is constant-time.
+- **API docs gated** — `/docs`, `/redoc`, and `/openapi.json` sat outside `/api/` and were served unauthenticated; they now require auth when auth is enabled.
+- **Request validation** — Bounds on LED start/end indices, post-game celebration/after-action enums and duration, preset ID range, and a 50-entry cap on watch teams (auto-watch polls ESPN per entry). `/api/test` with an unknown `host` returns 404 instead of a 500.
+- **CI supply chain** — All third-party GitHub Actions pinned to commit SHAs (Trivy was on `@master`; trivy-action's tags were hijacked in the March 2026 supply-chain incident). Workflow `GITHUB_TOKEN` defaults to `contents: read`. Dependabot gets a 7-day cooldown so freshly published releases aren't proposed immediately.
+
 ## [2.6.0] - 2026-06-20
 
 ### Added

@@ -14,6 +14,7 @@ import threading
 import time
 from collections import deque
 from enum import StrEnum
+from typing import Literal
 
 from auth import AUTH_ENABLED, FORCE_HTTPS, check_auth, log_auth_config
 from auth import router as auth_router
@@ -527,13 +528,19 @@ async def security_headers_middleware(request: Request, call_next):
     return response
 
 
+_DOCS_PATHS = ("/docs", "/redoc", "/openapi.json")
+
+
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     """Authentication middleware — protects /api/* routes when auth is enabled."""
     path = request.url.path
 
-    # Open paths — static assets, auth endpoints, health/status, WebSocket
-    if not path.startswith("/api/") or path.startswith("/api/auth/") or path in ("/api/status", "/api/health"):
+    # Open paths — static assets, auth endpoints, health/status, WebSocket.
+    # FastAPI's generated API docs live outside /api/ but describe every
+    # endpoint, so they're protected too.
+    protected = path.startswith("/api/") or path in _DOCS_PATHS or path.startswith("/docs/")
+    if not protected or path.startswith("/api/auth/") or path in ("/api/status", "/api/health"):
         return await call_next(request)
 
     if not AUTH_ENABLED:
@@ -947,10 +954,15 @@ def _validate_wled_host(host: str) -> str | None:
     return None
 
 
+# Bounds for LED indices — generous (WLED tops out well below this) but keeps
+# junk values out of settings.yaml and WLED segment payloads.
+MAX_LED_INDEX = 65535
+
+
 class AddWLEDRequest(BaseModel):
     host: str
-    start: int = 0
-    end: int = 300
+    start: int = Field(default=0, ge=0, le=MAX_LED_INDEX)
+    end: int = Field(default=300, ge=0, le=MAX_LED_INDEX)
 
 
 @app.post("/api/wled/add")
@@ -1279,8 +1291,8 @@ async def delete_instance(host: str):
 
 class UpdateInstanceRequest(BaseModel):
     host: str | None = None
-    start: int | None = None
-    end: int | None = None
+    start: int | None = Field(default=None, ge=0, le=MAX_LED_INDEX)
+    end: int | None = Field(default=None, ge=0, le=MAX_LED_INDEX)
 
 
 @app.patch("/api/instance/{host}")
@@ -1406,7 +1418,8 @@ async def get_watch_teams(host: str):
 
 
 class WatchTeamsRequest(BaseModel):
-    watch_teams: list[str]  # e.g. ["nfl:GB", "nba:MIL"]
+    # e.g. ["nfl:GB", "nba:MIL"] — capped: auto-watch polls ESPN per entry
+    watch_teams: list[str] = Field(max_length=50)
 
 
 @app.post("/api/instance/{host}/watch_teams")
@@ -1423,10 +1436,10 @@ async def set_watch_teams(host: str, req: WatchTeamsRequest):
 
 
 class PostGameRequest(BaseModel):
-    celebration: str  # freeze | chase | twinkle | flash | solid
-    celebration_duration_s: int = 60
-    after_action: str  # off | fade_off | restore | preset
-    preset_id: int | None = None
+    celebration: Literal["freeze", "chase", "twinkle", "flash", "solid"]
+    celebration_duration_s: int = Field(default=60, ge=0, le=3600)
+    after_action: Literal["off", "fade_off", "restore", "preset"]
+    preset_id: int | None = Field(default=None, ge=0, le=250)
 
 
 @app.post("/api/instance/{host}/post_game")
@@ -1632,6 +1645,9 @@ async def test_percentage(req: TestRequest):
 
     home_colors = get_team_colors(req.league, req.home)
     away_colors = get_team_colors(req.league, req.away)
+
+    if req.host and req.host not in state.instances:
+        raise HTTPException(404, f"Unknown instance: {req.host}")
 
     # Target specific instance or all
     targets = [state.instances[req.host]] if req.host else state.instances.values()

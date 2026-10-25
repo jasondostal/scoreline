@@ -35,8 +35,8 @@ def _secret_or_env(name: str) -> str:
     if secret_file:
         try:
             return open(secret_file).read().strip()
-        except OSError:
-            pass
+        except OSError as e:
+            log.error("[AUTH] Could not read %s_SECRETFILE (%s): %s", name, secret_file, e)
     return os.environ.get(name, "")
 
 
@@ -51,7 +51,10 @@ FORCE_HTTPS = bool(os.environ.get("FORCE_HTTPS", ""))
 # Derived properties
 LOGIN_REQUIRED = bool(ADMIN_USER)
 API_AUTH_REQUIRED = bool(API_KEY)
-AUTH_ENABLED = LOGIN_REQUIRED or API_AUTH_REQUIRED
+# Proxy header auth alone must still enforce auth -- otherwise a direct hit on
+# the container port (bypassing the proxy) would be served as "anonymous".
+PROXY_AUTH_CONFIGURED = bool(AUTH_PROXY_HEADER and TRUSTED_PROXY_IPS)
+AUTH_ENABLED = LOGIN_REQUIRED or API_AUTH_REQUIRED or PROXY_AUTH_CONFIGURED
 
 
 class LoginRequest(BaseModel):
@@ -179,6 +182,13 @@ def log_auth_config():
                 AUTH_PROXY_HEADER,
             )
 
+    if LOGIN_REQUIRED and not ADMIN_PASS:
+        log.error(
+            "[AUTH] ADMIN_USER='%s' set without ADMIN_PASS -- local login is DISABLED "
+            "(fail-closed). Set ADMIN_PASS or ADMIN_PASS_SECRETFILE.",
+            ADMIN_USER,
+        )
+
     log.info("[AUTH] Enabled: %s", " + ".join(methods))
 
 
@@ -234,7 +244,11 @@ async def login(request: Request, body: LoginRequest):
             headers={"Retry-After": str(retry_after)},
         )
 
-    if body.username != ADMIN_USER or body.password != ADMIN_PASS:
+    # Fail closed on a missing password (e.g. unreadable secret file) -- never
+    # let an empty ADMIN_PASS match an empty submitted password.
+    user_ok = secrets.compare_digest(body.username.encode(), ADMIN_USER.encode())
+    pass_ok = secrets.compare_digest(body.password.encode(), ADMIN_PASS.encode())
+    if not ADMIN_PASS or not (user_ok and pass_ok):
         _record_login_attempt(client_ip)
         log.warning("[AUTH] Failed login: user=%r from %s", body.username, client_ip)
         return JSONResponse(status_code=401, content={"detail": "Invalid credentials"})
