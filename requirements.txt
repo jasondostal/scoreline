@@ -1,6 +1,6 @@
 fastapi>=0.148.0,<1.0
 uvicorn[standard]>=0.54.0,<1.0
-httpx>=0.26.0,<1.0
+httpx>=0.28.1,<1.0
 pyyaml>=6.0,<7.0
 zeroconf>=0.151.5,<1.0
 watchdog>=4.0.0,<7.0
