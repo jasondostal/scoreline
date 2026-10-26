@@ -7,12 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-10-26
+
 ### Security
 - **Proxy-header-only auth no longer fails open** — Setting `AUTH_PROXY_HEADER` + `TRUSTED_PROXY_IPS` without `ADMIN_USER`/`API_KEY` left `AUTH_ENABLED` false, so every request (including a direct hit on the container port that bypasses the proxy) was served as `anonymous`. Proxy-header config now enables auth on its own.
 - **Empty `ADMIN_PASS` no longer accepts an empty password** — With `ADMIN_USER` set and `ADMIN_PASS` unset (or an unreadable `ADMIN_PASS_SECRETFILE`), logging in with a blank password succeeded. Login is now refused, an error is logged at startup, and secret-file read failures are logged instead of silently swallowed. Credential comparison is constant-time.
 - **API docs gated** — `/docs`, `/redoc`, and `/openapi.json` sat outside `/api/` and were served unauthenticated; they now require auth when auth is enabled.
 - **Request validation** — Bounds on LED start/end indices, post-game celebration/after-action enums and duration, preset ID range, and a 50-entry cap on watch teams (auto-watch polls ESPN per entry). `/api/test` with an unknown `host` returns 404 instead of a 500.
 - **CI supply chain** — All third-party GitHub Actions pinned to commit SHAs (Trivy was on `@master`; trivy-action's tags were hijacked in the March 2026 supply-chain incident). Workflow `GITHUB_TOKEN` defaults to `contents: read`. Dependabot gets a 7-day cooldown so freshly published releases aren't proposed immediately.
+- **Frontend dependency audit** — `npm audit fix` clears 12 build-time advisories (vite, postcss, js-yaml, nanoid, source-map-js, zod, launch-editor) that had turned the npm-audit CI gate red.
+
+### Changed
+- **Dependencies** — React 19.3, Radix UI 1.8, Tailwind 4.3 (npm-prod group), npm-dev group, and raised floors for fastapi, uvicorn, httpx, zeroconf, pytest-asyncio; hadolint-action 3.5.0.
+- **Dockerfile** — `HEALTHCHECK` uses JSON-form `CMD` (hadolint DL3025).
+
+### Fixed
+- **Dependabot auto-merge** — The workflow's approve step always failed ("GitHub Actions is not permitted to approve pull requests"), aborting the job before auto-merge was enabled. Approve step removed; `main` now requires the `lint`/`test`/`build` checks, which auto-merge waits on.
 
 ## [2.6.0] - 2026-06-20
 
@@ -199,7 +209,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - mDNS device discovery
 - Web UI for configuration
 
-[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.5.0...HEAD
+[Unreleased]: https://github.com/jasondostal/scoreline/compare/v2.6.1...HEAD
+[2.6.1]: https://github.com/jasondostal/scoreline/compare/v2.6.0...v2.6.1
+[2.6.0]: https://github.com/jasondostal/scoreline/compare/v2.5.1...v2.6.0
+[2.5.1]: https://github.com/jasondostal/scoreline/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/jasondostal/scoreline/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/jasondostal/scoreline/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/jasondostal/scoreline/compare/v2.2.0...v2.3.0
