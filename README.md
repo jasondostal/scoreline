@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://github.com/jasondostal/scoreline/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/jasondostal/scoreline/build.yml?style=flat-square&label=build" alt="Build"></a>
   <a href="https://github.com/jasondostal/scoreline/releases"><img src="https://img.shields.io/github/v/release/jasondostal/scoreline?style=flat-square" alt="Release"></a>
-  <a href="https://github.com/jasondostal/scoreline-ha"><img src="https://img.shields.io/badge/Home_Assistant-HACS-41BDF5?style=flat-square&logo=home-assistant" alt="HACS"></a>
+  <a href="https://github.com/jasondostal/scoreline-ha"><img src="https://img.shields.io/badge/Home_Assistant-Marketplace-41BDF5?style=flat-square&logo=home-assistant" alt="Home Assistant Marketplace"></a>
   <img src="https://img.shields.io/badge/leagues-17-brightgreen?style=flat-square" alt="Leagues">
   <img src="https://img.shields.io/badge/teams-1500+-brightgreen?style=flat-square" alt="Teams">
 </p>
@@ -270,14 +270,14 @@ docker run -d --name scoreline \
 
 ## Home Assistant Integration
 
-[**scoreline-ha**](https://github.com/jasondostal/scoreline-ha) — HACS custom integration with local push updates via WebSocket.
+[**scoreline-ha**](https://github.com/jasondostal/scoreline-ha) — custom integration with local push updates via WebSocket.
 
 - 11 sensors per WLED instance (state, teams, scores, win %, period, league, health)
 - Game Active binary sensor, Stop Watching button per instance
 - Services: `scoreline.watch_game`, `scoreline.set_watch_teams`, `scoreline.test_display`
 - MAC-based cross-linking with the WLED HA integration
 
-Install via HACS > Custom Repositories > `https://github.com/jasondostal/scoreline-ha`
+Install via Marketplace > Add from link > `https://github.com/jasondostal/scoreline-ha` (Home Assistant 2026.11+; on older versions, HACS > Custom Repositories).
 
 ## License
 
